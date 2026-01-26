@@ -1,32 +1,29 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import Layout from "./layouts/layout";
-import { AppProvider } from "./context/AppContext";
-import StudentRepository from "./pages/StudentRepository";
-import PatientManagement from "./pages/PatientManagement";
-import AddPatient from "./pages/AddPatient";
-import EditPatient from "./pages/EditPatient";
-import CreateRecord from "./pages/CreateRecord";
-import EditRecord from "./pages/EditRecord";
-import AccountManagement from "./pages/AccountManagement";
-import RecordDetail from "./pages/RecordDetail";
+import RecordsPage from "./pages/RecordsPage";
+import { RecordDetailView } from "./components/RecordDetail/RecordDetailView";
+import { EditRecordView } from "./components/EditRecord/EditRecordView";
+import { CreateRecordView } from "./components/EditRecord/CreateRecordView";
+import { PatientManagementView } from "./components/Patient/Management/PatientManagementView";
+import { EditPatientForm } from "./components/Patient/Edit/EditPatientForm";
+import { AddPatientForm } from "./components/Patient/Add/AddPatientForm";
+import { AccountManagementView } from "./components/Account/AccountManagementView";
 
 function AppRoutes() {
   return (
-    <AppProvider>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/repository" element={<StudentRepository />} />
-          <Route path="/patient-management" element={<PatientManagement />} />
-          <Route path="/patients/new" element={<AddPatient />} />
-          <Route path="/patients/edit/:id" element={<EditPatient />} />
-          <Route path="/records/create/:patientId" element={<CreateRecord />} />
-          <Route path="/record/edit/:id" element={<EditRecord />} />
-          <Route path="/accountmanager" element={<AccountManagement />} />
-          <Route path="/record/:id" element={<RecordDetail />} />
-          <Route path="*" element={<Navigate to="/repository" replace />} />
+          <Route path="/" element={<RecordsPage />} />
+          <Route path="/record/:id" element={<RecordDetailView />} />
+          <Route path="/record/edit/:id" element={<EditRecordView />} />
+          <Route path="/record/create/:patientId" element={<CreateRecordView />} />
+          <Route path="/patients" element={<PatientManagementView />} />
+          <Route path="/patient/add" element={<AddPatientForm />} />
+          <Route path="/patient/edit/:id" element={<EditPatientForm />} />
+          <Route path="/account" element={<AccountManagementView />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
-    </AppProvider>
   );
 }
 

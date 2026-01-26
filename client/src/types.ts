@@ -1,6 +1,7 @@
 export interface Patient {
   id: string;
   fullName: string;
+  cccd: string;
   dob: string;
   age: number;
   gender: string;
@@ -28,6 +29,7 @@ export interface Document {
   fileName: string;
   date: string;
   url?: string;
+  data?: any;
 }
 
 export interface Transfer {
@@ -157,6 +159,7 @@ export interface Record {
   id: string;
   patientId: string;
   patientName: string;
+  cccd: string;
   dob: string;
   age: number;
   gender: string;

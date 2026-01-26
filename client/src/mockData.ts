@@ -16,11 +16,13 @@ const generateMockRecords = (count: number): Record[] => {
     const randomYear = 2024 - randomAge;
     const randomIdNum = (i + 2).toString().padStart(3, "0");
     const patientId = `BN${randomIdNum}`;
+    const cccd = `079${Math.floor(Math.random() * 1000000000).toString().padStart(9, "0")}`;
 
     records.push({
       id: `REC${randomIdNum}`,
       patientId: patientId,
       patientName: randomName,
+      cccd: cccd,
       dob: `${randomYear}-05-15`,
       age: randomAge,
       gender: Math.random() > 0.5 ? "Nam" : "Nữ",
@@ -108,10 +110,12 @@ const generateMockPatients = (count: number): Patient[] => {
     const randomAge = Math.floor(Math.random() * 60) + 10;
     const randomYear = 2024 - randomAge;
     const randomIdNum = (i + 2).toString().padStart(3, "0");
+    const cccd = `079${Math.floor(Math.random() * 1000000000).toString().padStart(9, "0")}`;
 
     patients.push({
       id: `BN${randomIdNum}`,
       fullName: randomName.toUpperCase(),
+      cccd: cccd,
       dob: `${randomYear}-05-15`,
       age: randomAge,
       gender: Math.random() > 0.5 ? "Nam" : "Nữ",
@@ -142,6 +146,7 @@ export const INITIAL_PATIENTS: Patient[] = [
   {
     id: "BN001",
     fullName: "NGUYEN VAN A",
+    cccd: "079178000123",
     dob: "1978-01-01",
     age: 46,
     gender: "Nam",
@@ -164,6 +169,7 @@ export const INITIAL_PATIENTS: Patient[] = [
   {
     id: "BN002",
     fullName: "TRAN THI B",
+    cccd: "079161000456",
     dob: "1961-05-20",
     age: 63,
     gender: "Nữ",
@@ -191,6 +197,7 @@ export const INITIAL_RECORDS: Record[] = [
     id: "REC001",
     patientId: "BN001",
     patientName: "NGUYEN VAN A",
+    cccd: "079178000123",
     dob: "1978-01-01",
     age: 46,
     gender: "Nam",
@@ -275,6 +282,7 @@ export const INITIAL_RECORDS: Record[] = [
     id: "REC002",
     patientId: "BN002",
     patientName: "TRAN THI B",
+    cccd: "079161000456",
     dob: "1961-05-20",
     age: 63,
     gender: "Nữ",
