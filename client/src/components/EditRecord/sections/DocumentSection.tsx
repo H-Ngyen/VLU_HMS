@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { FileText, Upload, Trash2, Eye, Edit2, Save, X } from "lucide-react";
 import type { Record, Document } from "@/types";
-import { XRayInputForm } from "./XRayInputForm";
 import { Button } from "@/components/ui/button";
 
 interface DocumentSectionProps {
@@ -11,24 +10,15 @@ interface DocumentSectionProps {
 }
 
 export const DocumentSection = ({ formData, setFormData, readOnly = false }: DocumentSectionProps) => {
-  const documents = formData.documents || [];
+  const documents = (formData.documents || []).filter(d => d.type !== "X-Quang" && d.type !== "XN-HuyetHoc");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadType, setUploadType] = useState("Khác");
   
   // Edit State
   const [editingDocId, setEditingDocId] = useState<string | null>(null);
   const [editName, setEditName] = useState("");
 
-  // X-Ray Form State
-  const [isXRayFormOpen, setIsXRayFormOpen] = useState(false);
-  const [editingXRayDoc, setEditingXRayDoc] = useState<Document | null>(null);
-  const [viewingXRayDoc, setViewingXRayDoc] = useState<Document | null>(null);
-
   const handleView = (doc: Document) => {
-    if (doc.type === "X-Quang" && doc.data) {
-        setViewingXRayDoc(doc);
-        setIsXRayFormOpen(true);
-    } else if (doc.url) {
+    if (doc.url) {
         window.open(doc.url, "_blank");
     } else {
         alert("Tài liệu này không có file đính kèm hoặc nội dung để xem.");
@@ -42,8 +32,8 @@ export const DocumentSection = ({ formData, setFormData, readOnly = false }: Doc
 
     const newDoc: Document = {
       id: `DOC${Date.now()}`,
-      name: uploadType === "X-Quang" && selectedFile.name.startsWith("XQuang_") ? "Phiếu X-Quang (Nhập tay)" : uploadType,
-      type: uploadType,
+      name: "Tài liệu",
+      type: "Tài liệu",
       fileName: selectedFile.name,
       date: new Date().toISOString().split("T")[0],
       url: URL.createObjectURL(selectedFile),
@@ -58,50 +48,6 @@ export const DocumentSection = ({ formData, setFormData, readOnly = false }: Doc
     });
 
     setSelectedFile(null);
-    setUploadType("Khác");
-  };
-
-  const handleXRaySave = (file: File, xrayData?: any) => {
-    if (readOnly) return;
-    if (editingXRayDoc) {
-        // Update existing doc
-        setFormData((prev) => {
-            if (!prev) return null;
-            const updatedDocs = prev.documents.map((d) => 
-              d.id === editingXRayDoc.id ? { 
-                  ...d, 
-                  fileName: file.name, 
-                  url: URL.createObjectURL(file),
-                  data: xrayData 
-              } : d
-            );
-            return { ...prev, documents: updatedDocs };
-        });
-        setEditingXRayDoc(null);
-    } else {
-        // Create new doc
-        const newDoc: Document = {
-            id: `DOC${Date.now()}`,
-            name: "Phiếu X-Quang (Nhập tay)",
-            type: "X-Quang",
-            fileName: file.name,
-            date: new Date().toISOString().split("T")[0],
-            url: URL.createObjectURL(file),
-            data: xrayData
-        };
-
-        setFormData((prev) => {
-            if (!prev) return null;
-            return {
-                ...prev,
-                documents: [...(prev.documents || []), newDoc],
-            };
-        });
-    }
-    
-    // Reset states
-    setUploadType("Khác");
-    setIsXRayFormOpen(false); // Ensure modal closes if it wasn't already
   };
 
   const handleDelete = (docId: string) => {
@@ -118,13 +64,8 @@ export const DocumentSection = ({ formData, setFormData, readOnly = false }: Doc
 
   const startEdit = (doc: Document) => {
     if (readOnly) return;
-    if (doc.type === "X-Quang" && doc.data) {
-        setEditingXRayDoc(doc);
-        setIsXRayFormOpen(true);
-    } else {
-        setEditingDocId(doc.id);
-        setEditName(doc.name);
-    }
+    setEditingDocId(doc.id);
+    setEditName(doc.name);
   };
 
   const saveEdit = (docId: string) => {
@@ -152,70 +93,20 @@ export const DocumentSection = ({ formData, setFormData, readOnly = false }: Doc
       {!readOnly && (
         <div className="mb-4 bg-gray-50 border border-dashed border-gray-300 rounded-lg p-4">
             <div className="flex flex-col md:flex-row gap-3 items-center">
-            <select
-                className="p-2 border border-gray-300 rounded-md text-sm outline-none w-full md:w-40 bg-white"
-                value={uploadType}
-                onChange={(e) => setUploadType(e.target.value)}
+            <input
+                type="file"
+                accept=".pdf"
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-vlu-red file:text-white hover:file:bg-red-700"
+                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+            />
+            <Button
+                disabled={!selectedFile}
+                type="button"
+                onClick={() => handleUpload()}
+                className="bg-vlu-red hover:bg-red-700"
             >
-                <option>Xét nghiệm máu</option>
-                <option>X-Quang</option>
-                <option>Siêu âm</option>
-                <option>Đơn thuốc</option>
-                <option>Khác</option>
-            </select>
-            
-            {uploadType === "X-Quang" ? (
-                <div className="flex-1 flex gap-2 w-full">
-                    <Button
-                        type="button"
-                        onClick={() => {
-                            setEditingXRayDoc(null); // Reset editing state for new entry
-                            setIsXRayFormOpen(true);
-                        }}
-                        size="sm"
-                        className="bg-vlu-red hover:bg-red-700 text-white"
-                    >
-                        <Edit2 size={14} className="mr-2" /> Nhập phiếu X-Quang
-                    </Button>
-                    <div className="relative flex-1">
-                        <input
-                            type="file"
-                            accept=".pdf"
-                            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                            onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                        />
-                        <div className="w-full h-full border border-gray-300 bg-white rounded-md px-3 py-2 text-sm text-gray-500 flex items-center justify-between">
-                            <span className="truncate">{selectedFile ? selectedFile.name : "Hoặc tải file..."}</span>
-                            <Upload size={14} />
-                        </div>
-                    </div>
-                    <Button
-                        disabled={!selectedFile}
-                        type="button"
-                        onClick={() => handleUpload()}
-                        variant="secondary"
-                    >
-                        <Upload size={16} /> Lưu
-                    </Button>
-                </div>
-            ) : (
-                <>
-                    <input
-                        type="file"
-                        accept=".pdf"
-                        className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-vlu-red file:text-white hover:file:bg-red-700"
-                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    />
-                    <Button
-                        disabled={!selectedFile}
-                        type="button"
-                        onClick={() => handleUpload()}
-                        className="bg-vlu-red hover:bg-red-700"
-                    >
-                        <Upload size={16} /> Tải lên
-                    </Button>
-                </>
-            )}
+                <Upload size={16} /> Tải lên
+            </Button>
             </div>
         </div>
       )}
@@ -300,21 +191,6 @@ export const DocumentSection = ({ formData, setFormData, readOnly = false }: Doc
           </tbody>
         </table>
       </div>
-
-      <XRayInputForm 
-        isOpen={isXRayFormOpen}
-        onClose={() => {
-            setIsXRayFormOpen(false);
-            setEditingXRayDoc(null);
-            setViewingXRayDoc(null);
-        }}
-        onSave={handleXRaySave}
-        defaultPatientName={formData.patientName}
-        defaultAge={formData.age}
-        defaultGender={formData.gender}
-        initialData={editingXRayDoc?.data || viewingXRayDoc?.data}
-        readOnly={!!viewingXRayDoc}
-      />
     </section>
   );
 };

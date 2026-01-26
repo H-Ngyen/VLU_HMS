@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight, Save, Plus, FileText, User, Activity, LogOut, ClipboardList, Thermometer, Pill, ChevronDown, ChevronRight, Stethoscope, Download as DownloadIcon } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Plus, FileText, User, Activity, LogOut, ClipboardList, Thermometer, Pill, ChevronDown, ChevronRight, Download as DownloadIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -13,6 +13,7 @@ import { MedicalHistorySection } from "./sections/MedicalHistorySection";
 import { ExaminationSection } from "./sections/ExaminationSection";
 import { TreatmentSection } from "./sections/TreatmentSection";
 import { DocumentSection } from "./sections/DocumentSection";
+import { PhieuYSection } from "./sections/PhieuYSection";
 
 interface RecordFormProps {
   record?: Record;
@@ -30,6 +31,7 @@ const createInitialRecord = (patient: Patient, type: "internal" | "surgery" = "i
     id: `REC${Date.now()}`,
     patientId: patient.id,
     patientName: patient.fullName,
+    cccd: patient.cccd,
     age: patient.age,
     dob: patient.dob,
     gender: patient.gender,
@@ -184,7 +186,7 @@ const getFlattenedSections = () => {
 export const RecordForm = ({ record, patient, mode, initialType = "internal", onSubmit, onCancel, readOnly = false }: RecordFormProps) => {
   const [formData, setFormData] = useState<Record | null>(null);
   const [editablePatient, setEditablePatient] = useState<Patient>(patient);
-  const [activeTab, setActiveTab] = useState("details"); // 'details' or 'documents'
+  const [activeTab, setActiveTab] = useState("details"); // 'details' | 'forms' | 'documents'
   
   // Initialize with the first section
   const [activeSection, setActiveSection] = useState("administrative");
@@ -230,7 +232,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
         setIsMedicalGroupOpen(true);
       }
     } else {
-      setActiveTab("documents");
+      setActiveTab("forms"); // Navigate to PHIẾU Y first
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -283,8 +285,9 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col overflow-hidden">
-        <TabsList className="grid w-full grid-cols-2 lg:w-[600px] flex-none">
+        <TabsList className="grid w-full grid-cols-3 lg:w-[600px] flex-none">
           <TabsTrigger value="details">Thông Tin Chi Tiết</TabsTrigger>
+          <TabsTrigger value="forms">Phiếu Y</TabsTrigger>
           <TabsTrigger value="documents">Tài Liệu Đính Kèm</TabsTrigger>
         </TabsList>
 
@@ -392,7 +395,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                     <Button type="button" onClick={handleNextSection} className="bg-black hover:bg-gray-800 text-white">
                       {currentSectionIndex < flattenedSections.length - 1 
                         ? `Tiếp tục: ${flattenedSections[currentSectionIndex + 1].label.replace(/^[IV0-9]+\.\s/, "")}` 
-                        : "Tiếp tục: Tài Liệu Đính Kèm"}
+                        : "Tiếp tục: Phiếu Y"}
                       <ArrowRight size={16} className="ml-2" />
                     </Button>
                   </div>
@@ -401,13 +404,29 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
           </div>
         </TabsContent>
 
+        <TabsContent value="forms" className="mt-6 animate-in fade-in slide-in-from-bottom-2 flex-1 overflow-hidden">
+             <div className="h-full overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pb-10">
+                <PhieuYSection formData={formData} setFormData={setFormData} readOnly={readOnly} />
+                
+                <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
+                    <Button type="button" variant="outline" onClick={() => { setActiveTab("details"); setActiveSection("treatment"); }}>
+                      <ArrowLeft size={16} className="mr-2" /> Quay lại: Chi Tiết Bệnh Án
+                    </Button>
+                    <Button type="button" onClick={() => setActiveTab("documents")} className="bg-black hover:bg-gray-800 text-white">
+                      Tiếp tục: Tài Liệu Đính Kèm
+                      <ArrowRight size={16} className="ml-2" />
+                    </Button>
+                </div>
+            </div>
+        </TabsContent>
+
         <TabsContent value="documents" className="mt-6 animate-in fade-in slide-in-from-bottom-2 flex-1 overflow-hidden">
              <div className="h-full overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pb-10">
                 <DocumentSection formData={formData} setFormData={setFormData} readOnly={readOnly} />
                 
                 <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
-                    <Button type="button" variant="outline" onClick={() => { setActiveTab("details"); setActiveSection("treatment"); }}>
-                      <ArrowLeft size={16} className="mr-2" /> Quay lại: Chi Tiết Bệnh Án
+                    <Button type="button" variant="outline" onClick={() => setActiveTab("forms")}>
+                      <ArrowLeft size={16} className="mr-2" /> Quay lại: Phiếu Y
                     </Button>
                     {!readOnly && (
                         <Button type="button" onClick={() => handleSubmit()} className="bg-vlu-red hover:bg-red-800 text-white min-w-[150px]">
