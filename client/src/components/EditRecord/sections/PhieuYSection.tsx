@@ -12,7 +12,7 @@ interface PhieuYSectionProps {
 }
 
 export const PhieuYSection = ({ formData, setFormData, readOnly = false }: PhieuYSectionProps) => {
-  const [activeFormType, setActiveFormType] = useState<string>("xray");
+  const [activeFormType, setActiveFormType] = useState<string | null>(null);
   
   // XRay State
   const [isXRayFormOpen, setIsXRayFormOpen] = useState(false);
@@ -147,7 +147,13 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         <Button
           type="button"
           variant="ghost"
-          onClick={() => setActiveFormType("xray")}
+          onClick={() => {
+             setActiveFormType("xray");
+             if (!readOnly) {
+                 setEditingXRayDoc(null);
+                 setIsXRayFormOpen(true);
+             }
+          }}
           className={`w-full justify-start text-left h-auto py-3 px-4 rounded-lg font-medium transition-all whitespace-normal text-xs leading-snug ${
             activeFormType === "xray" 
               ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" 
@@ -159,7 +165,13 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
          <Button
           type="button"
           variant="ghost"
-          onClick={() => setActiveFormType("blood_test")}
+          onClick={() => {
+             setActiveFormType("blood_test");
+             if (!readOnly) {
+                 setEditingHematologyDoc(null);
+                 setIsHematologyFormOpen(true);
+             }
+          }}
           className={`w-full justify-start text-left h-auto py-3 px-4 rounded-lg font-medium transition-all whitespace-normal text-xs leading-snug ${
             activeFormType === "blood_test" 
               ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" 
@@ -171,9 +183,18 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        {activeFormType === "xray" && (
-          <div>
+      <div className="flex-1 bg-white rounded-lg shadow-sm border border-gray-200 p-6 min-h-[400px]">
+        {!activeFormType ? (
+          <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-4">
+            <div className="bg-gray-50 p-6 rounded-full">
+                <FileText size={48} className="opacity-20" />
+            </div>
+            <p className="italic">Vui lòng chọn loại phiếu từ danh sách bên trái.</p>
+          </div>
+        ) : (
+          <>
+            {activeFormType === "xray" && (
+              <div>
              <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-gray-800 flex items-center">
                     <FileText className="mr-2 text-vlu-red" />
@@ -292,6 +313,8 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
                 </table>
              </div>
           </div>
+        )}
+          </>
         )}
       </div>
 

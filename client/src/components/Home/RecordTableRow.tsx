@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Eye, Settings, Trash2, FilePenLine } from "lucide-react";
+import { Eye, Trash2, FilePenLine } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -47,8 +47,8 @@ export const RecordTableRow = ({ record, user, onEdit, onDelete }: RecordTableRo
           </Button>
           {user?.role !== "student" && (
             <>
-              <Button variant="ghost" size="icon" onClick={() => navigate(`/record/edit/${record.id}`)} className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 h-8 w-8" title="Chỉnh sửa HSBA & Tài liệu">
-                <Settings size={16} />
+              <Button variant="ghost" size="icon" onClick={() => navigate(`/record/edit/${record.id}`)} className="text-green-600 hover:text-green-800 hover:bg-green-50 h-8 w-8" title="Chỉnh sửa HSBA & Tài liệu">
+                <FilePenLine size={16} />
               </Button>
               <Button variant="ghost" size="icon" onClick={() => onDelete(record)} className="text-red-600 hover:text-red-800 hover:bg-red-50 h-8 w-8" title="Xóa hồ sơ">
                 <Trash2 size={16} />

@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 interface DropdownMenuHeaderProps {
   user: {
     name: string;
+    email?: string;
     avatar: string;
   };
 }
@@ -10,7 +11,10 @@ interface DropdownMenuHeaderProps {
 export function DropdownMenuHeader({ user }: DropdownMenuHeaderProps) {
   return (
     <div className="flex items-center gap-3">
-      <span className="text-sm font-medium hidden sm:inline-block">{user.name}</span>
+      <div className="hidden sm:flex flex-col items-end">
+        <span className="text-sm font-medium text-foreground">{user.name}</span>
+        {user.email && <span className="text-[10px] text-muted-foreground">{user.email}</span>}
+      </div>
       <Avatar className="h-8 w-8">
         <AvatarImage src={user.avatar} alt={user.name} />
         <AvatarFallback className="bg-red-700 text-white font-bold text-xs">

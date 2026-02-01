@@ -34,8 +34,8 @@ export const EditRecordView = () => {
   const handleUpdate = (updatedRecord: Record) => {
     // In a real app, this would be an API PUT request
     console.log("Updated Record:", updatedRecord);
+    setRecord(updatedRecord);
     alert("Cập nhật hồ sơ thành công!");
-    navigate(`/record/${updatedRecord.id}`);
   };
 
   return (

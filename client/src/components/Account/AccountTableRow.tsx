@@ -9,17 +9,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Edit, Save, Trash2, X } from "lucide-react";
+import { Edit, Save, X } from "lucide-react";
 import { RoleBadge } from "./RoleBadge";
 import { StatusBadge } from "./StatusBadge";
 
 interface AccountTableRowProps {
   user: UserType;
   onUpdate: (username: string, updates: Partial<UserType>) => void;
-  onDelete: (username: string) => void;
 }
 
-export const AccountTableRow = ({ user, onUpdate, onDelete }: AccountTableRowProps) => {
+export const AccountTableRow = ({ user, onUpdate }: AccountTableRowProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [selectedRole, setSelectedRole] = useState(user.role);
   const [selectedStatus, setSelectedStatus] = useState(user.status || "active");
@@ -33,12 +32,6 @@ export const AccountTableRow = ({ user, onUpdate, onDelete }: AccountTableRowPro
     setSelectedRole(user.role);
     setSelectedStatus(user.status || "active");
     setIsEditing(false);
-  };
-
-  const handleDelete = () => {
-    if (window.confirm(`Xóa tài khoản ${user.username}?`)) {
-      onDelete(user.username);
-    }
   };
 
   return (
@@ -111,16 +104,6 @@ export const AccountTableRow = ({ user, onUpdate, onDelete }: AccountTableRowPro
               <Edit size={16} />
             </Button>
           )}
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleDelete}
-            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-            title="Xóa tài khoản"
-          >
-            <Trash2 size={16} />
-          </Button>
         </div>
       </TableCell>
     </TableRow>

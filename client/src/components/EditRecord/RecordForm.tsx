@@ -268,9 +268,15 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
           </p>
         </div>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>{readOnly ? "Quay lại" : "Hủy bỏ"}</Button>
+          <Button 
+            type="button" 
+            onClick={onCancel}
+            className="bg-vlu-red hover:bg-red-800 text-white"
+          >
+            {readOnly ? "Quay lại" : "Hủy bỏ"}
+          </Button>
           {readOnly && (
-            <Button type="button" className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+            <Button type="button" className="bg-vlu-red hover:bg-red-800 text-white flex items-center gap-2">
               <DownloadIcon size={18} />
               Xuất PDF
             </Button>
