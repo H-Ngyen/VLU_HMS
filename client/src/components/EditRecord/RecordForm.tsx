@@ -161,9 +161,9 @@ const FORM_SECTIONS: SectionItem[] = [
     label: "A. Bệnh Án",
     icon: ClipboardList,
     subSections: [
-      { id: "history", label: "1. Bệnh Sử & Tiền Sử", icon: ClipboardList },
-      { id: "examination", label: "2. Khám Bệnh", icon: Thermometer },
-      { id: "treatment", label: "3. Tiên Lượng & Điều Trị", icon: Pill },
+      { id: "history", label: "Lý do vào viện & Hỏi bệnh", icon: ClipboardList },
+      { id: "examination", label: "Khám Bệnh", icon: Thermometer },
+      { id: "treatment", label: "Chẩn Đoán & Điều Trị", icon: Pill },
     ],
   },
 ];
@@ -398,10 +398,10 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                       <ArrowLeft size={16} className="mr-2" /> Quay lại
                     </Button>
                     
-                    <Button type="button" onClick={handleNextSection} className="bg-black hover:bg-gray-800 text-white">
+                    <Button type="button" onClick={handleNextSection} className="bg-vlu-red hover:bg-red-800 text-white">
                       {currentSectionIndex < flattenedSections.length - 1 
-                        ? `Tiếp tục: ${flattenedSections[currentSectionIndex + 1].label.replace(/^[IV0-9]+\.\s/, "")}` 
-                        : "Tiếp tục: Phiếu cận lâm sàng"}
+                        ? flattenedSections[currentSectionIndex + 1].label.replace(/^[IV0-9]+\.\s/, "") 
+                        : "Phiếu cận lâm sàng"}
                       <ArrowRight size={16} className="ml-2" />
                     </Button>
                   </div>
@@ -416,10 +416,10 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                 
                 <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
                     <Button type="button" variant="outline" onClick={() => { setActiveTab("details"); setActiveSection("treatment"); }}>
-                      <ArrowLeft size={16} className="mr-2" /> Quay lại: Chi Tiết Bệnh Án
+                      <ArrowLeft size={16} className="mr-2" /> Quay lại
                     </Button>
-                    <Button type="button" onClick={() => setActiveTab("documents")} className="bg-black hover:bg-gray-800 text-white">
-                      Tiếp tục: Tài Liệu Đính Kèm
+                    <Button type="button" onClick={() => setActiveTab("documents")} className="bg-vlu-red hover:bg-red-800 text-white">
+                      Tài Liệu Đính Kèm
                       <ArrowRight size={16} className="ml-2" />
                     </Button>
                 </div>
@@ -432,7 +432,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                 
                 <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
                     <Button type="button" variant="outline" onClick={() => setActiveTab("forms")}>
-                      <ArrowLeft size={16} className="mr-2" /> Quay lại: Phiếu cận lâm sàng
+                      <ArrowLeft size={16} className="mr-2" /> Quay lại
                     </Button>
                     {!readOnly && (
                         <Button type="button" onClick={() => handleSubmit()} className="bg-vlu-red hover:bg-red-800 text-white min-w-[150px]">

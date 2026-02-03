@@ -51,7 +51,7 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
     <Card className="shadow-sm border-gray-200">
       <CardContent className="p-6 space-y-6">
         <div className="space-y-2">
-            <Label>1. Toàn thân</Label>
+            <Label>Toàn thân: <span className="font-normal italic">(ý thức, da niêm mạc, hệ thống hạch, tuyến giáp, vị trí, kích thước, số lượng, di động v.v...)</span></Label>
             <Textarea 
               value={content.overallExamination}
               onChange={(e) => handleChange("overallExamination", e.target.value)}
@@ -60,95 +60,152 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
             />
         </div>
         
-        <div className="space-y-4 border border-gray-100 rounded-lg p-4 bg-gray-50/30">
-            <Label className="font-semibold text-blue-600">Dấu hiệu sinh tồn</Label>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div className="space-y-1">
-                    <Label className="text-xs">Mạch (lần/phút)</Label>
-                    <Input 
-                        value={content.vitalSigns?.pulse || ""}
-                        onChange={(e) => handleNestedChange("vitalSigns", "pulse", e.target.value)}
-                        disabled={readOnly}
-                    />
-                </div>
-                <div className="space-y-1">
-                    <Label className="text-xs">Nhiệt độ (độ C)</Label>
-                    <Input 
-                        value={content.vitalSigns?.temperature || ""}
-                        onChange={(e) => handleNestedChange("vitalSigns", "temperature", e.target.value)}
-                        disabled={readOnly}
-                    />
-                </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Huyết áp (mmHg)</Label>
-                    <Input 
-                        value={content.vitalSigns?.bloodPressure || ""}
-                        onChange={(e) => handleNestedChange("vitalSigns", "bloodPressure", e.target.value)}
-                        disabled={readOnly}
-                    />
-                </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Nhịp thở (lần/phút)</Label>
-                    <Input 
-                        value={content.vitalSigns?.respiratoryRate || ""}
-                        onChange={(e) => handleNestedChange("vitalSigns", "respiratoryRate", e.target.value)}
-                        disabled={readOnly}
-                    />
-                </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs">Cân nặng (kg)</Label>
-                    <Input 
-                        value={content.vitalSigns?.weight || ""}
-                        onChange={(e) => handleNestedChange("vitalSigns", "weight", e.target.value)}
-                        disabled={readOnly}
-                    />
-                </div>
-            </div>
+        <div className="overflow-hidden border border-gray-200 rounded-md">
+            <table className="w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                        <th className="px-3 py-2 text-center border-r border-gray-200 font-medium text-gray-700">Mạch (lần/phút)</th>
+                        <th className="px-3 py-2 text-center border-r border-gray-200 font-medium text-gray-700">Nhiệt độ (độ C)</th>
+                        <th className="px-3 py-2 text-center border-r border-gray-200 font-medium text-gray-700">Huyết áp (mmHg)</th>
+                        <th className="px-3 py-2 text-center border-r border-gray-200 font-medium text-gray-700">Nhịp thở (lần/phút)</th>
+                        <th className="px-3 py-2 text-center font-medium text-gray-700">Cân nặng (kg)</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                    <tr>
+                        <td className="p-2 border-r border-gray-200">
+                            <Input 
+                                className="border-gray-200 text-center"
+                                value={content.vitalSigns?.pulse || ""}
+                                onChange={(e) => handleNestedChange("vitalSigns", "pulse", e.target.value)}
+                                disabled={readOnly}
+                            />
+                        </td>
+                        <td className="p-2 border-r border-gray-200">
+                            <Input 
+                                className="border-gray-200 text-center"
+                                value={content.vitalSigns?.temperature || ""}
+                                onChange={(e) => handleNestedChange("vitalSigns", "temperature", e.target.value)}
+                                disabled={readOnly}
+                            />
+                        </td>
+                        <td className="p-2 border-r border-gray-200">
+                            <Input 
+                                className="border-gray-200 text-center"
+                                value={content.vitalSigns?.bloodPressure || ""}
+                                onChange={(e) => handleNestedChange("vitalSigns", "bloodPressure", e.target.value)}
+                                disabled={readOnly}
+                            />
+                        </td>
+                        <td className="p-2 border-r border-gray-200">
+                            <Input 
+                                className="border-gray-200 text-center"
+                                value={content.vitalSigns?.respiratoryRate || ""}
+                                onChange={(e) => handleNestedChange("vitalSigns", "respiratoryRate", e.target.value)}
+                                disabled={readOnly}
+                            />
+                        </td>
+                        <td className="p-2">
+                            <Input 
+                                className="border-gray-200 text-center"
+                                value={content.vitalSigns?.weight || ""}
+                                onChange={(e) => handleNestedChange("vitalSigns", "weight", e.target.value)}
+                                disabled={readOnly}
+                            />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
         
-        <div className="space-y-2">
-            <Label>2. Các cơ quan</Label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-4">
+            <Label>Các cơ quan</Label>
+            <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1">
-                    <Label className="text-xs text-gray-500">Tuần hoàn</Label>
+                    <Label className="text-xs font-semibold">+ Tuần hoàn:</Label>
                       <Textarea 
-                        className="h-20"
+                        className="min-h-[80px]"
                         value={content.organs?.circulatory || ""}
                         onChange={(e) => handleNestedChange("organs", "circulatory", e.target.value)}
                         disabled={readOnly}
                       />
                 </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-gray-500">Hô hấp</Label>
+                <div className="space-y-1">
+                    <Label className="text-xs font-semibold">+ Hô hấp:</Label>
                       <Textarea 
-                        className="h-20"
+                        className="min-h-[80px]"
                         value={content.organs?.respiratory || ""}
                         onChange={(e) => handleNestedChange("organs", "respiratory", e.target.value)}
                         disabled={readOnly}
                       />
                 </div>
-                  <div className="space-y-1">
-                    <Label className="text-xs text-gray-500">Tiêu hóa</Label>
+                <div className="space-y-1">
+                    <Label className="text-xs font-semibold">+ Tiêu hoá:</Label>
                       <Textarea 
-                        className="h-20"
+                        className="min-h-[80px]"
                         value={content.organs?.digestive || ""}
                         onChange={(e) => handleNestedChange("organs", "digestive", e.target.value)}
                         disabled={readOnly}
                       />
                 </div>
                 <div className="space-y-1">
-                    <Label className="text-xs text-gray-500">Thần kinh</Label>
+                    <Label className="text-xs font-semibold">+ Thận - Tiết niệu - Sinh dục:</Label>
                       <Textarea 
-                        className="h-20"
+                        className="min-h-[80px]"
+                        value={content.organs?.kidneyUrology || ""}
+                        onChange={(e) => handleNestedChange("organs", "kidneyUrology", e.target.value)}
+                        disabled={readOnly}
+                      />
+                </div>
+                <div className="space-y-1">
+                    <Label className="text-xs font-semibold">+ Thần Kinh:</Label>
+                      <Textarea 
+                        className="min-h-[80px]"
                         value={content.organs?.neurological || ""}
                         onChange={(e) => handleNestedChange("organs", "neurological", e.target.value)}
                         disabled={readOnly}
                       />
                 </div>
-                  <div className="col-span-1 md:col-span-2 space-y-1">
-                    <Label className="text-xs text-gray-500">Các cơ quan khác</Label>
+                <div className="space-y-1">
+                    <Label className="text-xs font-semibold">+ Cơ - Xương - Khớp:</Label>
                       <Textarea 
-                        className="h-20"
+                        className="min-h-[80px]"
+                        value={content.organs?.musculoskeletal || ""}
+                        onChange={(e) => handleNestedChange("organs", "musculoskeletal", e.target.value)}
+                        disabled={readOnly}
+                      />
+                </div>
+                <div className="space-y-1">
+                    <Label className="text-xs font-semibold">+ Tai - Mũi - Họng:</Label>
+                      <Textarea 
+                        className="min-h-[80px]"
+                        value={content.organs?.ent || ""}
+                        onChange={(e) => handleNestedChange("organs", "ent", e.target.value)}
+                        disabled={readOnly}
+                      />
+                </div>
+                <div className="space-y-1">
+                    <Label className="text-xs font-semibold">+ Răng - Hàm - Mặt:</Label>
+                      <Textarea 
+                        className="min-h-[80px]"
+                        value={content.organs?.maxillofacial || ""}
+                        onChange={(e) => handleNestedChange("organs", "maxillofacial", e.target.value)}
+                        disabled={readOnly}
+                      />
+                </div>
+                <div className="space-y-1">
+                    <Label className="text-xs font-semibold">+ Mắt:</Label>
+                      <Textarea 
+                        className="min-h-[80px]"
+                        value={content.organs?.eye || ""}
+                        onChange={(e) => handleNestedChange("organs", "eye", e.target.value)}
+                        disabled={readOnly}
+                      />
+                </div>
+                <div className="space-y-1">
+                    <Label className="text-xs font-semibold">+ Nội tiết, dinh dưỡng và các bệnh lý khác:</Label>
+                      <Textarea 
+                        className="min-h-[80px]"
                         value={content.organs?.endocrineAndOthers || ""}
                         onChange={(e) => handleNestedChange("organs", "endocrineAndOthers", e.target.value)}
                         disabled={readOnly}
