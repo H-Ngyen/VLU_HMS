@@ -141,7 +141,7 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-full">
-      {/* Sidebar for Phieu Y Types */}
+      {/* Sidebar for Phiếu cận lâm sàng Types */}
       <div className="w-full lg:w-48 flex-shrink-0 space-y-1">
         <div className="font-bold text-gray-700 px-4 py-2 mb-2 uppercase text-sm">Danh sách phiếu</div>
         <Button

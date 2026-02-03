@@ -232,7 +232,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
         setIsMedicalGroupOpen(true);
       }
     } else {
-      setActiveTab("forms"); // Navigate to PHIẾU Y first
+      setActiveTab("forms"); // Navigate to Phiếu cận lâm sàng first
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -293,7 +293,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col overflow-hidden">
         <TabsList className="grid w-full grid-cols-3 lg:w-[600px] flex-none">
           <TabsTrigger value="details">Thông Tin Chi Tiết</TabsTrigger>
-          <TabsTrigger value="forms">Phiếu Y</TabsTrigger>
+          <TabsTrigger value="forms">Phiếu cận lâm sàng</TabsTrigger>
           <TabsTrigger value="documents">Tài Liệu Đính Kèm</TabsTrigger>
         </TabsList>
 
@@ -401,7 +401,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                     <Button type="button" onClick={handleNextSection} className="bg-black hover:bg-gray-800 text-white">
                       {currentSectionIndex < flattenedSections.length - 1 
                         ? `Tiếp tục: ${flattenedSections[currentSectionIndex + 1].label.replace(/^[IV0-9]+\.\s/, "")}` 
-                        : "Tiếp tục: Phiếu Y"}
+                        : "Tiếp tục: Phiếu cận lâm sàng"}
                       <ArrowRight size={16} className="ml-2" />
                     </Button>
                   </div>
@@ -432,7 +432,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                 
                 <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
                     <Button type="button" variant="outline" onClick={() => setActiveTab("forms")}>
-                      <ArrowLeft size={16} className="mr-2" /> Quay lại: Phiếu Y
+                      <ArrowLeft size={16} className="mr-2" /> Quay lại: Phiếu cận lâm sàng
                     </Button>
                     {!readOnly && (
                         <Button type="button" onClick={() => handleSubmit()} className="bg-vlu-red hover:bg-red-800 text-white min-w-[150px]">
