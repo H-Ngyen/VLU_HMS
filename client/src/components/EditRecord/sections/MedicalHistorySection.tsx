@@ -80,7 +80,7 @@ export const MedicalHistorySection = ({ formData, setFormData, readOnly = false 
             
             {/* 1. Quá trình bệnh lý */}
             <div className="space-y-2 pl-4">
-                <Label className="font-semibold">1. Quá trình bệnh lý: <span className="font-normal italic">(khởi phát, diễn biến, chẩn đoán, điều trị của tuyến dưới v.v...)</span></Label>
+                <Label className="font-semibold">1. Quá trình bệnh lý: <span className="font-normal italic text-gray-600">(khởi phát, diễn biến, chẩn đoán, điều trị của tuyến dưới v.v...)</span></Label>
                 <Textarea 
                     value={content.pathologicalProcess}
                     onChange={(e) => handleChange("pathologicalProcess", e.target.value)}
@@ -95,7 +95,7 @@ export const MedicalHistorySection = ({ formData, setFormData, readOnly = false 
                 
                 {/* Bản thân */}
                 <div className="pl-4 space-y-2">
-                    <Label className="font-semibold text-sm">+ Bản thân: <span className="font-normal italic">(phát triển thể lực từ nhỏ đến lớn, những bệnh đã mắc, phương pháp ĐTr, tiêm phòng, ăn uống, sinh hoạt vv...)</span></Label>
+                    <Label className="font-semibold text-sm">+ Bản thân: <span className="font-normal italic text-gray-600">(phát triển thể lực từ nhỏ đến lớn, những bệnh đã mắc, phương pháp ĐTr, tiêm phòng, ăn uống, sinh hoạt vv...)</span></Label>
                     <Textarea 
                         value={content.personalHistory}
                         onChange={(e) => handleChange("personalHistory", e.target.value)}
@@ -254,7 +254,7 @@ export const MedicalHistorySection = ({ formData, setFormData, readOnly = false 
 
                 {/* Gia đình */}
                 <div className="pl-4 space-y-2">
-                    <Label className="font-semibold text-sm">+ Gia đình: <span className="font-normal italic">(Những người trong gia đình: bệnh đã mắc, đời sống, tinh thần, vật chất v.v...)</span></Label>
+                    <Label className="font-semibold text-sm">+ Gia đình: <span className="font-normal italic text-gray-600">(Những người trong gia đình: bệnh đã mắc, đời sống, tinh thần, vật chất v.v...)</span></Label>
                     <Textarea 
                         value={content.familyHistory}
                         onChange={(e) => handleChange("familyHistory", e.target.value)}

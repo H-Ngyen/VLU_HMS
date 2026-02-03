@@ -26,7 +26,7 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
 
         {/* 2. Sinh ngày & Tuổi */}
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
-             <label className="text-sm text-gray-500 font-medium">2. Sinh ngày</label>
+             <label className="text-sm text-gray-700 font-medium">2. Sinh ngày</label>
              <div className="flex items-center gap-4">
                  <span>{patient.dob}</span>
                  <span className="text-gray-400">|</span>
@@ -39,7 +39,7 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
 
         {/* 4. Nghề nghiệp & Mã nghề */}
          <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
-            <label className="text-sm text-gray-500 font-medium">4. Nghề nghiệp</label>
+            <label className="text-sm text-gray-700 font-medium">4. Nghề nghiệp</label>
             <div className="flex items-center gap-2">
                 <Input 
                     value={patient.job} 
@@ -60,21 +60,21 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
 
         {/* 5. Dân tộc */}
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
-            <label className="text-sm text-gray-500 font-medium">5. Dân tộc</label>
+            <label className="text-sm text-gray-700 font-medium">5. Dân tộc</label>
             <Input 
                 value={patient.ethnicity} 
                 readOnly
-                className="h-8 text-sm w-full md:w-64 bg-gray-100 text-gray-700 pointer-events-none"
+                className="h-8 text-sm w-full md:w-64 bg-gray-50 text-gray-900 pointer-events-none"
             />
         </div>
 
         {/* 6. Ngoại kiều */}
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
-            <label className="text-sm text-gray-500 font-medium">6. Ngoại kiều</label>
+            <label className="text-sm text-gray-700 font-medium">6. Ngoại kiều</label>
              <Input 
                 value={patient.nationality} 
                 readOnly
-                className="h-8 text-sm w-full md:w-64 bg-gray-100 text-gray-700 pointer-events-none"
+                className="h-8 text-sm w-full md:w-64 bg-gray-50 text-gray-900 pointer-events-none"
                 placeholder="Việt Nam"
             />
         </div>
@@ -84,17 +84,17 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
 
         {/* 8. Nơi làm việc */}
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
-            <label className="text-sm text-gray-500 font-medium">8. Nơi làm việc</label>
+            <label className="text-sm text-gray-700 font-medium">8. Nơi làm việc</label>
             <Input 
                 value={patient.workplace} 
                 readOnly
-                className="h-8 text-sm bg-gray-100 text-gray-700 pointer-events-none"
+                className="h-8 text-sm bg-gray-50 text-gray-900 pointer-events-none"
             />
         </div>
 
         {/* 9. Đối tượng */}
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
-            <label className="text-sm text-gray-500 font-medium">9. Đối tượng</label>
+            <label className="text-sm text-gray-700 font-medium">9. Đối tượng</label>
             <Select value={patient.subjectType} onValueChange={(val) => handleChange("subjectType", val)} disabled={readOnly}>
                 <SelectTrigger className="h-8 w-full md:w-64">
                     <SelectValue placeholder="Chọn đối tượng" />
@@ -110,7 +110,7 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
 
         {/* 10. BHYT */}
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
-            <label className="text-sm text-gray-500 font-medium">10. BHYT giá trị đến ngày</label>
+            <label className="text-sm text-gray-700 font-medium">10. BHYT giá trị đến ngày</label>
             <div className="flex flex-col md:flex-row gap-2 items-start md:items-center">
                  <Input 
                     type="date"
@@ -120,11 +120,11 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
                     disabled={readOnly}
                 />
                 <div className="flex items-center gap-2 ml-2">
-                    <span className="text-sm text-gray-500">Số thẻ BHYT:</span>
+                    <span className="text-sm text-gray-700">Số thẻ BHYT:</span>
                     <Input 
                         value={patient.insuranceNumber || ""} 
                         readOnly
-                        className="h-8 w-48 text-sm bg-gray-100 text-gray-700 pointer-events-none"
+                        className="h-8 w-48 text-sm bg-gray-50 text-gray-900 pointer-events-none"
                         placeholder="Số thẻ..."
                     />
                 </div>
@@ -133,7 +133,7 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
 
         {/* 11. Người nhà */}
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-start">
-            <label className="text-sm text-gray-500 font-medium mt-2">11. Họ tên, địa chỉ người nhà</label>
+            <label className="text-sm text-gray-700 font-medium mt-2">11. Họ tên, địa chỉ người nhà</label>
             <div className="w-full space-y-2">
                 <Textarea 
                     value={patient.relativeInfo} 
@@ -143,7 +143,7 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
                     disabled={readOnly}
                 />
                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500 w-24 flex-shrink-0">Điện thoại số:</span>
+                    <span className="text-sm text-gray-700 w-24 flex-shrink-0">Điện thoại số:</span>
                     <Input 
                         value={patient.relativePhone || ""} 
                         onChange={(e) => handleChange("relativePhone", e.target.value)}

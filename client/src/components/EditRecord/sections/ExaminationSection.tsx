@@ -122,7 +122,7 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
             <Label>Các cơ quan</Label>
             <div className="grid grid-cols-1 gap-4">
                 <div className="space-y-1">
-                    <Label className="text-xs font-semibold">+ Tuần hoàn:</Label>
+                    <Label className="text-xs font-semibold text-gray-700">+ Tuần hoàn:</Label>
                       <Textarea 
                         className="min-h-[80px]"
                         value={content.organs?.circulatory || ""}
@@ -131,7 +131,7 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
                       />
                 </div>
                 <div className="space-y-1">
-                    <Label className="text-xs font-semibold">+ Hô hấp:</Label>
+                    <Label className="text-xs font-semibold text-gray-700">+ Hô hấp:</Label>
                       <Textarea 
                         className="min-h-[80px]"
                         value={content.organs?.respiratory || ""}
@@ -140,7 +140,7 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
                       />
                 </div>
                 <div className="space-y-1">
-                    <Label className="text-xs font-semibold">+ Tiêu hoá:</Label>
+                    <Label className="text-xs font-semibold text-gray-700">+ Tiêu hoá:</Label>
                       <Textarea 
                         className="min-h-[80px]"
                         value={content.organs?.digestive || ""}
@@ -149,7 +149,7 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
                       />
                 </div>
                 <div className="space-y-1">
-                    <Label className="text-xs font-semibold">+ Thận - Tiết niệu - Sinh dục:</Label>
+                    <Label className="text-xs font-semibold text-gray-700">+ Thận - Tiết niệu - Sinh dục:</Label>
                       <Textarea 
                         className="min-h-[80px]"
                         value={content.organs?.kidneyUrology || ""}
@@ -158,7 +158,7 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
                       />
                 </div>
                 <div className="space-y-1">
-                    <Label className="text-xs font-semibold">+ Thần Kinh:</Label>
+                    <Label className="text-xs font-semibold text-gray-700">+ Thần Kinh:</Label>
                       <Textarea 
                         className="min-h-[80px]"
                         value={content.organs?.neurological || ""}
@@ -167,7 +167,7 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
                       />
                 </div>
                 <div className="space-y-1">
-                    <Label className="text-xs font-semibold">+ Cơ - Xương - Khớp:</Label>
+                    <Label className="text-xs font-semibold text-gray-700">+ Cơ - Xương - Khớp:</Label>
                       <Textarea 
                         className="min-h-[80px]"
                         value={content.organs?.musculoskeletal || ""}
@@ -176,7 +176,7 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
                       />
                 </div>
                 <div className="space-y-1">
-                    <Label className="text-xs font-semibold">+ Tai - Mũi - Họng:</Label>
+                    <Label className="text-xs font-semibold text-gray-700">+ Tai - Mũi - Họng:</Label>
                       <Textarea 
                         className="min-h-[80px]"
                         value={content.organs?.ent || ""}
@@ -185,7 +185,7 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
                       />
                 </div>
                 <div className="space-y-1">
-                    <Label className="text-xs font-semibold">+ Răng - Hàm - Mặt:</Label>
+                    <Label className="text-xs font-semibold text-gray-700">+ Răng - Hàm - Mặt:</Label>
                       <Textarea 
                         className="min-h-[80px]"
                         value={content.organs?.maxillofacial || ""}
@@ -194,7 +194,7 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
                       />
                 </div>
                 <div className="space-y-1">
-                    <Label className="text-xs font-semibold">+ Mắt:</Label>
+                    <Label className="text-xs font-semibold text-gray-700">+ Mắt:</Label>
                       <Textarea 
                         className="min-h-[80px]"
                         value={content.organs?.eye || ""}
@@ -203,7 +203,7 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
                       />
                 </div>
                 <div className="space-y-1">
-                    <Label className="text-xs font-semibold">+ Nội tiết, dinh dưỡng và các bệnh lý khác:</Label>
+                    <Label className="text-xs font-semibold text-gray-700">+ Nội tiết, dinh dưỡng và các bệnh lý khác:</Label>
                       <Textarea 
                         className="min-h-[80px]"
                         value={content.organs?.endocrineAndOthers || ""}

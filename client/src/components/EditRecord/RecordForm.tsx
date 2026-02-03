@@ -319,7 +319,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                           type="button"
                           variant="ghost"
                           className={`w-full justify-between text-left h-auto py-3 px-4 rounded-lg font-bold transition-all ${
-                            isChildActive ? "text-vlu-red bg-red-50" : "text-gray-700 hover:bg-gray-100"
+                            isChildActive ? "text-vlu-red bg-red-50" : "text-gray-800 hover:bg-gray-100"
                           }`}
                         >
                           <div className="flex items-center">
@@ -341,7 +341,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                               className={`w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium transition-all text-sm ${
                                 isSubActive 
                                   ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" 
-                                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                                  : "text-gray-800 hover:bg-gray-100 hover:text-gray-900"
                               }`}
                             >
                               <span className="mr-2 opacity-70">•</span>
@@ -361,11 +361,11 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                     type="button"
                     variant="ghost"
                     onClick={() => { setActiveSection(section.id); }}
-                    className={`w-full justify-start text-left h-auto py-3 px-4 rounded-lg font-medium transition-all ${
-                      isActive ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" : "bg-white text-gray-600 hover:bg-gray-100 border border-transparent hover:border-gray-200"
+                    className={`w-full justify-start text-left h-auto py-3 px-4 rounded-lg font-bold transition-all ${
+                      isActive ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" : "bg-white text-gray-800 hover:bg-gray-100 border border-transparent hover:border-gray-200"
                     }`}
                   >
-                    <Icon size={18} className={`mr-3 ${isActive ? "text-white" : "text-gray-500"}`} />
+                    <Icon size={18} className={`mr-3 ${isActive ? "text-white" : "text-gray-700"}`} />
                     {section.label}
                   </Button>
                 );
@@ -410,19 +410,19 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
           </div>
         </TabsContent>
 
-        <TabsContent value="forms" className="mt-6 animate-in fade-in slide-in-from-bottom-2 flex-1 overflow-hidden">
-             <div className="h-full overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pb-10">
+        <TabsContent value="forms" className="mt-6 animate-in fade-in slide-in-from-bottom-2 flex-1 flex flex-col overflow-hidden">
+             <div className="flex-1 min-h-0 pr-4 pb-2">
                 <PhieuYSection formData={formData} setFormData={setFormData} readOnly={readOnly} />
+             </div>
                 
-                <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
-                    <Button type="button" variant="outline" onClick={() => { setActiveTab("details"); setActiveSection("treatment"); }}>
-                      <ArrowLeft size={16} className="mr-2" /> Quay lại
-                    </Button>
-                    <Button type="button" onClick={() => setActiveTab("documents")} className="bg-vlu-red hover:bg-red-800 text-white">
-                      Tài Liệu Đính Kèm
-                      <ArrowRight size={16} className="ml-2" />
-                    </Button>
-                </div>
+             <div className="flex-none mt-2 flex justify-between items-center pt-4 border-t border-gray-200 pb-6 pr-4">
+                <Button type="button" variant="outline" onClick={() => { setActiveTab("details"); setActiveSection("treatment"); }}>
+                    <ArrowLeft size={16} className="mr-2" /> Quay lại: Chi Tiết Bệnh Án
+                </Button>
+                <Button type="button" onClick={() => setActiveTab("documents")} className="bg-vlu-red hover:bg-red-800 text-white">
+                    Tài Liệu Đính Kèm
+                    <ArrowRight size={16} className="ml-2" />
+                </Button>
             </div>
         </TabsContent>
 
