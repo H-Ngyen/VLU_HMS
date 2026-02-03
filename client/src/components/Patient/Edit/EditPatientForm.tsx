@@ -83,7 +83,7 @@ export const EditPatientForm = () => {
               </div>
 
               <div className="flex justify-end pt-6 border-t border-gray-100">
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700 font-bold px-8 py-6 text-base">
+                <Button type="submit" className="bg-red-700 hover:bg-red-800 font-bold px-8 py-6 text-base text-white">
                   <Save size={20} className="mr-2" /> Lưu Thay Đổi
                 </Button>
               </div>
