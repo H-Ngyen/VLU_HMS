@@ -1,5 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Plus, FileText, Eye, Edit2, Trash2 } from "lucide-react";
 import type { Record, Document } from "@/types";
 import { XRayInputForm } from "./XRayInputForm";
@@ -142,44 +148,90 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-full">
       {/* Sidebar for Phiếu cận lâm sàng Types */}
-      <div className="w-full lg:w-48 flex-shrink-0 space-y-1">
-        <div className="font-bold text-gray-700 px-4 py-2 mb-2 uppercase text-sm">Danh sách phiếu</div>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => {
-             setActiveFormType("xray");
-             if (!readOnly) {
-                 setEditingXRayDoc(null);
-                 setIsXRayFormOpen(true);
-             }
-          }}
-          className={`w-full justify-start text-left h-auto py-3 px-4 rounded-lg font-medium transition-all whitespace-normal text-xs leading-snug ${
-            activeFormType === "xray" 
-              ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" 
-              : "bg-white text-gray-600 hover:bg-gray-100"
-          }`}
-        >
-          1. Phiếu chiếu/ chụp X-quang (08/BV2)
-        </Button>
-         <Button
-          type="button"
-          variant="ghost"
-          onClick={() => {
-             setActiveFormType("blood_test");
-             if (!readOnly) {
-                 setEditingHematologyDoc(null);
-                 setIsHematologyFormOpen(true);
-             }
-          }}
-          className={`w-full justify-start text-left h-auto py-3 px-4 rounded-lg font-medium transition-all whitespace-normal text-xs leading-snug ${
-            activeFormType === "blood_test" 
-              ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" 
-              : "bg-white text-gray-600 hover:bg-gray-100"
-          }`}
-        >
-          2. Phiếu xét nghiệm Huyết học (17/BV2)
-        </Button>
+      <div className="w-full lg:w-64 flex-shrink-0 space-y-1">
+        <div className="font-bold text-gray-700 px-2 py-2 mb-2 uppercase text-sm">Danh sách phiếu</div>
+        <Accordion type="single" collapsible className="w-full">
+            <AccordionItem value="xet-nghiem">
+                <AccordionTrigger className="px-2 text-sm font-semibold hover:no-underline">1. Xét nghiệm</AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                         setActiveFormType("blood_test");
+                         if (!readOnly) {
+                             setEditingHematologyDoc(null);
+                             setIsHematologyFormOpen(true);
+                         }
+                      }}
+                      className={`w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium transition-all whitespace-normal text-xs leading-snug ml-2 ${
+                        activeFormType === "blood_test" 
+                          ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" 
+                          : "bg-white text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      Huyết học (17/BV2)
+                    </Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Huyết – Tủy đồ</Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Rối loạn đông cầm máu</Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Hóa sinh máu</Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Nước tiểu, phân, dịch chọc dò</Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Vi sinh</Button>
+                </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="cdha">
+                <AccordionTrigger className="px-2 text-sm font-semibold hover:no-underline">2. Chẩn đoán hình ảnh</AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                         setActiveFormType("xray");
+                         if (!readOnly) {
+                             setEditingXRayDoc(null);
+                             setIsXRayFormOpen(true);
+                         }
+                      }}
+                      className={`w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium transition-all whitespace-normal text-xs leading-snug ml-2 ${
+                        activeFormType === "xray" 
+                          ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" 
+                          : "bg-white text-gray-600 hover:bg-gray-100"
+                      }`}
+                    >
+                      X-quang (08/BV2)
+                    </Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Siêu âm</Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">CT-scanner (Chụp cắt lớp vi tính)</Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">MRI (Chụp cộng hưởng từ)</Button>
+                </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="tdcn">
+                <AccordionTrigger className="px-2 text-sm font-semibold hover:no-underline">3. Thăm dò chức năng</AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-1">
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Điện tim (ECG)</Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Điện não</Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Phiếu đo chức năng hô hấp</Button>
+                </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="ns-tdct">
+                <AccordionTrigger className="px-2 text-sm font-semibold hover:no-underline">4. Nội soi - thăm dò can thiệp</AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-1">
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Nội soi dạ dày – đại tràng</Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Nội soi tai mũi họng</Button>
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Nội soi phế quản</Button>
+                </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="gpb">
+                <AccordionTrigger className="px-2 text-sm font-semibold hover:no-underline">5. Giải phẫu bệnh - tế bào học</AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-1">
+                    <Button variant="ghost" disabled className="w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium text-xs ml-2 opacity-50 cursor-not-allowed">Giải phẫu bệnh sinh thiết</Button>
+                </AccordionContent>
+            </AccordionItem>
+        </Accordion>
       </div>
 
       {/* Main Content */}
