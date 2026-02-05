@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Plus, Trash2 } from "lucide-react";
 import type { Record, Transfer } from "@/types";
 
@@ -26,6 +28,14 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
         },
       };
     });
+  };
+
+  const handleRootChange = (field: keyof Record, value: any) => {
+      if (readOnly) return;
+      setFormData((prev) => {
+          if (!prev) return null;
+          return { ...prev, [field]: value };
+      });
   };
 
   const handleTransferChange = (index: number, field: keyof Transfer, value: any) => {
@@ -76,7 +86,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
       <CardContent className="p-6 space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label>10. Vào viện lúc</Label>
+            <Label>12. Vào viện lúc</Label>
             <Input
               type="datetime-local"
               value={dateTimeValue}
@@ -85,25 +95,41 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
             />
           </div>
           <div className="space-y-2">
-            <Label>11. Trực tiếp vào</Label>
-             <Input
-              value={managementData.admissionType || ""}
-              onChange={(e) => handleChange("admissionType", e.target.value)}
-              placeholder="Ví dụ: Cấp cứu, KKB..."
+            <Label>13. Trực tiếp vào</Label>
+            <Select 
+              value={managementData.admissionType || ""} 
+              onValueChange={(val) => handleChange("admissionType", val)}
               disabled={readOnly}
-            />
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Chọn nơi vào..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Cấp cứu">Cấp cứu</SelectItem>
+                <SelectItem value="KKB">KKB</SelectItem>
+                <SelectItem value="Khoa điều trị">Khoa điều trị</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
-            <Label>12. Nơi giới thiệu</Label>
-             <Input
-              value={managementData.referralSource || ""}
-              onChange={(e) => handleChange("referralSource", e.target.value)}
-              placeholder="Cơ quan y tế, Tự đến..."
+            <Label>14. Nơi giới thiệu</Label>
+            <Select 
+              value={managementData.referralSource || ""} 
+              onValueChange={(val) => handleChange("referralSource", val)}
               disabled={readOnly}
-            />
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Chọn nơi giới thiệu..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Cơ quan y tế">Cơ quan y tế</SelectItem>
+                <SelectItem value="Tự đến">Tự đến</SelectItem>
+                <SelectItem value="Khác">Khác</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
-            <Label>13. Vào viện lần thứ</Label>
+            <Label>- Vào viện lần thứ</Label>
             <Input
               type="number"
               value={managementData.admissionCount || 1}
@@ -114,8 +140,55 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
         </div>
 
         <div className="space-y-4">
+             <div className="space-y-2">
+                <Label className="text-base font-semibold">15. Vào khoa</Label>
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <div className="md:col-span-4 space-y-1">
+                      <Label className="text-xs">Khoa</Label>
+                      <Input
+                        value={managementData.transfers[0]?.department || ""}
+                        onChange={(e) => handleTransferChange(0, "department", e.target.value)}
+                        placeholder="Tên khoa"
+                        className="h-9 bg-white"
+                        disabled={readOnly}
+                      />
+                    </div>
+                    <div className="md:col-span-3 space-y-1">
+                       <Label className="text-xs">Ngày đến</Label>
+                       <Input
+                        type="date"
+                        value={managementData.transfers[0]?.date || ""}
+                        onChange={(e) => handleTransferChange(0, "date", e.target.value)}
+                        className="h-9 bg-white"
+                        disabled={readOnly}
+                      />
+                    </div>
+                     <div className="md:col-span-2 space-y-1">
+                       <Label className="text-xs">Giờ</Label>
+                       <Input
+                        type="time"
+                        value={managementData.transfers[0]?.time || ""}
+                        onChange={(e) => handleTransferChange(0, "time", e.target.value)}
+                        className="h-9 bg-white"
+                        disabled={readOnly}
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-1">
+                       <Label className="text-xs">Số ngày</Label>
+                       <Input
+                        type="number"
+                        value={managementData.transfers[0]?.days || 0}
+                        onChange={(e) => handleTransferChange(0, "days", e.target.value)}
+                        className="h-9 bg-white"
+                        disabled={readOnly}
+                      />
+                    </div>
+                     <div className="md:col-span-1"></div>
+                  </div>
+             </div>
+
           <div className="flex items-center justify-between">
-            <Label className="text-base font-semibold">14. Chuyển khoa</Label>
+            <Label className="text-base font-semibold">16. Chuyển khoa</Label>
             {!readOnly && (
                 <Button type="button" variant="outline" size="sm" onClick={addTransfer} className="h-8">
                 <Plus size={14} className="mr-1" /> Thêm khoa
@@ -124,91 +197,128 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
           </div>
           
           <div className="space-y-3">
-            {managementData.transfers.map((transfer, index) => (
-              <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded-lg border border-gray-100">
-                <div className="md:col-span-4 space-y-1">
-                  <Label className="text-xs">Khoa</Label>
-                  <Input
-                    value={transfer.department}
-                    onChange={(e) => handleTransferChange(index, "department", e.target.value)}
-                    placeholder="Tên khoa"
-                    className="h-9 bg-white"
-                    disabled={readOnly}
-                  />
-                </div>
-                <div className="md:col-span-3 space-y-1">
-                   <Label className="text-xs">Ngày đến</Label>
-                   <Input
-                    type="date"
-                    value={transfer.date}
-                    onChange={(e) => handleTransferChange(index, "date", e.target.value)}
-                    className="h-9 bg-white"
-                    disabled={readOnly}
-                  />
-                </div>
-                 <div className="md:col-span-2 space-y-1">
-                   <Label className="text-xs">Giờ</Label>
-                   <Input
-                    type="time"
-                    value={transfer.time || ""}
-                    onChange={(e) => handleTransferChange(index, "time", e.target.value)}
-                    className="h-9 bg-white"
-                    disabled={readOnly}
-                  />
-                </div>
-                <div className="md:col-span-2 space-y-1">
-                   <Label className="text-xs">Số ngày</Label>
-                   <Input
-                    type="number"
-                    value={transfer.days}
-                    onChange={(e) => handleTransferChange(index, "days", e.target.value)}
-                    className="h-9 bg-white"
-                    disabled={readOnly}
-                  />
-                </div>
-                 <div className="md:col-span-1 flex justify-center pb-1">
-                  {!readOnly && (
-                      <Button type="button" variant="ghost" size="icon" onClick={() => removeTransfer(index)} className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50">
-                        <Trash2 size={16} />
-                      </Button>
-                  )}
-                </div>
-              </div>
-            ))}
+            {managementData.transfers.slice(1).map((transfer, index) => {
+               // Adjust index to match original array (index + 1 because we sliced 0)
+               const realIndex = index + 1;
+               return (
+                  <div key={realIndex} className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end bg-gray-50 p-3 rounded-lg border border-gray-100">
+                    <div className="md:col-span-4 space-y-1">
+                      <Label className="text-xs">Khoa</Label>
+                      <Input
+                        value={transfer.department}
+                        onChange={(e) => handleTransferChange(realIndex, "department", e.target.value)}
+                        placeholder="Tên khoa"
+                        className="h-9 bg-white"
+                        disabled={readOnly}
+                      />
+                    </div>
+                    <div className="md:col-span-3 space-y-1">
+                       <Label className="text-xs">Ngày đến</Label>
+                       <Input
+                        type="date"
+                        value={transfer.date}
+                        onChange={(e) => handleTransferChange(realIndex, "date", e.target.value)}
+                        className="h-9 bg-white"
+                        disabled={readOnly}
+                      />
+                    </div>
+                     <div className="md:col-span-2 space-y-1">
+                       <Label className="text-xs">Giờ</Label>
+                       <Input
+                        type="time"
+                        value={transfer.time || ""}
+                        onChange={(e) => handleTransferChange(realIndex, "time", e.target.value)}
+                        className="h-9 bg-white"
+                        disabled={readOnly}
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-1">
+                       <Label className="text-xs">Số ngày</Label>
+                       <Input
+                        type="number"
+                        value={transfer.days}
+                        onChange={(e) => handleTransferChange(realIndex, "days", e.target.value)}
+                        className="h-9 bg-white"
+                        disabled={readOnly}
+                      />
+                    </div>
+                     <div className="md:col-span-1 flex justify-center pb-1">
+                      {!readOnly && (
+                          <Button type="button" variant="ghost" size="icon" onClick={() => removeTransfer(realIndex)} className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50">
+                            <Trash2 size={16} />
+                          </Button>
+                      )}
+                    </div>
+                  </div>
+               );
+            })}
           </div>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-gray-100">
              <div className="space-y-2">
-                <Label>15. Chuyển viện (Tuyến)</Label>
-                 <Input
+                <Label>17. Chuyển viện</Label>
+                <Select
                   value={managementData.hospitalTransfer?.type || ""}
-                  onChange={(e) => handleChange("hospitalTransfer", { ...managementData.hospitalTransfer, type: e.target.value })}
+                  onValueChange={(val) => handleChange("hospitalTransfer", { ...managementData.hospitalTransfer, type: val })}
                   disabled={readOnly}
-                />
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Chọn tuyến..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Tuyến trên">Tuyến trên</SelectItem>
+                    <SelectItem value="Tuyến dưới">Tuyến dưới</SelectItem>
+                    <SelectItem value="CK">CK</SelectItem>
+                  </SelectContent>
+                </Select>
              </div>
               <div className="space-y-2">
-                <Label>Đến bệnh viện</Label>
+                <Label>- Chuyển đến</Label>
                  <Input
                   value={managementData.hospitalTransfer?.destination || ""}
                    onChange={(e) => handleChange("hospitalTransfer", { ...managementData.hospitalTransfer, destination: e.target.value })}
                    disabled={readOnly}
+                   placeholder="Tên cơ sở y tế..."
                 />
              </div>
         </div>
         
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <div className="space-y-2">
-                <Label>16. Ra viện</Label>
+             <div className="space-y-3">
+                <Label>18. Ra viện</Label>
                  <Input
-                  value={managementData.dischargeType || ""}
-                  onChange={(e) => handleChange("dischargeType", e.target.value)}
-                   placeholder="Ra viện, chuyển viện, trốn viện..."
-                   disabled={readOnly}
+                  type="date"
+                  value={formData.dischargeDate || ""}
+                  onChange={(e) => handleRootChange("dischargeDate", e.target.value)}
+                  disabled={readOnly}
                 />
+                <RadioGroup 
+                    value={managementData.dischargeType || ""} 
+                    onValueChange={(val) => handleChange("dischargeType", val)}
+                    className="flex flex-wrap gap-4 mt-2"
+                    disabled={readOnly}
+                >
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Ra viện" id="rv-1" />
+                        <Label htmlFor="rv-1" className="font-normal cursor-pointer">Ra viện</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Xin về" id="rv-2" />
+                        <Label htmlFor="rv-2" className="font-normal cursor-pointer">Xin về</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Bỏ về" id="rv-3" />
+                        <Label htmlFor="rv-3" className="font-normal cursor-pointer">Bỏ về</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Đưa về" id="rv-4" />
+                        <Label htmlFor="rv-4" className="font-normal cursor-pointer">Đưa về</Label>
+                    </div>
+                </RadioGroup>
              </div>
               <div className="space-y-2">
-                <Label>17. Tổng số ngày điều trị</Label>
+                <Label>19. Tổng số ngày điều trị</Label>
                  <Input
                   type="number"
                   value={managementData.totalDays || 0}

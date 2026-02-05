@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,17 +14,17 @@ import { AccountTableRow } from "./AccountTableRow";
 interface AccountTableProps {
   users: UserType[];
   onUpdate: (username: string, updates: Partial<UserType>) => void;
-  onDelete: (username: string) => void;
 }
 
-export const AccountTable = ({ users, onUpdate, onDelete }: AccountTableProps) => {
+export const AccountTable = ({ users, onUpdate }: AccountTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [prevUsersLength, setPrevUsersLength] = useState(users.length);
   const itemsPerPage = 10;
 
-  // Reset to page 1 when data changes
-  useEffect(() => {
+  if (users.length !== prevUsersLength) {
+    setPrevUsersLength(users.length);
     setCurrentPage(1);
-  }, [users.length]);
+  }
 
   const totalPages = Math.ceil(users.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -48,7 +48,6 @@ export const AccountTable = ({ users, onUpdate, onDelete }: AccountTableProps) =
               key={user.username}
               user={user}
               onUpdate={onUpdate}
-              onDelete={onDelete}
             />
           ))}
         </TableBody>

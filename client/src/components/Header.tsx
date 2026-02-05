@@ -5,7 +5,11 @@ import { cn } from "@/lib/utils";
 import { LogOut } from "lucide-react";
 import { DropdownMenuHeader } from "./DropdownMenuHeader";
 
-const user = { name: "TS. Trần Văn Giảng Viên", avatar: "" };
+const user = { 
+  name: "TS. Trần Văn Giảng Viên", 
+  email: "giangvien@vanlanguni.vn",
+  avatar: "" 
+};
 const navs = [
   { href: "/", label: "Bệnh án" },
   { href: "/patients", label: "Bệnh nhân" },

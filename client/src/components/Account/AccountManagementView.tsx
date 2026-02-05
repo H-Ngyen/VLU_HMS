@@ -15,10 +15,6 @@ export const AccountManagementView = () => {
     );
   };
 
-  const deleteUser = (username: string) => {
-    setUsers((prev) => prev.filter((u) => u.username !== username));
-  };
-
   const filteredUsers = users.filter((user) => 
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (user.username + "@vanlanguni.vn").includes(searchTerm.toLowerCase())
@@ -50,7 +46,6 @@ export const AccountManagementView = () => {
       <AccountTable 
         users={filteredUsers} 
         onUpdate={updateUser} 
-        onDelete={deleteUser} 
       />
     </div>
   );

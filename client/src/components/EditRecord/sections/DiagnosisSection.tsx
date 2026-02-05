@@ -37,9 +37,9 @@ export const DiagnosisSection = ({ formData, setFormData, readOnly = false }: Di
   return (
     <Card className="shadow-sm border-gray-200">
       <CardContent className="p-6 space-y-6">
-        {/* 18. Nơi chuyển đến */}
+        {/* 20. Nơi chuyển đến */}
         <div className="space-y-2">
-          <Label className="font-semibold text-gray-700">18. Nơi chuyển đến</Label>
+          <Label className="font-semibold text-gray-700">20. Nơi chuyển đến</Label>
           <div className="grid grid-cols-1 md:grid-cols-[1fr_150px] gap-4">
              <Input 
                 placeholder="Tên chẩn đoán"
@@ -57,9 +57,9 @@ export const DiagnosisSection = ({ formData, setFormData, readOnly = false }: Di
           </div>
         </div>
 
-        {/* 19. KKB, Cấp cứu */}
+        {/* 21. KKB, Cấp cứu */}
         <div className="space-y-2">
-          <Label className="font-semibold text-gray-700">19. KKB, Cấp cứu</Label>
+          <Label className="font-semibold text-gray-700">21. KKB, Cấp cứu</Label>
           <div className="grid grid-cols-1 md:grid-cols-[1fr_150px] gap-4">
              <Input 
                 placeholder="Tên chẩn đoán"
@@ -77,9 +77,9 @@ export const DiagnosisSection = ({ formData, setFormData, readOnly = false }: Di
           </div>
         </div>
 
-        {/* 20. Khi vào khoa điều trị */}
+        {/* 22. Khi vào khoa điều trị */}
         <div className="space-y-2">
-          <Label className="font-semibold text-gray-700">20. Khi vào khoa điều trị</Label>
+          <Label className="font-semibold text-gray-700">22. Khi vào khoa điều trị</Label>
           <div className="grid grid-cols-1 md:grid-cols-[1fr_150px] gap-4">
              <Input 
                 placeholder="Tên chẩn đoán"
@@ -98,32 +98,32 @@ export const DiagnosisSection = ({ formData, setFormData, readOnly = false }: Di
           <div className="flex gap-6 mt-2">
              <div className="flex items-center space-x-2">
                 <Checkbox 
-                  id="isSurgery" 
-                  checked={diagnosisInfo.deptDiagnosis.isSurgery}
-                  onCheckedChange={(checked) => handleChange(['deptDiagnosis', 'isSurgery'], checked)}
-                  disabled={readOnly}
-                />
-                <label htmlFor="isSurgery" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Có phẫu thuật
-                </label>
-             </div>
-             <div className="flex items-center space-x-2">
-                <Checkbox 
                   id="isProcedure" 
                   checked={diagnosisInfo.deptDiagnosis.isProcedure}
                   onCheckedChange={(checked) => handleChange(['deptDiagnosis', 'isProcedure'], checked)}
                   disabled={readOnly}
                 />
                 <label htmlFor="isProcedure" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Có thủ thuật
+                  Thủ thuật
+                </label>
+             </div>
+             <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="isSurgery" 
+                  checked={diagnosisInfo.deptDiagnosis.isSurgery}
+                  onCheckedChange={(checked) => handleChange(['deptDiagnosis', 'isSurgery'], checked)}
+                  disabled={readOnly}
+                />
+                <label htmlFor="isSurgery" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                  Phẫu thuật
                 </label>
              </div>
           </div>
         </div>
 
-        {/* 21. Ra viện */}
+        {/* 23. Ra viện */}
         <div className="space-y-4 pt-4 border-t border-gray-100">
-           <Label className="font-semibold text-gray-700">21. Ra viện</Label>
+           <Label className="font-semibold text-gray-700">23. Ra viện</Label>
            
            <div className="pl-4 space-y-4 border-l-2 border-gray-100">
               {/* Bệnh chính */}
@@ -171,7 +171,7 @@ export const DiagnosisSection = ({ formData, setFormData, readOnly = false }: Di
                       disabled={readOnly}
                     />
                     <label htmlFor="isAccident" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Tai biến y khoa
+                      Tai biến
                     </label>
                  </div>
                  <div className="flex items-center space-x-2">

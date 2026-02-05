@@ -161,9 +161,9 @@ const FORM_SECTIONS: SectionItem[] = [
     label: "A. Bệnh Án",
     icon: ClipboardList,
     subSections: [
-      { id: "history", label: "1. Bệnh Sử & Tiền Sử", icon: ClipboardList },
-      { id: "examination", label: "2. Khám Bệnh", icon: Thermometer },
-      { id: "treatment", label: "3. Tiên Lượng & Điều Trị", icon: Pill },
+      { id: "history", label: "Lý do vào viện & Hỏi bệnh", icon: ClipboardList },
+      { id: "examination", label: "Khám Bệnh", icon: Thermometer },
+      { id: "treatment", label: "Chẩn Đoán & Điều Trị", icon: Pill },
     ],
   },
 ];
@@ -232,7 +232,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
         setIsMedicalGroupOpen(true);
       }
     } else {
-      setActiveTab("forms"); // Navigate to PHIẾU Y first
+      setActiveTab("forms"); // Navigate to Phiếu cận lâm sàng first
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
@@ -264,19 +264,25 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
             <span className="text-vlu-red">{typeLabel}</span>
           </h1>
           <p className="text-gray-500">
-            {isCreate ? `Bệnh nhân: ${patient.fullName}` : `Mã hồ sơ: ${record?.id}`}
+            {isCreate ? `Bệnh nhân: ${patient.fullName}` : `Mã lưu trữ: ${record?.id}`}
           </p>
         </div>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>{readOnly ? "Quay lại" : "Hủy bỏ"}</Button>
+          <Button 
+            type="button" 
+            onClick={onCancel}
+            className="bg-vlu-red hover:bg-red-800 text-white"
+          >
+            {readOnly ? "Quay lại" : "Hủy bỏ"}
+          </Button>
           {readOnly && (
-            <Button type="button" className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2">
+            <Button type="button" className="bg-vlu-red hover:bg-red-800 text-white flex items-center gap-2">
               <DownloadIcon size={18} />
               Xuất PDF
             </Button>
           )}
           {!readOnly && (
-            <Button type="button" onClick={() => handleSubmit()} className="bg-vlu-red hover:bg-red-800 text-white min-w-[120px]">
+            <Button type="button" onClick={() => handleSubmit()} className="bg-red-700 hover:bg-red-800 text-white min-w-[120px]">
                 {isCreate ? <Plus size={18} className="mr-2" /> : <Save size={18} className="mr-2" />}
                 {isCreate ? "Tạo Hồ Sơ" : "Lưu Thay Đổi"}
             </Button>
@@ -285,11 +291,31 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col overflow-hidden">
-        <TabsList className="grid w-full grid-cols-3 lg:w-[600px] flex-none">
-          <TabsTrigger value="details">Thông Tin Chi Tiết</TabsTrigger>
-          <TabsTrigger value="forms">Phiếu Y</TabsTrigger>
-          <TabsTrigger value="documents">Tài Liệu Đính Kèm</TabsTrigger>
-        </TabsList>
+        <div className="flex-none flex justify-start mb-6">
+            <TabsList className="flex items-center justify-center bg-gray-900 p-1 rounded-xl border border-gray-800 shadow-lg h-auto">
+              <TabsTrigger 
+                value="details" 
+                className="rounded-lg px-4 py-2 text-[12px] font-bold text-gray-400 transition-all duration-200 data-[state=active]:bg-vlu-red data-[state=active]:text-white"
+              >
+                <ClipboardList size={16} className="mr-2" />
+                Thông Tin Chi Tiết
+              </TabsTrigger>
+              <TabsTrigger 
+                value="forms"
+                className="rounded-lg px-4 py-2 text-[12px] font-bold text-gray-400 transition-all duration-200 data-[state=active]:bg-vlu-red data-[state=active]:text-white"
+              >
+                <Activity size={16} className="mr-2" />
+                Phiếu cận lâm sàng
+              </TabsTrigger>
+              <TabsTrigger 
+                value="documents"
+                className="rounded-lg px-4 py-2 text-[12px] font-bold text-gray-400 transition-all duration-200 data-[state=active]:bg-vlu-red data-[state=active]:text-white"
+              >
+                <FileText size={16} className="mr-2" />
+                Tài Liệu Đính Kèm
+              </TabsTrigger>
+            </TabsList>
+        </div>
 
         <TabsContent value="details" className="mt-6 animate-in fade-in slide-in-from-bottom-2 flex-1 overflow-hidden">
           <div className="flex flex-col lg:flex-row gap-8 items-start h-full">
@@ -313,7 +339,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                           type="button"
                           variant="ghost"
                           className={`w-full justify-between text-left h-auto py-3 px-4 rounded-lg font-bold transition-all ${
-                            isChildActive ? "text-vlu-red bg-red-50" : "text-gray-700 hover:bg-gray-100"
+                            isChildActive ? "text-vlu-red bg-red-50" : "text-gray-800 hover:bg-gray-100"
                           }`}
                         >
                           <div className="flex items-center">
@@ -335,7 +361,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                               className={`w-full justify-start text-left h-auto py-2 px-4 rounded-lg font-medium transition-all text-sm ${
                                 isSubActive 
                                   ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" 
-                                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                                  : "text-gray-800 hover:bg-gray-100 hover:text-gray-900"
                               }`}
                             >
                               <span className="mr-2 opacity-70">•</span>
@@ -355,11 +381,11 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                     type="button"
                     variant="ghost"
                     onClick={() => { setActiveSection(section.id); }}
-                    className={`w-full justify-start text-left h-auto py-3 px-4 rounded-lg font-medium transition-all ${
-                      isActive ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" : "bg-white text-gray-600 hover:bg-gray-100 border border-transparent hover:border-gray-200"
+                    className={`w-full justify-start text-left h-auto py-3 px-4 rounded-lg font-bold transition-all ${
+                      isActive ? "bg-vlu-red text-white hover:bg-red-800 shadow-sm" : "bg-white text-gray-800 hover:bg-gray-100 border border-transparent hover:border-gray-200"
                     }`}
                   >
-                    <Icon size={18} className={`mr-3 ${isActive ? "text-white" : "text-gray-500"}`} />
+                    <Icon size={18} className={`mr-3 ${isActive ? "text-white" : "text-gray-700"}`} />
                     {section.label}
                   </Button>
                 );
@@ -392,10 +418,10 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                       <ArrowLeft size={16} className="mr-2" /> Quay lại
                     </Button>
                     
-                    <Button type="button" onClick={handleNextSection} className="bg-black hover:bg-gray-800 text-white">
+                    <Button type="button" onClick={handleNextSection} className="bg-vlu-red hover:bg-red-800 text-white">
                       {currentSectionIndex < flattenedSections.length - 1 
-                        ? `Tiếp tục: ${flattenedSections[currentSectionIndex + 1].label.replace(/^[IV0-9]+\.\s/, "")}` 
-                        : "Tiếp tục: Phiếu Y"}
+                        ? flattenedSections[currentSectionIndex + 1].label.replace(/^[IV0-9]+\.\s/, "") 
+                        : "Phiếu cận lâm sàng"}
                       <ArrowRight size={16} className="ml-2" />
                     </Button>
                   </div>
@@ -404,19 +430,19 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
           </div>
         </TabsContent>
 
-        <TabsContent value="forms" className="mt-6 animate-in fade-in slide-in-from-bottom-2 flex-1 overflow-hidden">
-             <div className="h-full overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent pb-10">
+        <TabsContent value="forms" className="mt-6 animate-in fade-in slide-in-from-bottom-2 flex-1 flex flex-col overflow-hidden">
+             <div className="flex-1 min-h-0 pr-4 pb-2">
                 <PhieuYSection formData={formData} setFormData={setFormData} readOnly={readOnly} />
+             </div>
                 
-                <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
-                    <Button type="button" variant="outline" onClick={() => { setActiveTab("details"); setActiveSection("treatment"); }}>
-                      <ArrowLeft size={16} className="mr-2" /> Quay lại: Chi Tiết Bệnh Án
-                    </Button>
-                    <Button type="button" onClick={() => setActiveTab("documents")} className="bg-black hover:bg-gray-800 text-white">
-                      Tiếp tục: Tài Liệu Đính Kèm
-                      <ArrowRight size={16} className="ml-2" />
-                    </Button>
-                </div>
+             <div className="flex-none mt-2 flex justify-between items-center pt-4 border-t border-gray-200 pb-6 pr-4">
+                <Button type="button" variant="outline" onClick={() => { setActiveTab("details"); setActiveSection("treatment"); }}>
+                    <ArrowLeft size={16} className="mr-2" /> Quay lại
+                </Button>
+                <Button type="button" onClick={() => setActiveTab("documents")} className="bg-vlu-red hover:bg-red-800 text-white">
+                    Tài Liệu Đính Kèm
+                    <ArrowRight size={16} className="ml-2" />
+                </Button>
             </div>
         </TabsContent>
 
@@ -426,10 +452,10 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                 
                 <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
                     <Button type="button" variant="outline" onClick={() => setActiveTab("forms")}>
-                      <ArrowLeft size={16} className="mr-2" /> Quay lại: Phiếu Y
+                      <ArrowLeft size={16} className="mr-2" /> Quay lại
                     </Button>
                     {!readOnly && (
-                        <Button type="button" onClick={() => handleSubmit()} className="bg-vlu-red hover:bg-red-800 text-white min-w-[150px]">
+                        <Button type="button" onClick={() => handleSubmit()} className="bg-red-700 hover:bg-red-800 text-white min-w-[150px]">
                             {isCreate ? <Plus size={18} className="mr-2" /> : <Save size={18} className="mr-2" />}
                             {isCreate ? "Hoàn tất & Tạo" : "Lưu Thay Đổi"}
                         </Button>
