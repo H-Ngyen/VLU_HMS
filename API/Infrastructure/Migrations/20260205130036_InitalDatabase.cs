@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitalDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -27,8 +27,7 @@ namespace Infrastructure.Migrations
                 name: "Roles",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false)
                 },
                 constraints: table =>
@@ -64,13 +63,13 @@ namespace Infrastructure.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
+                    EthnicityId = table.Column<int>(type: "int", nullable: false, defaultValue: 56),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     DateOfBirth = table.Column<DateTime>(type: "date", nullable: false),
                     Gender = table.Column<int>(type: "int", nullable: false),
                     HealthInsuranceNumber = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EthnicityId = table.Column<int>(type: "int", nullable: false, defaultValue: 56),
-                    CreatedBy = table.Column<int>(type: "int", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -96,6 +95,7 @@ namespace Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PatientId = table.Column<int>(type: "int", nullable: false),
+                    CreatedBy = table.Column<int>(type: "int", nullable: false),
                     RecordType = table.Column<int>(type: "int", nullable: true),
                     FormCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     StorageCode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
@@ -146,7 +146,6 @@ namespace Infrastructure.Migrations
                     HasAutopsy = table.Column<bool>(type: "bit", nullable: false),
                     DiagnosisAutopsy = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     DiagnosisCode = table.Column<int>(type: "int", nullable: true),
-                    CreatedBy = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
@@ -196,11 +195,11 @@ namespace Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     MedicalRecordId = table.Column<int>(type: "int", nullable: false),
+                    RequestedById = table.Column<int>(type: "int", nullable: false),
+                    PerformedById = table.Column<int>(type: "int", nullable: true),
                     IsEmergency = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
                     RequestedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    RequestedById = table.Column<int>(type: "int", nullable: false),
                     CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    PerformedById = table.Column<int>(type: "int", nullable: true),
                     RedBloodCellCount = table.Column<float>(type: "real", nullable: true),
                     WhiteBloodCellCount = table.Column<float>(type: "real", nullable: true),
                     Hemoglobin = table.Column<float>(type: "real", nullable: true),
@@ -316,13 +315,13 @@ namespace Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     MedicalRecordId = table.Column<int>(type: "int", nullable: false),
+                    RequestedById = table.Column<int>(type: "int", nullable: false),
+                    PerformedById = table.Column<int>(type: "int", nullable: true),
                     RequestDescription = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     RequestedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    RequestedById = table.Column<int>(type: "int", nullable: false),
                     ResultDescription = table.Column<string>(type: "nvarchar(4000)", maxLength: 4000, nullable: true),
                     DoctorAdvice = table.Column<string>(type: "nvarchar(2000)", maxLength: 2000, nullable: true),
-                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    PerformedById = table.Column<int>(type: "int", nullable: true)
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {

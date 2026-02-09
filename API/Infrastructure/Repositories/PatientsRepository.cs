@@ -1,6 +1,51 @@
+using Domain.Entities;
+using Domain.Repositories;
+using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
 namespace Infrastructure.Repositories;
 
-public class PatientsRepository
+internal class PatientsRepository : BaseRepository<Patient>, IPatientsRepository
 {
-    
+    public PatientsRepository(AppDbContext dbContext) : base(dbContext) { }
+    public async Task<int> CreateAsync(Patient patient)
+    {
+        _dbContext.Add(patient);
+        await _dbContext.SaveChangesAsync();
+        return  patient.Id;
+    }
+
+    public async Task<IEnumerable<Patient>> GetAllAsync()
+        => await ReadOnlyQuery
+            .Include(p => p.Ethnicity)
+            .ToListAsync();
+
+    public async Task<Patient?> GetByIdAsync(int id)
+        => await TrackingQuery
+            .Include(p => p.Ethnicity)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+    public async Task<(IEnumerable<Patient>, int)> GetAllMatchingAsync(string? searchPhrase,
+        int pageSize,
+        int pageNumber)
+    {
+        var searchPhraseLower = searchPhrase?.ToLower();
+
+        var baseQuery = ReadOnlyQuery
+            .Where(r => searchPhraseLower == null || r.Name.ToLower().Contains(searchPhraseLower)
+                                                   || r.HealthInsuranceNumber.ToLower().Contains(searchPhraseLower));
+
+        var totalCount = await baseQuery.CountAsync();
+        var patients = await baseQuery
+            .Skip(pageSize * (pageNumber - 1))
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (patients, totalCount);
+    }
+
+    public async Task SaveChanges() => await _dbContext.SaveChangesAsync();
+
+    public async Task<bool> ExistHealthInsuranceNumber(string healthInsuranceNumber)
+        => await ReadOnlyQuery.AnyAsync(p => p.HealthInsuranceNumber == healthInsuranceNumber);
 }

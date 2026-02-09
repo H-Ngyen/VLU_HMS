@@ -43,7 +43,7 @@ internal class Seeder(AppDbContext dbContext) : ISeeder
     private IEnumerable<User> GetUserAdmin()
     {
         List<User> users = [
-            new() { Id = 1, Auth0Id = "something", Email = "admin@gmail.com", RoleId = 1, CreateAt = DateTime.UtcNow },
+            new() { Auth0Id = "something", Email = "admin@gmail.com", RoleId = 1, CreateAt = DateTime.UtcNow },
         ];
         return users;
     }
