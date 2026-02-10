@@ -1,9 +1,10 @@
 using Domain.Interfaces;
+using TimeZoneConverter;
 
 namespace Infrastructure.Services;
 
 public class DateTimeProvider : IDateTimeProvider
 {
-    public DateTime Now => TimeZoneInfo.ConvertTime(DateTime.Now, 
-        TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time"));
+    private readonly TimeZoneInfo VietNameseTimeZone = TZConvert.GetTimeZoneInfo("Asia/Ho_Chi_Minh");
+    public DateTime Now => TimeZoneInfo.ConvertTime(DateTime.UtcNow, VietNameseTimeZone);
 }
