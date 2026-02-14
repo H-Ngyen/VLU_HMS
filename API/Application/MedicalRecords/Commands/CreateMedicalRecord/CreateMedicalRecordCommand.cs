@@ -1,19 +1,18 @@
 using Domain.Constants;
+using Domain.Entities;
+using MediatR;
 
-namespace Domain.Entities;
+namespace Application.MedicalRecords.Commands.CreateMedicalRecord;
 
-public class MedicalRecord
+public class CreateMedicalRecordCommand : IRequest<int>
 {
-    public int Id { get; set; }
     // Foreign Key
-    public required int PatientId { get; set; }
-    public required int CreatedBy { get; set; }
-
+    public int PatientId { get; set; }
     // Props
     // Info
-    public RecordType? RecordType { get; set; }
+    public required RecordType RecordType { get; set; }
     public string? FormCode { get; set; }
-    public string? StorageCode { get; set; }
+    // public string? StorageCode { get; set; }
     public string? MedicalCode { get; set; }
     public string? BedCode { get; set; }
 
@@ -71,18 +70,16 @@ public class MedicalRecord
     public bool HasAutopsy { get; set; }
     public string? DiagnosisAutopsy { get; set; }
     public int? DiagnosisCode { get; set; }
+    // public List<IFormFile>? PdfFiles { get; set; }
 
-    public required DateTime CreatedAt { get; set; }
-
-    // Navigation Properties
-    public User Creator { get; set; } = null!;
-    public ICollection<MedicalAttachment> Attachments { get; set; } = [];
+    // // Navigation Properties
+    // public ICollection<MedicalAttachment> Attachments { get; set; } = [];
     public ICollection<DepartmentTransfer> DepartmentTransfers { get; set; } = [];
-    public Patient Patient { get; set; } = null!;
-    
-    // clinical examination form
-    public ICollection<XRay> XRays { get; set; } = [];
-    public ICollection<Hematology> Hematologies { get; set; } = [];
-    // 1-1 Relationship
-    public MedicalRecordDetail? Detail { get; set; }
+    // public Patient Patient { get; set; } = null!;
+
+    // // clinical examination form
+    // public ICollection<XRay> XRays { get; set; } = [];
+    // public ICollection<Hematology> Hematologies { get; set; } = [];
+    // // 1-1 Relationship
+    // public MedicalRecordDetail? Detail { get; set; }
 }

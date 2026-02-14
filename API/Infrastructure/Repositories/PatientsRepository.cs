@@ -5,9 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-internal class PatientsRepository : BaseRepository<Patient>, IPatientsRepository
+internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient>(context), IPatientsRepository
 {
-    public PatientsRepository(AppDbContext dbContext) : base(dbContext) { }
     public async Task<int> CreateAsync(Patient patient)
     {
         _dbContext.Add(patient);

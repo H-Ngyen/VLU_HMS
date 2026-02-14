@@ -14,4 +14,52 @@ Content-Type: application/json
   "createdAt": "2025-02-05T10:30:00Z"
 }
 
-###
+### Create Medical Record (No PDF)
+POST {{AppHost_HostAddress}}/api/medical-records
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="PatientId"
+
+1
+--boundary
+Content-Disposition: form-data; name="RecordType"
+
+1
+--boundary
+Content-Disposition: form-data; name="MedicalCode"
+
+MR12345
+--boundary
+Content-Disposition: form-data; name="AdmissionDiagnosis"
+
+Viêm họng cấp
+--boundary--
+
+### Create Medical Record (With PDF)
+# Note: Ensure the file path exists on your machine
+POST {{AppHost_HostAddress}}/api/medical-records
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="PatientId"
+
+1
+--boundary
+Content-Disposition: form-data; name="RecordType"
+
+2
+--boundary
+Content-Disposition: form-data; name="MedicalCode"
+
+MR67890
+--boundary
+Content-Disposition: form-data; name="AdmissionDiagnosis"
+
+Chấn thương chỉnh hình
+--boundary
+Content-Disposition: form-data; name="PdfFiles"; filename="sample.pdf"
+Content-Type: application/pdf
+
+< C:/path/to/your/sample.pdf
+--boundary--

@@ -1,17 +1,19 @@
+using Application.Patients.Dtos;
 using Domain.Constants;
+using Domain.Entities;
 
-namespace Domain.Entities;
+namespace Application.MedicalRecords.Dtos;
 
-public class MedicalRecord
+public class MedicalRecordDto
 {
     public int Id { get; set; }
     // Foreign Key
     public required int PatientId { get; set; }
-    public required int CreatedBy { get; set; }
+    // public required int CreatedBy { get; set; }
 
     // Props
     // Info
-    public RecordType? RecordType { get; set; }
+    public required RecordType RecordType { get; set; }
     public string? FormCode { get; set; }
     public string? StorageCode { get; set; }
     public string? MedicalCode { get; set; }
@@ -41,7 +43,7 @@ public class MedicalRecord
     // Transfer & Discharge
     public HospitalTransferType? HospitalTransferType { get; set; }
     public string? HospitalTransferDestination { get; set; }
-    public DateTime? DischargeTime { get; set; }
+    public string? DischargeDescription { get; set; }
     public DischargeType? DischargeType { get; set; }
     public string? TotalTreatmentDays { get; set; }
 
@@ -72,17 +74,17 @@ public class MedicalRecord
     public string? DiagnosisAutopsy { get; set; }
     public int? DiagnosisCode { get; set; }
 
-    public required DateTime CreatedAt { get; set; }
+    // public required DateTime CreatedAt { get; set; }
 
     // Navigation Properties
-    public User Creator { get; set; } = null!;
-    public ICollection<MedicalAttachment> Attachments { get; set; } = [];
+    // public User Creator { get; set; } = null!;
+    // public ICollection<MedicalAttachment> Attachments { get; set; } = [];
     public ICollection<DepartmentTransfer> DepartmentTransfers { get; set; } = [];
-    public Patient Patient { get; set; } = null!;
-    
+    public PatientDto Patient { get; set; } = null!;
+
     // clinical examination form
-    public ICollection<XRay> XRays { get; set; } = [];
-    public ICollection<Hematology> Hematologies { get; set; } = [];
+    // public ICollection<XRay> XRays { get; set; } = [];
+    // public ICollection<Hematology> Hematologies { get; set; } = [];
     // 1-1 Relationship
     public MedicalRecordDetail? Detail { get; set; }
 }

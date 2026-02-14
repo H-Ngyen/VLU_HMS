@@ -4,7 +4,7 @@ public class MedicalAttachment
 {
     public int Id { get; set; }
     // Foreign Key
-    public required int MedicalRecordId { get; set; }
+    public int MedicalRecordId { get; set; }
 
     // Props
     public required string Name { get; set; }
