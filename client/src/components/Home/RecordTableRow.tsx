@@ -26,7 +26,7 @@ export const RecordTableRow = ({ record, user, onEdit, onDelete }: RecordTableRo
         </div>
         <div className="text-xs text-gray-400 mt-0.5 font-mono">{record.patientId}</div>
       </TableCell>
-      <TableCell className="text-gray-600 font-mono text-xs">{record.cccd || "---"}</TableCell>
+      <TableCell className="text-gray-600 font-mono text-xs">{record.insuranceNumber || "---"}</TableCell>
       <TableCell className="text-gray-600">{formatDate(record.dob)}</TableCell>
       <TableCell className="text-gray-600">{record.age} / {record.gender}</TableCell>
       <TableCell>

@@ -160,6 +160,7 @@ export interface Record {
   patientId: string;
   patientName: string;
   cccd: string;
+  insuranceNumber: string;
   dob: string;
   age: number;
   gender: string;

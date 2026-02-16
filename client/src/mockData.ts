@@ -17,12 +17,14 @@ const generateMockRecords = (count: number): Record[] => {
     const randomIdNum = (i + 2).toString().padStart(3, "0");
     const patientId = `BN${randomIdNum}`;
     const cccd = `079${Math.floor(Math.random() * 1000000000).toString().padStart(9, "0")}`;
+    const insuranceNumber = `GD${Math.floor(Math.random() * 100000000000).toString().padStart(12, "0")}`;
 
     records.push({
       id: `REC${randomIdNum}`,
       patientId: patientId,
       patientName: randomName,
       cccd: cccd,
+      insuranceNumber: insuranceNumber,
       dob: `${randomYear}-05-15`,
       age: randomAge,
       gender: Math.random() > 0.5 ? "Nam" : "Nữ",
@@ -198,6 +200,7 @@ export const INITIAL_RECORDS: Record[] = [
     patientId: "BN001",
     patientName: "NGUYEN VAN A",
     cccd: "079178000123",
+    insuranceNumber: "GD4797938644422",
     dob: "1978-01-01",
     age: 46,
     gender: "Nam",
@@ -283,6 +286,7 @@ export const INITIAL_RECORDS: Record[] = [
     patientId: "BN002",
     patientName: "TRAN THI B",
     cccd: "079161000456",
+    insuranceNumber: "",
     dob: "1961-05-20",
     age: 63,
     gender: "Nữ",
