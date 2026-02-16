@@ -1,0 +1,17 @@
+@AppHost_HostAddress = https://localhost:5001
+
+### Create Patient
+POST {{AppHost_HostAddress}}/api/patients
+Content-Type: application/json
+
+{
+  "name": "Nguyen Van A",
+  "createdBy": 1,
+  "dateOfBirth": "1990-05-15",
+  "gender": 0,
+  "ethnicityId": 1,
+  "healthInsuranceNumber": "DN1234567890",
+  "createdAt": "2025-02-05T10:30:00Z"
+}
+
+###
