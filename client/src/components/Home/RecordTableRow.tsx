@@ -14,7 +14,7 @@ interface RecordTableRowProps {
   onDelete: (record: Record) => void;
 }
 
-export const RecordTableRow = ({ record, user, onEdit, onDelete }: RecordTableRowProps) => {
+export const RecordTableRow = ({ record, user, onDelete }: RecordTableRowProps) => {
   const navigate = useNavigate();
 
   return (

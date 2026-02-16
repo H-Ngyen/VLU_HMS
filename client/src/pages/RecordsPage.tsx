@@ -1,4 +1,3 @@
-import React from "react";
 import { StudentRepositoryView } from "@/components/Home/StudentRepositoryView";
 
 const RecordsPage = () => {
