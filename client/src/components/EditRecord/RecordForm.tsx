@@ -32,6 +32,7 @@ const createInitialRecord = (patient: Patient, type: "internal" | "surgery" = "i
     patientId: patient.id,
     patientName: patient.fullName,
     cccd: patient.cccd,
+    insuranceNumber: patient.insuranceNumber,
     age: patient.age,
     dob: patient.dob,
     gender: patient.gender,

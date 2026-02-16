@@ -2,7 +2,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { INITIAL_RECORDS, INITIAL_PATIENTS } from "@/mockData";
 import { RecordForm } from "../EditRecord/RecordForm";
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
 
 export const RecordDetailView = () => {
   const { id } = useParams();
@@ -13,11 +12,6 @@ export const RecordDetailView = () => {
   const patient = record
     ? INITIAL_PATIENTS.find((p) => p.id === record.patientId)
     : undefined;
-
-  const handleExportPDF = () => {
-    // Logic for PDF export will be implemented later
-    console.log("Exporting PDF for record:", id);
-  };
 
   if (!record || !patient) {
     return (

@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Plus, FileText, Eye, Edit2, Trash2 } from "lucide-react";
+import { FileText, Eye, Edit2, Trash2 } from "lucide-react";
 import type { Record, Document } from "@/types";
 import { XRayInputForm } from "./XRayInputForm";
 import { HematologyInputForm } from "./HematologyInputForm";
@@ -30,9 +30,6 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
   const [editingHematologyDoc, setEditingHematologyDoc] = useState<Document | null>(null);
   const [viewingHematologyDoc, setViewingHematologyDoc] = useState<Document | null>(null);
 
-  // Filter documents
-  const xrayDocuments = (formData.documents || []).filter(d => d.type === "X-Quang");
-  const hematologyDocuments = (formData.documents || []).filter(d => d.type === "XN-HuyetHoc");
 
   const handleXRaySave = (file: File, xrayData?: any) => {
     if (readOnly) return;

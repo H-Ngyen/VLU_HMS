@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { INITIAL_PATIENTS } from "@/mockData";
 import { RecordForm } from "./RecordForm";
