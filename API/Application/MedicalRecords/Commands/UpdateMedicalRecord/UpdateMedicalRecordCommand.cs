@@ -11,7 +11,7 @@ public class UpdateMedicalRecordCommand(int id) : IRequest
     // Info
     public required RecordType RecordType { get; set; }
     public string? FormCode { get; set; }
-    public string? StorageCode { get; set; }
+    // public string? StorageCode { get; set; }
     public string? MedicalCode { get; set; }
     public string? BedCode { get; set; }
 

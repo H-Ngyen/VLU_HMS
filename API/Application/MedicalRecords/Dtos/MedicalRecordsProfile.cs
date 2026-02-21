@@ -1,4 +1,5 @@
 using Application.MedicalRecords.Commands.CreateMedicalRecord;
+using Application.MedicalRecords.Commands.UpdateMedicalRecord;
 using AutoMapper;
 using Domain.Entities;
 
@@ -21,5 +22,6 @@ public class MedicalRecordsProfile : Profile
             .ForMember(dest => dest.Detail, opt => opt.MapFrom(src => src.Detail));
 
         CreateMap<MedicalRecord, MedicalRecordItemDto>();
+        CreateMap<UpdateMedicalRecordCommand, MedicalRecord>();
     }
 }
