@@ -10,7 +10,7 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
     public async Task<int> CreateAsync(Patient patient)
     {
         _dbContext.Add(patient);
-        await _dbContext.SaveChangesAsync();
+        await SaveChanges();
         return  patient.Id;
     }
 
@@ -47,4 +47,10 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
 
     public async Task<bool> ExistHealthInsuranceNumber(string healthInsuranceNumber)
         => await NoTrackingQuery.AnyAsync(p => p.HealthInsuranceNumber == healthInsuranceNumber);
+
+    public async Task DeleteAsync(Patient patient)
+    {
+        _dbContext.Patients.Remove(patient);
+        await SaveChanges();
+    }
 }
