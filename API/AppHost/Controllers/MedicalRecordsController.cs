@@ -1,4 +1,5 @@
 using Application.MedicalRecords.Commands.CreateMedicalRecord;
+using Application.MedicalRecords.Commands.DeleteMedicalRecord;
 using Application.MedicalRecords.Commands.UpdateMedicalRecord;
 using Application.MedicalRecords.Queries.GetAllMedicalRecords;
 using Application.MedicalRecords.Queries.GetMedicalRecordById;
@@ -38,6 +39,13 @@ public class MedicalRecordsController(IMediator mediator) : ControllerBase
     {
         command.Id = id;
         await mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> DeleteMedicalRecord(int id)
+    {
+        await mediator.Send(new DeleteMedicalRecordCommand(id));
         return NoContent();
     }
 }
