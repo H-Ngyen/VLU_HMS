@@ -9,6 +9,22 @@ namespace Infrastructure.Services;
 public class FileStorageService (IMinioClient minioClient, IOptions<FileStorageSettings> fileStorageSettings): IFileStorageService
 {
     private readonly FileStorageSettings _settings = fileStorageSettings.Value;
+
+    public async Task DeleteFileAsync(string fileUrl)
+    {
+        if (string.IsNullOrWhiteSpace(fileUrl)) return;
+
+        // The fileUrl is stored as "{bucketName}/{fileName}"
+        var parts = fileUrl.Split('/');
+        var objectName = parts.Length > 1 ? parts[^1] : fileUrl;
+
+        var removeObjectArgs = new RemoveObjectArgs()
+            .WithBucket(_settings.BucketName)
+            .WithObject(objectName);
+
+        await minioClient.RemoveObjectAsync(removeObjectArgs);
+    }
+
     public async Task<string> UploadFileAsync(Stream file, string fileName)
     {
         var extension = Path.GetExtension(fileName);

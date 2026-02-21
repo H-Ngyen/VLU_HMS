@@ -1,4 +1,5 @@
 using Application.MedicalAttachments.Commands.CreateMedicalAttachment;
+using Application.MedicalAttachments.Commands.DeleteMedicalAttachment;
 using Application.MedicalAttachments.Commands.UpdateMedicalAttachment;
 using Application.MedicalAttachments.Queries;
 using MediatR;
@@ -32,6 +33,13 @@ public class MedicalAttachmentController(IMediator mediator) : ControllerBase
         command.Id = attachmentId;
         command.MedicalRecordId = recordId;
         await mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpDelete("{attachmentId}")]
+    public async Task<IActionResult> DeleteAttachment(int recordId, int attachmentId)
+    {
+        await mediator.Send(new DeleteMedicalAttachmentCommand(attachmentId, recordId));
         return NoContent();
     }
 }

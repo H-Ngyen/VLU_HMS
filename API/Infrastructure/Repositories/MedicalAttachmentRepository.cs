@@ -10,8 +10,14 @@ internal class MedicalAttachmentRepository(AppDbContext context) : BaseRepositor
     public async Task<int> CreateAsync(MedicalAttachment entity)
     {
         _dbContext.MedicalAttachments.Add(entity);
-        await _dbContext.SaveChangesAsync();
+        await SaveChanges();
         return entity.Id;
+    }
+
+    public async Task DeleteAsync(MedicalAttachment entity)
+    {
+        _dbContext.MedicalAttachments.Remove(entity);
+        await SaveChanges();
     }
 
     public async Task<IEnumerable<MedicalAttachment>> GetAllAsync()
