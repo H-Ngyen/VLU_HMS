@@ -8,5 +8,5 @@ namespace Infrastructure.Repositories;
 internal class UsersRepository(AppDbContext context) : BaseRepository<User>(context), IUserRepository
 {
     public async Task<bool> ExistsAsync(int id)
-        => await ReadOnlyQuery.AnyAsync(u => u.Id == id);
+        => await NoTrackingQuery.AnyAsync(u => u.Id == id);
 }

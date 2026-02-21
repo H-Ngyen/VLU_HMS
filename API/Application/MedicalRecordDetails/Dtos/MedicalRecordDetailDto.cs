@@ -1,14 +1,12 @@
-namespace Domain.Entities;
+namespace Application.MedicalRecordDetails.Dtos;
 
-public class MedicalRecordDetail
+public class MedicalRecordDetailDto
 {
-    public int Id { get; set; } // PK & FK to MedicalRecord
-
     public string? AdmissionReason { get; set; }
     public string? PathologicalProcess { get; set; }
     public string? PersonalHistory { get; set; }
     public string? FamilyHistory { get; set; }
-    
+
     // Exams
     public string? ExamGeneral { get; set; }
     public string? ExamCardio { get; set; }
@@ -26,7 +24,7 @@ public class MedicalRecordDetail
     public string? DiagnosisMain { get; set; }
     public string? DiagnosisSub { get; set; }
     public string? DiagnosisDifferential { get; set; }
-    
+
     public string? PulseRate { get; set; }
     public string? Temperature { get; set; }
     public string? BloodPressure { get; set; }
@@ -34,6 +32,6 @@ public class MedicalRecordDetail
     public string? BodyWeight { get; set; }
 
     // Navigation Properties
-    public ICollection<MedicalRecordRiskFactor> RiskFactors { get; set; } = [];
-    public MedicalRecord MedicalRecord { get; set; } = null!;
+    public ICollection<MedicalRecordRiskFactorDto> RiskFactors { get; set; } = [];
+    // public MedicalRecord MedicalRecord { get; set; } = null!;
 }

@@ -15,7 +15,7 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
     }
 
     public async Task<IEnumerable<Patient>> GetAllAsync()
-        => await ReadOnlyQuery
+        => await NoTrackingQuery
             .Include(p => p.Ethnicity)
             .ToListAsync();
 
@@ -30,7 +30,7 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
     {
         var searchPhraseLower = searchPhrase?.ToLower();
 
-        var baseQuery = ReadOnlyQuery
+        var baseQuery = NoTrackingQuery
             .Where(r => searchPhraseLower == null || r.Name.ToLower().Contains(searchPhraseLower)
                                                    || r.HealthInsuranceNumber.ToLower().Contains(searchPhraseLower));
 
@@ -46,5 +46,5 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
     public async Task SaveChanges() => await _dbContext.SaveChangesAsync();
 
     public async Task<bool> ExistHealthInsuranceNumber(string healthInsuranceNumber)
-        => await ReadOnlyQuery.AnyAsync(p => p.HealthInsuranceNumber == healthInsuranceNumber);
+        => await NoTrackingQuery.AnyAsync(p => p.HealthInsuranceNumber == healthInsuranceNumber);
 }

@@ -16,7 +16,9 @@ public class MedicalRecordsProfile : Profile
             .ForMember(dest => dest.Attachments, opt => opt.Ignore());
 
         CreateMap<MedicalRecord, MedicalRecordDto>()
-            .ForMember(dest => dest.Patient, opt => opt.MapFrom(src => src.Patient));
+            .ForMember(dest => dest.Patient, opt => opt.MapFrom(src => src.Patient))
+            .ForMember(dest => dest.DepartmentTransfers, opt => opt.MapFrom(src => src.DepartmentTransfers))
+            .ForMember(dest => dest.Detail, opt => opt.MapFrom(src => src.Detail));
 
         CreateMap<MedicalRecord, MedicalRecordItemDto>();
     }

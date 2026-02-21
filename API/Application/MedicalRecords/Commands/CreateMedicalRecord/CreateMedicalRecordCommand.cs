@@ -1,5 +1,6 @@
+using Application.DepartmentTransfers.Dtos;
+using Application.MedicalRecordDetails.Dtos;
 using Domain.Constants;
-using Domain.Entities;
 using MediatR;
 
 namespace Application.MedicalRecords.Commands.CreateMedicalRecord;
@@ -74,12 +75,12 @@ public class CreateMedicalRecordCommand : IRequest<int>
 
     // // Navigation Properties
     // public ICollection<MedicalAttachment> Attachments { get; set; } = [];
-    public ICollection<DepartmentTransfer> DepartmentTransfers { get; set; } = [];
+    public ICollection<DepartmentTransferDto> DepartmentTransfers { get; set; } = [];
     // public Patient Patient { get; set; } = null!;
 
     // // clinical examination form
     // public ICollection<XRay> XRays { get; set; } = [];
     // public ICollection<Hematology> Hematologies { get; set; } = [];
     // // 1-1 Relationship
-    // public MedicalRecordDetail? Detail { get; set; }
+    public MedicalRecordDetailDto? Detail { get; set; }
 }

@@ -24,7 +24,7 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
     {
         var searchPhraseLower = searchPhrase?.ToLower();
 
-        var baseQuery = ReadOnlyQuery
+        var baseQuery = NoTrackingQuery
             .Include(m => m.Patient)
             .Where(r =>
                 (recordType == null || r.RecordType == recordType) &&
@@ -52,5 +52,5 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
             .FirstOrDefaultAsync(m => m.Id == id);
 
     public async Task<bool> ExistAsync(int id)
-        => await ReadOnlyQuery.AnyAsync(m => m.Id == id);
+        => await NoTrackingQuery.AnyAsync(m => m.Id == id);
 }

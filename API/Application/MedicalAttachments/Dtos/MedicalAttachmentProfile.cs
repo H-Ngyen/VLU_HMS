@@ -1,4 +1,6 @@
 using Application.MedicalAttachments.Commands.CreateMedicalAttachment;
+using Application.MedicalAttachments.Commands.UpdateMedicalAttachment;
+using Application.MedicalAttachments.Queries;
 using AutoMapper;
 using Domain.Entities;
 
@@ -11,5 +13,8 @@ public class MedicalAttachmentProfile : Profile
         // CreateMap<MedicalAttachment, MedicalAttachmentDto>();
         CreateMap<CreateMedicalAttachmentCommand, MedicalAttachment>()
             .ForMember(dest => dest.Path, opt => opt.Ignore());
+        CreateMap<MedicalAttachment, MedicalAttachmentDto>()
+            .ReverseMap();
+        CreateMap<UpdateMedicalAttachmentCommand, MedicalAttachment>();
     }
 }

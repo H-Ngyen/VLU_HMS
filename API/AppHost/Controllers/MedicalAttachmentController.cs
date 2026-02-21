@@ -1,4 +1,6 @@
 using Application.MedicalAttachments.Commands.CreateMedicalAttachment;
+using Application.MedicalAttachments.Commands.UpdateMedicalAttachment;
+using Application.MedicalAttachments.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,6 +10,13 @@ namespace AppHost.Controllers;
 [Route("api/medical-records/{recordId}/attachments")]
 public class MedicalAttachmentController(IMediator mediator) : ControllerBase
 {
+    [HttpGet]
+    public async Task<IActionResult> GetAllAttachments(int recordId)
+    {
+        var attachments = await mediator.Send(new GetAllMedicalAttachmentsQuery(recordId));
+        return Ok(attachments);
+    }
+    
     [HttpPost]
     public async Task<IActionResult> CreateAttachment(int recordId, [FromForm] CreateMedicalAttachmentCommand command)
     {
@@ -15,5 +24,14 @@ public class MedicalAttachmentController(IMediator mediator) : ControllerBase
         var attachmentId =  await mediator.Send(command);
         // return CreatedAtAction(nameof);
         return Ok(attachmentId);
+    }
+
+    [HttpPut("{attachmentId}")]
+    public async Task<IActionResult> UpdateAttachment(int recordId, int attachmentId, UpdateMedicalAttachmentCommand command)
+    {
+        command.Id = attachmentId;
+        command.MedicalRecordId = recordId;
+        await mediator.Send(command);
+        return NoContent();
     }
 }

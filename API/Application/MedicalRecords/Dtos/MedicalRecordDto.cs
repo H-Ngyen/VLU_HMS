@@ -1,3 +1,5 @@
+using Application.DepartmentTransfers.Dtos;
+using Application.MedicalRecordDetails.Dtos;
 using Application.Patients.Dtos;
 using Domain.Constants;
 using Domain.Entities;
@@ -43,7 +45,7 @@ public class MedicalRecordDto
     // Transfer & Discharge
     public HospitalTransferType? HospitalTransferType { get; set; }
     public string? HospitalTransferDestination { get; set; }
-    public string? DischargeDescription { get; set; }
+    public DateTime? DischargeTime { get; set; }
     public DischargeType? DischargeType { get; set; }
     public string? TotalTreatmentDays { get; set; }
 
@@ -79,12 +81,12 @@ public class MedicalRecordDto
     // Navigation Properties
     // public User Creator { get; set; } = null!;
     // public ICollection<MedicalAttachment> Attachments { get; set; } = [];
-    public ICollection<DepartmentTransfer> DepartmentTransfers { get; set; } = [];
+    public ICollection<DepartmentTransferDto> DepartmentTransfers { get; set; } = [];
     public PatientDto Patient { get; set; } = null!;
 
     // clinical examination form
     // public ICollection<XRay> XRays { get; set; } = [];
     // public ICollection<Hematology> Hematologies { get; set; } = [];
     // 1-1 Relationship
-    public MedicalRecordDetail? Detail { get; set; }
+    public MedicalRecordDetailDto? Detail { get; set; }
 }
