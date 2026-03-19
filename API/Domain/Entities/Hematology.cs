@@ -6,7 +6,7 @@ public class Hematology
 {
     public int Id { get; set; }
     // Foreign key
-    public required int MedicalRecordId { get; set; }
+    public int MedicalRecordId { get; set; }
     public int RequestedById { get; set; }
     public int? PerformedById { get; set; }
 

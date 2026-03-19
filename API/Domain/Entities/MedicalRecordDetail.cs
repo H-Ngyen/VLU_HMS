@@ -31,7 +31,7 @@ public class MedicalRecordDetail
     public string? Temperature { get; set; }
     public string? BloodPressure { get; set; }
     public string? RespiratoryRate { get; set; }
-    public string BodyWeight { get; set; } = null!;
+    public string? BodyWeight { get; set; }
 
     // Navigation Properties
     public ICollection<MedicalRecordRiskFactor> RiskFactors { get; set; } = [];

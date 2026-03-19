@@ -41,7 +41,7 @@ public class MedicalRecord
     // Transfer & Discharge
     public HospitalTransferType? HospitalTransferType { get; set; }
     public string? HospitalTransferDestination { get; set; }
-    public string? DischargeDescription { get; set; }
+    public DateTime? DischargeTime { get; set; }
     public DischargeType? DischargeType { get; set; }
     public string? TotalTreatmentDays { get; set; }
 

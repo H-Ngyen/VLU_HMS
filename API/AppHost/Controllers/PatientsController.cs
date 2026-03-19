@@ -1,4 +1,5 @@
 using Application.Patients.Commands.CreatePatient;
+using Application.Patients.Commands.DeletePatient;
 using Application.Patients.Commands.UpdatePatient;
 using Application.Patients.Queries.GetAllPatients;
 using Application.Patients.Queries.GetPatientById;
@@ -37,6 +38,13 @@ public class PatientsController(IMediator mediator) : ControllerBase
     {
         command.Id = id;
         await mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeletePatient(int id)
+    {
+        await mediator.Send(new DeletePatientCommand(id));
         return NoContent();
     }
 }

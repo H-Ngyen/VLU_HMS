@@ -6,7 +6,7 @@ public class XRay
     
     // Foreign Key
     // Liên kết với Hồ sơ bệnh án
-    public required int MedicalRecordId { get; set; }
+    public int MedicalRecordId { get; set; }
     public int RequestedById { get; set; }
     public int? PerformedById { get; set; }
 

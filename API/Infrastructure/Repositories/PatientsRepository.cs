@@ -5,18 +5,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-internal class PatientsRepository : BaseRepository<Patient>, IPatientsRepository
+internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient>(context), IPatientsRepository
 {
-    public PatientsRepository(AppDbContext dbContext) : base(dbContext) { }
     public async Task<int> CreateAsync(Patient patient)
     {
         _dbContext.Add(patient);
-        await _dbContext.SaveChangesAsync();
+        await SaveChanges();
         return  patient.Id;
     }
 
     public async Task<IEnumerable<Patient>> GetAllAsync()
-        => await ReadOnlyQuery
+        => await NoTrackingQuery
             .Include(p => p.Ethnicity)
             .ToListAsync();
 
@@ -31,7 +30,7 @@ internal class PatientsRepository : BaseRepository<Patient>, IPatientsRepository
     {
         var searchPhraseLower = searchPhrase?.ToLower();
 
-        var baseQuery = ReadOnlyQuery
+        var baseQuery = NoTrackingQuery
             .Where(r => searchPhraseLower == null || r.Name.ToLower().Contains(searchPhraseLower)
                                                    || r.HealthInsuranceNumber.ToLower().Contains(searchPhraseLower));
 
@@ -47,5 +46,11 @@ internal class PatientsRepository : BaseRepository<Patient>, IPatientsRepository
     public async Task SaveChanges() => await _dbContext.SaveChangesAsync();
 
     public async Task<bool> ExistHealthInsuranceNumber(string healthInsuranceNumber)
-        => await ReadOnlyQuery.AnyAsync(p => p.HealthInsuranceNumber == healthInsuranceNumber);
+        => await NoTrackingQuery.AnyAsync(p => p.HealthInsuranceNumber == healthInsuranceNumber);
+
+    public async Task DeleteAsync(Patient patient)
+    {
+        _dbContext.Patients.Remove(patient);
+        await SaveChanges();
+    }
 }

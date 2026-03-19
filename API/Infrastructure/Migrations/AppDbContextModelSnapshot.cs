@@ -274,9 +274,6 @@ namespace Infrastructure.Migrations
                     b.Property<int?>("DiagnosisCode")
                         .HasColumnType("int");
 
-                    b.Property<string>("DischargeDescription")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("DischargeMainCode")
                         .HasColumnType("nvarchar(max)");
 
@@ -288,6 +285,9 @@ namespace Infrastructure.Migrations
 
                     b.Property<string>("DischargeSubDiagnosis")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("DischargeTime")
+                        .HasColumnType("datetime2");
 
                     b.Property<int?>("DischargeType")
                         .HasColumnType("int");
@@ -404,7 +404,6 @@ namespace Infrastructure.Migrations
                         .HasColumnType("nvarchar(10)");
 
                     b.Property<string>("BodyWeight")
-                        .IsRequired()
                         .HasMaxLength(5)
                         .HasColumnType("nvarchar(5)");
 

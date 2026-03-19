@@ -5,9 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 
-internal class UsersRepository : BaseRepository<User>, IUserRepository
+internal class UsersRepository(AppDbContext context) : BaseRepository<User>(context), IUserRepository
 {
-    public UsersRepository(AppDbContext context) : base(context) { }
-    public Task<bool> ExistsAsync(int id)
-        => ReadOnlyQuery.AnyAsync(u => u.Id == id);
+    public async Task<bool> ExistsAsync(int id)
+        => await NoTrackingQuery.AnyAsync(u => u.Id == id);
 }

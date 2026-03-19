@@ -18,7 +18,7 @@ internal class MedicalRecordDetailConfiguration : IEntityTypeConfiguration<Medic
         builder.Property(d => d.ExamGeneral).HasMaxLength(2000);
         // ... (Bạn có thể thêm tiếp các trường Exam khác nếu muốn giới hạn)
 
-        builder.Property(d => d.BodyWeight).IsRequired().HasMaxLength(5);
+        builder.Property(d => d.BodyWeight).HasMaxLength(5);
         builder.Property(d => d.PulseRate).HasMaxLength(5);
         builder.Property(d => d.Temperature).HasMaxLength(5);
         builder.Property(d => d.BloodPressure).HasMaxLength(10);
