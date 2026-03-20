@@ -1,6 +1,8 @@
+using Application.Common;
 using Application.MedicalRecords.Commands.CreateMedicalRecord;
 using Application.MedicalRecords.Commands.DeleteMedicalRecord;
 using Application.MedicalRecords.Commands.UpdateMedicalRecord;
+using Application.MedicalRecords.Dtos;
 using Application.MedicalRecords.Queries.GetAllMedicalRecords;
 using Application.MedicalRecords.Queries.GetMedicalRecordById;
 using MediatR;
@@ -13,21 +15,27 @@ namespace AppHost.Controllers;
 public class MedicalRecordsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAllMedicalRecords([FromQuery] GetAllMedicalRecordsQuery query)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<MedicalRecordItemDto>>> GetAllMedicalRecords([FromQuery] GetAllMedicalRecordsQuery query)
     {
         var medicalRecords = await mediator.Send(query);
         return Ok(medicalRecords);
     }   
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetMedicalRecordById(int id)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<MedicalRecordDto>> GetMedicalRecordById(int id)
     {
         var medicalRecord = await mediator.Send(new GetMedicalRecordByIdQuery(id));
         return Ok(medicalRecord);
     }
 
     [HttpPost("{patientId:int}")]
-    public async Task<IActionResult> CreateMedicalRecord(int patientId, CreateMedicalRecordCommand command)
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<int>> CreateMedicalRecord(int patientId, CreateMedicalRecordCommand command)
     {
         command.PatientId = patientId;
         var recordId = await mediator.Send(command);
@@ -35,6 +43,9 @@ public class MedicalRecordsController(IMediator mediator) : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateMedicalRecord(int id, UpdateMedicalRecordCommand command)
     {
         command.Id = id;
@@ -43,6 +54,8 @@ public class MedicalRecordsController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteMedicalRecord(int id)
     {
         await mediator.Send(new DeleteMedicalRecordCommand(id));

@@ -1,17 +1,32 @@
+using AutoMapper;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Application.Extensions;
+
 public static class ServiceCollectionExtensions
 {
     public static void AddApplication(this IServiceCollection services)
     {
-        var applicationAssembly = typeof(ServiceCollectionExtensions).Assembly;
+        var applicationAssemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(applicationAssembly));
-        services.AddAutoMapper(applicationAssembly);
-        services.AddValidatorsFromAssembly(applicationAssembly)
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(applicationAssemblies));
+        // register AutoMapper configuration
+        services.AddSingleton(provider =>
+        {
+            var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+
+            var mapperConfig = new MapperConfiguration(cfg =>
+            {
+                cfg.AddMaps(applicationAssemblies);
+            }, loggerFactory);
+
+            return mapperConfig.CreateMapper();
+        });
+        
+        services.AddValidatorsFromAssemblies(applicationAssemblies)
             .AddFluentValidationAutoValidation();
     }
 }

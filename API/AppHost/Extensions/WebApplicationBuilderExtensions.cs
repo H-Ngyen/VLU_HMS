@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 using AppHost.Middlewares;
+using Microsoft.OpenApi.Models;
+using Serilog;
 
 namespace AppHost.Extensions;
 
@@ -12,6 +14,34 @@ public static class WebApplicationBuilderExtensions
             {
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
+
+        builder.Services.AddSwaggerGen(cfg =>
+        {
+            cfg.AddSecurityDefinition("bearerAuth", new OpenApiSecurityScheme
+            {
+                Type = SecuritySchemeType.Http,
+                Scheme = "Bearer"
+            });
+
+            cfg.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "bearerAuth"}
+                },
+                []
+            }
+            });
+        });
+
+        builder.Services.AddEndpointsApiExplorer();
+
         builder.Services.AddScoped<ErrorHandlingMiddleware>();
-    } 
+        builder.Services.AddScoped<RequestTimeLoggingMiddleware>();
+
+        builder.Host.UseSerilog((context, configuration) =>
+            configuration.ReadFrom.Configuration(context.Configuration)
+        );
+    }
 }

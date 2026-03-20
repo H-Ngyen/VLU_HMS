@@ -9,7 +9,10 @@ namespace AppHost.Controllers;
 public class XRaysController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> AddXRay(int recordId, CreateXRaysCommand command)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<int>> AddXRay(int recordId, CreateXRaysCommand command)
     {
         command.MedicalRecordId = recordId;
         var xRayId = await mediator.Send(command);

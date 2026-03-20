@@ -3,6 +3,7 @@ using AppHost.Middlewares;
 using Application.Extensions;
 using Infrastructure.Extensions;
 using Infrastructure.Seeders;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +23,16 @@ await seeder.Seed();
 
 // Configure the HTTP request pipeline. 
 app.UseMiddleware<ErrorHandlingMiddleware>();
+
+app.UseMiddleware<RequestTimeLoggingMiddleware>();
+
+app.UseSerilogRequestLogging();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 app.UseHttpsRedirection();
 

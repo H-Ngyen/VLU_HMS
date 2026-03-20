@@ -1,6 +1,7 @@
 using Application.MedicalAttachments.Commands.CreateMedicalAttachment;
 using Application.MedicalAttachments.Commands.DeleteMedicalAttachment;
 using Application.MedicalAttachments.Commands.UpdateMedicalAttachment;
+using Application.MedicalAttachments.Dtos;
 using Application.MedicalAttachments.Queries;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
@@ -12,22 +13,29 @@ namespace AppHost.Controllers;
 public class MedicalAttachmentController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    public async Task<IActionResult> GetAllAttachments(int recordId)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IEnumerable<MedicalAttachmentDto>>> GetAllAttachments(int recordId)
     {
         var attachments = await mediator.Send(new GetAllMedicalAttachmentsQuery(recordId));
         return Ok(attachments);
     }
     
     [HttpPost]
-    public async Task<IActionResult> CreateAttachment(int recordId, [FromForm] CreateMedicalAttachmentCommand command)
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<int>> CreateAttachment(int recordId, [FromForm] CreateMedicalAttachmentCommand command)
     {
         command.MedicalRecordId = recordId;
         var attachmentId =  await mediator.Send(command);
-        // return CreatedAtAction(nameof);
         return Ok(attachmentId);
     }
 
     [HttpPut("{attachmentId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> UpdateAttachment(int recordId, int attachmentId, UpdateMedicalAttachmentCommand command)
     {
         command.Id = attachmentId;
@@ -37,6 +45,8 @@ public class MedicalAttachmentController(IMediator mediator) : ControllerBase
     }
 
     [HttpDelete("{attachmentId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> DeleteAttachment(int recordId, int attachmentId)
     {
         await mediator.Send(new DeleteMedicalAttachmentCommand(attachmentId, recordId));
