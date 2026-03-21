@@ -1,25 +1,14 @@
 export interface Patient {
-  id: string;
-  fullName: string;
-  cccd: string;
-  dob: string;
-  age: number;
-  gender: string;
-  job: string;
-  jobCode: string;
-  ethnicity: string;
-  nationality: string;
-  address: string;
-  addressStreet: string;
-  addressWard: string;
-  addressDistrict: string;
-  addressProvince: string;
-  workplace: string;
-  subjectType: string;
-  insuranceExpiry: string;
-  insuranceNumber: string;
-  relativeInfo: string;
-  relativePhone: string;
+  id: number;
+  name: string;
+  dateOfBirth: string;
+  gender: number; // 1=Male, 2=Female, 3=Other
+  healthInsuranceNumber: string;
+  ethnicityId: number;
+  ethnicity?: {
+    id: number;
+    name: string;
+  };
 }
 
 export interface Document {
