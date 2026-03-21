@@ -8,7 +8,10 @@ namespace Infrastructure.Repositories;
 
 internal class EthnicityRepository(AppDbContext context) : BaseRepository<Ethnicity>(context), IEthnicityRepository
 {
-    public async Task<bool> ExistsAsync(int id) 
+    public async Task<IEnumerable<Ethnicity>> GetAllAsync()
+        => await NoTrackingQuery.ToListAsync();
+
+    public async Task<bool> ExistsAsync(int id)
         => await NoTrackingQuery.AnyAsync(e => e.Id == id);
 
     // public async Task<Ethnicity?> GetByIdAsync(int id)
