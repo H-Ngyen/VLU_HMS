@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { INITIAL_RECORDS, INITIAL_PATIENTS } from "@/mockData";
-import { RecordForm } from "../EditRecord/RecordForm";
+import { ViewRecordForm } from "../ViewRecord/RecordForm";
 import { Button } from "@/components/ui/button";
 
 export const RecordDetailView = () => {
@@ -26,13 +26,10 @@ export const RecordDetailView = () => {
 
   return (
     <div className="w-full p-4 lg:p-8 max-w-[1600px] mx-auto bg-white min-h-screen">
-      <RecordForm
+      <ViewRecordForm
         record={record}
         patient={patient}
-        mode="edit"
-        onSubmit={() => {}} // No-op in read-only mode
         onCancel={() => navigate("/")}
-        readOnly={true}
       />
     </div>
   );

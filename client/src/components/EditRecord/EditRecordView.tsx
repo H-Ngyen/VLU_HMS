@@ -31,7 +31,7 @@ export const EditRecordView = () => {
   // Fallback if patient not found (though record exists)
   if (!patient) return <div>Lỗi dữ liệu: Không tìm thấy thông tin bệnh nhân.</div>;
 
-  const handleUpdate = (updatedRecord: Record) => {
+  const handleUpdate = (updatedRecord: Record, _patientSnapshot: any) => {
     // In a real app, this would be an API PUT request
     console.log("Updated Record:", updatedRecord);
     setRecord(updatedRecord);

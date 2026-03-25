@@ -47,7 +47,15 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
 
   const addTransfer = () => {
     if (readOnly) return;
-    const newTransfer: Transfer = { department: "", date: "", days: 0, time: "" };
+    // transfers[0] là "Vào khoa" (Admission), transfers[1+] là "Chuyển khoa" (DepartmentTransfer)
+    const nextIndex = managementData.transfers.length;
+    const newTransfer: Transfer = {
+      department: "",
+      date: "",
+      days: 0,
+      time: "",
+      transferType: nextIndex === 0 ? 1 : 2,
+    };
     handleChange("transfers", [...managementData.transfers, newTransfer]);
   };
 
@@ -287,12 +295,22 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <div className="space-y-3">
                 <Label>18. Ra viện</Label>
-                 <Input
-                  type="date"
-                  value={formData.dischargeDate || ""}
-                  onChange={(e) => handleRootChange("dischargeDate", e.target.value)}
-                  disabled={readOnly}
-                />
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Input
+                    type="date"
+                    value={formData.dischargeDate || ""}
+                    onChange={(e) => handleRootChange("dischargeDate", e.target.value)}
+                    disabled={readOnly}
+                    className="h-9"
+                  />
+                  <Input
+                    type="time"
+                    value={managementData.dischargeTime || ""}
+                    onChange={(e) => handleChange("dischargeTime", e.target.value)}
+                    disabled={readOnly}
+                    className="h-9"
+                  />
+                </div>
                 <RadioGroup 
                     value={managementData.dischargeType || ""} 
                     onValueChange={(val) => handleChange("dischargeType", val)}

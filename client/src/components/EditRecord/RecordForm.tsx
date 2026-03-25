@@ -20,16 +20,16 @@ interface RecordFormProps {
   patient: Patient;
   mode: "create" | "edit";
   initialType?: "internal" | "surgery";
-  onSubmit: (data: Record) => void;
+  onSubmit: (data: Record, patient: Patient) => void;
   onCancel: () => void;
   readOnly?: boolean;
 }
 
-const createInitialRecord = (patient: Patient, type: "internal" | "surgery" = "internal"): Record => {
+const createInitialRecord = (patient: any, type: "internal" | "surgery" = "internal"): Record => {
   const departmentName = type === "surgery" ? "Ngoại Khoa" : "Nội Khoa";
   return {
     id: `REC${Date.now()}`,
-    patientId: patient.id,
+    patientId: String(patient.id),
     patientName: patient.fullName,
     cccd: patient.cccd,
     insuranceNumber: patient.insuranceNumber,
@@ -48,8 +48,18 @@ const createInitialRecord = (patient: Patient, type: "internal" | "surgery" = "i
       admissionCount: 1,
       hospitalTransfer: { type: "", destination: "" },
       dischargeType: "",
+      dischargeTime: "00:00",
       totalDays: 0,
-      transfers: [{ department: departmentName, date: new Date().toISOString().split("T")[0], time: "", days: 0 }],
+      transfers: [
+        {
+          department: departmentName,
+          date: new Date().toISOString().split("T")[0],
+          time: "",
+          days: 0,
+          // transfers[0] corresponds to Swagger TransferType.Admission (=1)
+          transferType: 1,
+        },
+      ],
     },
     diagnosisInfo: {
       transferDiagnosis: { name: "", code: "" },
@@ -110,8 +120,22 @@ const createInitialRecord = (patient: Patient, type: "internal" | "surgery" = "i
 const prepareRecordData = (record: Record): Record => {
   let transfers = record.managementData?.transfers || [];
   if (transfers.length === 0) {
-    transfers = [{ department: record.department || "", date: record.admissionDate || "", time: "", days: 0 }];
+    transfers = [
+      {
+        department: record.department || "",
+        date: record.admissionDate || "",
+        time: "",
+        days: 0,
+        transferType: 1,
+      },
+    ];
   }
+
+  // Normalize transferType for existing/mock data
+  transfers = transfers.map((t, idx) => {
+    const transferType = t.transferType ?? (idx === 0 ? 1 : 2);
+    return { ...t, transferType };
+  });
   const initializedData: Record = {
     ...record,
     managementData: { ...record.managementData, transfers: transfers },
@@ -211,7 +235,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
     if (e) e.preventDefault();
     if (formData && !readOnly) {
       // In a real app, we would also submit editablePatient to update patient details
-      onSubmit(formData);
+      onSubmit(formData, editablePatient);
     }
   };
 
@@ -233,8 +257,12 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
         setIsMedicalGroupOpen(true);
       }
     } else {
-      setActiveTab("forms"); // Navigate to Phiếu cận lâm sàng first
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // In create mode, do not navigate to "forms/documents" yet.
+      // The user should finish the "mục 1..A" in the details tab first.
+      if (!isCreate) {
+        setActiveTab("forms"); // Navigate to Phiếu cận lâm sàng first
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     }
   };
 
@@ -265,7 +293,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
             <span className="text-vlu-red">{typeLabel}</span>
           </h1>
           <p className="text-gray-500">
-            {isCreate ? `Bệnh nhân: ${patient.fullName}` : `Mã lưu trữ: ${record?.id}`}
+            {isCreate ? `Bệnh nhân: ${(patient as any).fullName}` : `Mã lưu trữ: ${record?.id}`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -303,14 +331,20 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
               </TabsTrigger>
               <TabsTrigger 
                 value="forms"
-                className="rounded-lg px-4 py-2 text-[12px] font-bold text-gray-400 transition-all duration-200 data-[state=active]:bg-vlu-red data-[state=active]:text-white"
+                disabled={isCreate}
+                className={`rounded-lg px-4 py-2 text-[12px] font-bold text-gray-400 transition-all duration-200 data-[state=active]:bg-vlu-red data-[state=active]:text-white ${
+                  isCreate ? "blur-[1px]" : ""
+                }`}
               >
                 <Activity size={16} className="mr-2" />
                 Phiếu cận lâm sàng
               </TabsTrigger>
               <TabsTrigger 
                 value="documents"
-                className="rounded-lg px-4 py-2 text-[12px] font-bold text-gray-400 transition-all duration-200 data-[state=active]:bg-vlu-red data-[state=active]:text-white"
+                disabled={isCreate}
+                className={`rounded-lg px-4 py-2 text-[12px] font-bold text-gray-400 transition-all duration-200 data-[state=active]:bg-vlu-red data-[state=active]:text-white ${
+                  isCreate ? "blur-[1px]" : ""
+                }`}
               >
                 <FileText size={16} className="mr-2" />
                 Tài Liệu Đính Kèm
@@ -419,9 +453,14 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                       <ArrowLeft size={16} className="mr-2" /> Quay lại
                     </Button>
                     
-                    <Button type="button" onClick={handleNextSection} className="bg-vlu-red hover:bg-red-800 text-white">
-                      {currentSectionIndex < flattenedSections.length - 1 
-                        ? flattenedSections[currentSectionIndex + 1].label.replace(/^[IV0-9]+\.\s/, "") 
+                    <Button
+                      type="button"
+                      onClick={handleNextSection}
+                      disabled={isCreate && currentSectionIndex === flattenedSections.length - 1}
+                      className="bg-vlu-red hover:bg-red-800 text-white disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {currentSectionIndex < flattenedSections.length - 1
+                        ? flattenedSections[currentSectionIndex + 1].label.replace(/^[IV0-9]+\.\s/, "")
                         : "Phiếu cận lâm sàng"}
                       <ArrowRight size={16} className="ml-2" />
                     </Button>

@@ -26,6 +26,11 @@ export interface Transfer {
   date: string;
   days: number | string;
   time?: string;
+  // Swagger "/api/medical-records" requires departmentTransfers[].transferType
+  // UI will auto-fill based on index:
+  // - index 0 => 1 (Admission)
+  // - index > 0 => 2 (DepartmentTransfer)
+  transferType?: number;
 }
 
 export interface HospitalTransfer {
@@ -41,6 +46,8 @@ export interface ManagementData {
   transfers: Transfer[];
   hospitalTransfer: HospitalTransfer;
   dischargeType: string;
+  // UI now captures both date + time for "Ra viện"
+  dischargeTime?: string;
   totalDays: number | string;
 }
 
