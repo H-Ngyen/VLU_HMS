@@ -64,7 +64,7 @@ export const EditRecordView = () => {
       }
 
       toast.success("Cập nhật hồ sơ bệnh án thành công!");
-      navigate(`/record/${id}`);
+      fetchRecordData(); // Refresh data from server to sync state
     } catch (error: any) {
       console.error("Failed to update record:", error);
       toast.error(error.message || "Lỗi khi cập nhật hồ sơ");
@@ -105,11 +105,54 @@ export const EditRecordView = () => {
 
 // --- MAPPING HELPERS ---
 
+const formatIsoToLocal = (isoString?: string) => {
+  if (!isoString) return { date: "", time: "" };
+  // Just split the string returned by the API (e.g. "2026-03-21T10:00:00")
+  const parts = isoString.split('T');
+  const date = parts[0] || "";
+  const time = parts[1] ? parts[1].substring(0, 5) : "";
+  return { date, time };
+};
+
 const mapDtoToPatient = (apiPatient: any, recordDto: any): Patient => {
   const dobDate = apiPatient.dateOfBirth ? new Date(apiPatient.dateOfBirth) : null;
   const age = dobDate && !isNaN(dobDate.getTime()) ? new Date().getFullYear() - dobDate.getFullYear() : 0;
   const genderText = apiPatient.gender === 1 ? "Nam" : apiPatient.gender === 2 ? "Nữ" : "Khác";
   const paymentCategoryMapInv: any = { 1: "BHYT", 2: "Thu phí", 3: "Miễn", 4: "Khác" };
+
+  // Parse address parts from the combined address string
+  const fullAddress = recordDto.address || "";
+  const addressParts = fullAddress.split(",").map((p: string) => p.trim());
+  
+  let houseNumber = "";
+  let village = "";
+  
+  // Logic: AdministrativeSection joins as [house, village, ward, district, province]
+  // We try to match from the end to identify ward, district, province
+  const knownWard = recordDto.wardName?.trim();
+  const knownDistrict = recordDto.districtName?.trim();
+  const knownProvince = recordDto.provinceName?.trim();
+
+  // Filter out the known parts from the end
+  const remainingParts = [...addressParts];
+  if (knownProvince && remainingParts[remainingParts.length - 1] === knownProvince) remainingParts.pop();
+  if (knownDistrict && remainingParts[remainingParts.length - 1] === knownDistrict) remainingParts.pop();
+  if (knownWard && remainingParts[remainingParts.length - 1] === knownWard) remainingParts.pop();
+
+  // What's left should be houseNumber and village
+  if (remainingParts.length >= 2) {
+    houseNumber = remainingParts[0];
+    village = remainingParts.slice(1).join(", ");
+  } else if (remainingParts.length === 1) {
+    // If only one part remains, we don't know if it's house number or village.
+    // Usually, people put village/street name if there's only one.
+    // But let's check if it looks like a number.
+    if (/^\d+/.test(remainingParts[0])) {
+      houseNumber = remainingParts[0];
+    } else {
+      village = remainingParts[0];
+    }
+  }
 
   return {
     id: apiPatient.id,
@@ -124,7 +167,7 @@ const mapDtoToPatient = (apiPatient: any, recordDto: any): Patient => {
     // Snapshots from recordDto
     job: recordDto.jobTitle || "",
     jobCode: recordDto.jobTitleCode || "",
-    nationality: "Việt Nam", // Default or map if available
+    nationality: "Việt Nam",
     address: recordDto.address || "",
     workplace: recordDto.addressJob || "",
     subjectType: paymentCategoryMapInv[recordDto.paymentCategory] || "",
@@ -132,7 +175,9 @@ const mapDtoToPatient = (apiPatient: any, recordDto: any): Patient => {
     relativeInfo: recordDto.relativeInfo || "",
     relativePhone: recordDto.relativePhone || "",
     
-    // Address parts
+    // Address parts for UI
+    houseNumber,
+    village,
     provinceName: recordDto.provinceName || "",
     districtName: recordDto.districtName || "",
     wardName: recordDto.wardName || "",
@@ -142,10 +187,8 @@ const mapDtoToPatient = (apiPatient: any, recordDto: any): Patient => {
 };
 
 const mapDtoToRecord = (dto: any): Record => {
-  const admissionDate = dto.admissionTime ? dto.admissionTime.split('T')[0] : "";
-  const admissionTime = dto.admissionTime ? dto.admissionTime.split('T')[1].substring(0, 5) : "";
-  const dischargeDate = dto.dischargeTime ? dto.dischargeTime.split('T')[0] : "";
-  const dischargeTime = dto.dischargeTime ? dto.dischargeTime.split('T')[1].substring(0, 5) : "";
+  const { date: admissionDate, time: admissionTime } = formatIsoToLocal(dto.admissionTime);
+  const { date: dischargeDate, time: dischargeTime } = formatIsoToLocal(dto.dischargeTime);
 
   // Reverse Map Enums to UI Strings
   const treatmentResultMapInv: any = { 1: "Khoi", 2: "DoGiam", 3: "KhongThayDoi", 4: "NangHon", 5: "TuVong" };
@@ -196,13 +239,16 @@ const mapDtoToRecord = (dto: any): Record => {
       admissionType: admissionTypeMapInv[dto.admissionType] || "",
       referralSource: referralSourceMapInv[dto.referralSource] || "",
       admissionCount: dto.admissionCount || "1",
-      transfers: dto.departmentTransfers?.map((t: any) => ({
-        department: t.name,
-        date: t.admissionTime?.split('T')[0] || "",
-        time: t.admissionTime?.split('T')[1]?.substring(0, 5) || "",
-        days: t.treatmentDays || "0",
-        transferType: t.transferType
-      })) || [],
+      transfers: dto.departmentTransfers?.map((t: any) => {
+        const { date, time } = formatIsoToLocal(t.admissionTime);
+        return {
+          department: t.name,
+          date,
+          time,
+          days: t.treatmentDays || "0",
+          transferType: t.transferType
+        };
+      }) || [],
       hospitalTransfer: { 
         type: hospitalTransferTypeMapInv[dto.hospitalTransferType] || "", 
         destination: dto.hospitalTransferDestination || "" 
@@ -241,7 +287,7 @@ const mapDtoToRecord = (dto: any): Record => {
     },
     medicalRecordContent: {
       reason: dto.detail?.admissionReason || "",
-      dayOfIllness: "",
+      dayOfIllness: dto.detail?.illnessDay?.toString() || "",
       pathologicalProcess: dto.detail?.pathologicalProcess || "",
       personalHistory: dto.detail?.personalHistory || "",
       familyHistory: dto.detail?.familyHistory || "",
@@ -292,16 +338,14 @@ const mapRecordToUpdateCommand = (newRecord: Record, patientSnapshot: any, numer
   const deathTimeGroupMap: any = { "Trong 24 giờ vào viện": 1, "Sau 24 giờ vào viện": 2 };
   const riskFactorSignedMap: any = { allergy: 1, drugs: 2, alcohol: 3, tobacco: 4, pipeTobacco: 5, other: 6 };
 
-  const isoDateAtMidnightUTC = (dateStr?: string) => {
+  const isoDateAtMidnight = (dateStr?: string) => {
     if (!dateStr) return undefined;
-    const d = new Date(`${dateStr}T00:00:00.000Z`);
-    return isNaN(d.getTime()) ? undefined : d.toISOString();
+    return `${dateStr}T00:00:00`;
   };
 
-  const combineDateTimeToIso = (dateStr?: string, timeStr?: string) => {
+  const combineDateTimeToLocal = (dateStr?: string, timeStr?: string) => {
     if (!dateStr || !timeStr) return undefined;
-    const d = new Date(`${dateStr}T${timeStr}:00`);
-    return isNaN(d.getTime()) ? undefined : d.toISOString();
+    return `${dateStr}T${timeStr}:00`;
   };
 
   const riskFactors = Object.entries(riskFactorSignedMap)
@@ -328,19 +372,19 @@ const mapRecordToUpdateCommand = (newRecord: Record, patientSnapshot: any, numer
     provinceName: patientSnapshot.provinceName || null,
     districtName: patientSnapshot.districtName || null,
     wardName: patientSnapshot.wardName || null,
-    healthInsuranceExpiryDate: isoDateAtMidnightUTC(patientSnapshot.insuranceExpiry),
+    healthInsuranceExpiryDate: isoDateAtMidnight(patientSnapshot.insuranceExpiry),
     relativeInfo: patientSnapshot.relativeInfo || "",
     relativePhone: patientSnapshot.relativePhone || "",
     paymentCategory: paymentCategoryMap[patientSnapshot.subjectType] ?? null,
 
     // Management
-    admissionTime: combineDateTimeToIso(newRecord.admissionDate, newRecord.managementData.admissionTime),
+    admissionTime: combineDateTimeToLocal(newRecord.admissionDate, newRecord.managementData.admissionTime),
     admissionType: admissionTypeMap[newRecord.managementData.admissionType] ?? null,
     referralSource: referralSourceMap[newRecord.managementData.referralSource] ?? null,
     admissionCount: newRecord.managementData.admissionCount.toString(),
     hospitalTransferType: hospitalTransferTypeMap[newRecord.managementData.hospitalTransfer?.type] ?? null,
     hospitalTransferDestination: newRecord.managementData.hospitalTransfer?.destination || "",
-    dischargeTime: combineDateTimeToIso(newRecord.dischargeDate, newRecord.managementData.dischargeTime),
+    dischargeTime: combineDateTimeToLocal(newRecord.dischargeDate, newRecord.managementData.dischargeTime),
     dischargeType: dischargeTypeMap[newRecord.managementData.dischargeType] ?? null,
     totalTreatmentDays: newRecord.managementData.totalDays.toString(),
     
@@ -372,15 +416,21 @@ const mapRecordToUpdateCommand = (newRecord: Record, patientSnapshot: any, numer
     diagnosisAutopsy: newRecord.dischargeStatusInfo.autopsyDiagnosis.name ?? "",
     diagnosisCode: parseInt(newRecord.dischargeStatusInfo.autopsyDiagnosis.code) || 0,
 
-    departmentTransfers: newRecord.managementData.transfers.map((t, idx) => ({
-      name: t.department || "",
-      admissionTime: combineDateTimeToIso(t.date, t.time || "00:00") || new Date().toISOString(),
-      transferType: t.transferType ?? (idx === 0 ? 1 : 2),
-      treatmentDays: t.days.toString()
-    })),
+    departmentTransfers: newRecord.managementData.transfers.map((t, idx) => {
+      const localNow = new Date();
+      const fallbackIso = `${localNow.getFullYear()}-${String(localNow.getMonth() + 1).padStart(2, '0')}-${String(localNow.getDate()).padStart(2, '0')}T${String(localNow.getHours()).padStart(2, '0')}:${String(localNow.getMinutes()).padStart(2, '0')}:00`;
+      
+      return {
+        name: t.department || "",
+        admissionTime: combineDateTimeToLocal(t.date, t.time || "00:00") || fallbackIso,
+        transferType: t.transferType ?? (idx === 0 ? 1 : 2),
+        treatmentDays: t.days.toString()
+      };
+    }),
 
     // Medical Record Detail (A)
     detail: {
+      illnessDay: newRecord.medicalRecordContent.dayOfIllness ? Number.parseInt(newRecord.medicalRecordContent.dayOfIllness, 10) : null,
       admissionReason: newRecord.medicalRecordContent.reason ?? "",
       pathologicalProcess: newRecord.medicalRecordContent.pathologicalProcess ?? "",
       personalHistory: newRecord.medicalRecordContent.personalHistory ?? "",

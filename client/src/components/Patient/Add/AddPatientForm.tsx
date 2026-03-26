@@ -48,9 +48,12 @@ export const AddPatientForm = () => {
     setSubmitting(true);
 
     try {
+      const localToday = new Date();
+      const todayStr = `${localToday.getFullYear()}-${String(localToday.getMonth() + 1).padStart(2, '0')}-${String(localToday.getDate()).padStart(2, '0')}`;
+      
       const payload = {
         name: formData.name,
-        dateOfBirth: formData.dateOfBirth ? new Date(formData.dateOfBirth).toISOString() : new Date().toISOString(),
+        dateOfBirth: formData.dateOfBirth ? `${formData.dateOfBirth}T00:00:00` : `${todayStr}T00:00:00`,
         gender: formData.gender,
         ethnicityId: formData.ethnicityId,
         healthInsuranceNumber: formData.healthInsuranceNumber
@@ -58,7 +61,7 @@ export const AddPatientForm = () => {
 
       console.log('Sending payload:', payload);
       await api.patients.create(payload);
-      toast.success(`Đã thêm bệnh nhân "${formData.fullName}" thành công!`);
+      toast.success(`Đã thêm bệnh nhân "${formData.name}" thành công!`);
       navigate('/patients');
     } catch (error: any) {
       console.error('Failed to create patient:', error);

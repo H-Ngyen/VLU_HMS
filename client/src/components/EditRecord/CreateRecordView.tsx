@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "@/services/api";
 import { RecordForm } from "./RecordForm";
 import type { Record } from "@/types";
+import { toast } from "sonner";
 
 export const CreateRecordView = () => {
   const { patientId } = useParams();
@@ -47,7 +48,7 @@ export const CreateRecordView = () => {
           fullName: apiPatient.name,
           cccd: "",
           insuranceNumber: apiPatient.healthInsuranceNumber,
-          dob: apiPatient.dateOfBirth,
+          dob: apiPatient.dateOfBirth?.split('T')[0] || "",
           age,
           gender: genderText,
           ethnicity: apiPatient.ethnicity?.name ?? "",
@@ -199,6 +200,7 @@ export const CreateRecordView = () => {
       .filter(Boolean);
 
     const detailPayload = {
+      illnessDay: content.dayOfIllness ? Number.parseInt(content.dayOfIllness, 10) : null,
       admissionReason: content.reason ?? "",
       pathologicalProcess: content.pathologicalProcess ?? "",
       personalHistory: content.personalHistory ?? "",
@@ -254,18 +256,16 @@ export const CreateRecordView = () => {
     const API_BASE_URL = "https://localhost:5001/api";
     const patientIdNum = Number(patientId);
 
-    const isoDateAtMidnightUTC = (dateStr?: string) => {
+    const isoDateAtMidnight = (dateStr?: string) => {
       if (!dateStr) return undefined;
-      // dateStr = "YYYY-MM-DD"
-      const d = new Date(`${dateStr}T00:00:00.000Z`);
-      return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+      // Return YYYY-MM-DD format which C# treats as local/unspecified
+      return `${dateStr}T00:00:00`;
     };
 
-    const combineDateTimeToIso = (dateStr?: string, timeStr?: string) => {
+    const combineDateTimeToLocal = (dateStr?: string, timeStr?: string) => {
       if (!dateStr || !timeStr) return undefined;
-      // timeStr = "HH:MM"
-      const d = new Date(`${dateStr}T${timeStr}:00`);
-      return Number.isNaN(d.getTime()) ? undefined : d.toISOString();
+      // Send as local string without Z suffix
+      return `${dateStr}T${timeStr}:00`;
     };
 
     const recordTypeMap: { [k: string]: number } = {
@@ -307,17 +307,20 @@ export const CreateRecordView = () => {
 
     const departmentTransfers = newRecord.managementData.transfers.map((t, idx) => {
       const transferType = t.transferType ?? (idx === 0 ? 1 : 2);
-      const admissionTimeIso = combineDateTimeToIso(t.date || newRecord.admissionDate, t.time || "00:00");
+      const admissionTimeLocal = combineDateTimeToLocal(t.date || newRecord.admissionDate, t.time || "00:00");
+      const localNow = new Date();
+      const localNowStr = `${localNow.getFullYear()}-${String(localNow.getMonth() + 1).padStart(2, '0')}-${String(localNow.getDate()).padStart(2, '0')}T${String(localNow.getHours()).padStart(2, '0')}:${String(localNow.getMinutes()).padStart(2, '0')}:00`;
+      
       return {
         name: t.department || "",
-        admissionTime: admissionTimeIso ?? new Date().toISOString(),
+        admissionTime: admissionTimeLocal ?? localNowStr,
         transferType,
         treatmentDays: String(t.days ?? 0),
       };
     });
 
-    const admissionTimeIso = combineDateTimeToIso(newRecord.admissionDate, newRecord.managementData.admissionTime);
-    const dischargeTimeIso = combineDateTimeToIso(newRecord.dischargeDate, newRecord.managementData.dischargeTime);
+    const admissionTimeLocal = combineDateTimeToLocal(newRecord.admissionDate, newRecord.managementData.admissionTime);
+    const dischargeTimeLocal = combineDateTimeToLocal(newRecord.dischargeDate, newRecord.managementData.dischargeTime);
 
     const createCommand = {
       // route param overrides command.patientId in controller, but we still send it for clarity
@@ -339,12 +342,12 @@ export const CreateRecordView = () => {
       districtName: patientSnapshot.districtName ?? null,
       wardName: patientSnapshot.wardName ?? null,
 
-      healthInsuranceExpiryDate: isoDateAtMidnightUTC(patientSnapshot.insuranceExpiry),
+      healthInsuranceExpiryDate: isoDateAtMidnight(patientSnapshot.insuranceExpiry),
       relativeInfo: patientSnapshot.relativeInfo || "",
       relativePhone: patientSnapshot.relativePhone || "",
       paymentCategory: paymentCategoryMap[patientSnapshot.subjectType] ?? null,
 
-      admissionTime: admissionTimeIso,
+      admissionTime: admissionTimeLocal,
       admissionType: admissionTypeMap[newRecord.managementData.admissionType] ?? null,
       referralSource: referralSourceMap[newRecord.managementData.referralSource] ?? null,
       admissionCount: String(newRecord.managementData.admissionCount ?? ""),
@@ -352,7 +355,7 @@ export const CreateRecordView = () => {
       hospitalTransferType: hospitalTransferTypeMap[newRecord.managementData.hospitalTransfer?.type] ?? null,
       hospitalTransferDestination: newRecord.managementData.hospitalTransfer?.destination || "",
 
-      dischargeTime: dischargeTimeIso,
+      dischargeTime: dischargeTimeLocal,
       dischargeType: dischargeTypeMap[newRecord.managementData.dischargeType] ?? null,
       totalTreatmentDays: String(newRecord.managementData.totalDays ?? ""),
 
@@ -361,7 +364,18 @@ export const CreateRecordView = () => {
       // IV
       ...dischargePayload,
       // A detail
-      departmentTransfers,
+      departmentTransfers: newRecord.managementData.transfers.map((t, idx) => {
+        const transferType = t.transferType ?? (idx === 0 ? 1 : 2);
+        const localNow = new Date();
+        const fallbackIso = `${localNow.getFullYear()}-${String(localNow.getMonth() + 1).padStart(2, '0')}-${String(localNow.getDate()).padStart(2, '0')}T${String(localNow.getHours()).padStart(2, '0')}:${String(localNow.getMinutes()).padStart(2, '0')}:00`;
+        
+        return {
+          name: t.department || "",
+          admissionTime: combineDateTimeToLocal(t.date || newRecord.admissionDate, t.time || "00:00") ?? fallbackIso,
+          transferType,
+          treatmentDays: String(t.days ?? 0),
+        };
+      }),
       detail: detailPayload,
     };
 
@@ -385,11 +399,12 @@ export const CreateRecordView = () => {
         return res.json();
       })
       .then((recordIdCreated) => {
-        alert(`Tạo hồ sơ bệnh án thành công! recordId=${recordIdCreated}`);
+        toast.success(`Tạo hồ sơ bệnh án thành công! (ID: ${recordIdCreated})`);
+        navigate("/"); // Quay về danh sách hồ sơ
       })
       .catch((err) => {
         console.error(err);
-        alert(`Tạo hồ sơ thất bại: ${err instanceof Error ? err.message : String(err)}`);
+        toast.error(`Tạo hồ sơ thất bại: ${err instanceof Error ? err.message : String(err)}`);
       });
   };
 

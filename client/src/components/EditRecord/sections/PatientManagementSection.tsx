@@ -81,12 +81,59 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
           },
         };
       });
+    } else {
+      setFormData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          admissionDate: "",
+          managementData: {
+            ...prev.managementData,
+            admissionTime: "",
+          },
+        };
+      });
     }
   };
 
-  // Combine date and time for input value
+  const handleDischargeDateTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) return;
+    const val = e.target.value;
+    if (val) {
+      const [date, time] = val.split('T');
+      setFormData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          dischargeDate: date,
+          managementData: {
+            ...prev.managementData,
+            dischargeTime: time,
+          },
+        };
+      });
+    } else {
+      setFormData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          dischargeDate: "",
+          managementData: {
+            ...prev.managementData,
+            dischargeTime: "",
+          },
+        };
+      });
+    }
+  };
+
+  // Combine date and time for input values
   const dateTimeValue = formData.admissionDate && managementData.admissionTime 
     ? `${formData.admissionDate}T${managementData.admissionTime}` 
+    : "";
+
+  const dischargeDateTimeValue = formData.dischargeDate && managementData.dischargeTime 
+    ? `${formData.dischargeDate}T${managementData.dischargeTime}` 
     : "";
 
   return (
@@ -295,22 +342,13 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <div className="space-y-3">
                 <Label>18. Ra viện</Label>
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Input
-                    type="date"
-                    value={formData.dischargeDate || ""}
-                    onChange={(e) => handleRootChange("dischargeDate", e.target.value)}
-                    disabled={readOnly}
-                    className="h-9"
-                  />
-                  <Input
-                    type="time"
-                    value={managementData.dischargeTime || ""}
-                    onChange={(e) => handleChange("dischargeTime", e.target.value)}
-                    disabled={readOnly}
-                    className="h-9"
-                  />
-                </div>
+                <Input
+                  type="datetime-local"
+                  value={dischargeDateTimeValue}
+                  onChange={handleDischargeDateTimeChange}
+                  disabled={readOnly}
+                  className="h-9"
+                />
                 <RadioGroup 
                     value={managementData.dischargeType || ""} 
                     onValueChange={(val) => handleChange("dischargeType", val)}
