@@ -1,4 +1,5 @@
 using Application.DepartmentTransfers.Dtos;
+using Application.MedicalRecordDetails.Dtos;
 using Domain.Constants;
 using MediatR;
 
@@ -81,5 +82,5 @@ public class UpdateMedicalRecordCommand(int id) : IRequest
     // public ICollection<XRay> XRays { get; set; } = [];
     // public ICollection<Hematology> Hematologies { get; set; } = [];
     // // 1-1 Relationship
-    // public MedicalRecordDetail? Detail { get; set; }
+    public MedicalRecordDetailDto? Detail { get; set; }
 }
