@@ -156,6 +156,7 @@ export const CreateRecordView = () => {
 
       deathCause: deathCauseMap[discharge.deathStatus.cause] ?? 0,
       deathTimeGroup: deathTimeGroupMap[discharge.deathStatus.time] ?? 0,
+      deathReason: discharge.deathStatus.description ?? "",
 
       // Swagger: deathMainReason / deathMainCode
       deathMainReason: discharge.mainCauseOfDeath.name ?? "",
@@ -214,10 +215,14 @@ export const CreateRecordView = () => {
       examMaxillofacial: content.organs?.maxillofacial ?? "",
       examOphthalmology: content.organs?.eye ?? "",
       examEndocrineOthers: content.organs?.endocrineAndOthers ?? "",
+      requiredClinicalTests: content.clinicalTests ?? "",
+      medicalSummary: content.summary ?? "",
 
       diagnosisMain: content.admissionDiagnosis?.mainDisease ?? "",
       diagnosisSub: content.admissionDiagnosis?.comorbidities ?? "",
       diagnosisDifferential: content.admissionDiagnosis?.differential ?? "",
+      prognosis: content.prognosis ?? "",
+      treatmentPlan: content.treatmentPlan ?? "",
 
       pulseRate: content.vitalSigns?.pulse ?? "",
       temperature: content.vitalSigns?.temperature ?? "",

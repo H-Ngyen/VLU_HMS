@@ -118,5 +118,42 @@ export const api = {
       if (!response.ok) throw new Error('Failed to fetch ethnicities');
       return response.json();
     }
+  },
+
+  medicalRecords: {
+    getAll: async (params?: { searchPhrase?: string; pageNumber?: number; pageSize?: number; recordType?: number }) => {
+      const queryParams = new URLSearchParams({
+        pageNumber: (params?.pageNumber || 1).toString(),
+        pageSize: (params?.pageSize || 30).toString(),
+        ...(params?.searchPhrase && { searchPhrase: params.searchPhrase }),
+        ...(params?.recordType && { recordType: params.recordType.toString() })
+      });
+
+      const response = await fetch(`${API_BASE_URL}/medical-records?${queryParams}`);
+      if (!response.ok) throw new Error('Failed to fetch medical records');
+      return response.json();
+    },
+
+    getById: async (id: number) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${id}`);
+      if (!response.ok) throw new Error('Failed to fetch medical record');
+      return response.json();
+    },
+
+    delete: async (id: number) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) {
+        let error;
+        try {
+          error = await response.json();
+        } catch {
+          throw new Error(`Failed to delete medical record (Status: ${response.status})`);
+        }
+        throw new Error(error?.title || error?.message || 'Failed to delete medical record');
+      }
+    }
   }
 };
