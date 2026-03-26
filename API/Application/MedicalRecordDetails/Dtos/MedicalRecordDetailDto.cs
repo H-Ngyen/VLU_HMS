@@ -2,6 +2,7 @@ namespace Application.MedicalRecordDetails.Dtos;
 
 public class MedicalRecordDetailDto
 {
+    public int? IllnessDay { get; set; }
     public string? AdmissionReason { get; set; }
     public string? PathologicalProcess { get; set; }
     public string? PersonalHistory { get; set; }

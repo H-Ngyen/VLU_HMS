@@ -4,6 +4,7 @@ public class MedicalRecordDetail
 {
     public int Id { get; set; } // PK & FK to MedicalRecord
 
+    public int? IllnessDay { get; set; }
     public string? AdmissionReason { get; set; }
     public string? PathologicalProcess { get; set; }
     public string? PersonalHistory { get; set; }
@@ -30,7 +31,7 @@ public class MedicalRecordDetail
     public string? DiagnosisDifferential { get; set; }
     public string? Prognosis { get; set; }
     public string? TreatmentPlan { get; set; }
-    
+
     // Vitals
     public string? PulseRate { get; set; }
     public string? Temperature { get; set; }
