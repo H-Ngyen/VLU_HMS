@@ -64,6 +64,7 @@ public class UpdateMedicalRecordCommand(int id) : IRequest
     public PathologyResult? PathologyResult { get; set; }
     public DeathCause? DeathCause { get; set; }
     public DeathTimeGroup? DeathTimeGroup { get; set; }
+     public string? DeathReason { get; set; }
     public string? DeathMainReason { get; set; }
     public int? DeathMainCode { get; set; }
     public bool HasAutopsy { get; set; }
