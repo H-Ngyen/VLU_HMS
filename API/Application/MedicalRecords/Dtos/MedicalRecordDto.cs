@@ -1,6 +1,7 @@
 using Application.DepartmentTransfers.Dtos;
 using Application.MedicalRecordDetails.Dtos;
 using Application.Patients.Dtos;
+using Application.XRays.Dtos;
 using Domain.Constants;
 using Domain.Entities;
 
@@ -86,7 +87,7 @@ public class MedicalRecordDto
     public PatientDto Patient { get; set; } = null!;
 
     // clinical examination form
-    // public ICollection<XRay> XRays { get; set; } = [];
+    public ICollection<XRayDto> XRays { get; set; } = [];
     // public ICollection<Hematology> Hematologies { get; set; } = [];
     // 1-1 Relationship
     public MedicalRecordDetailDto? Detail { get; set; }

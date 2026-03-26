@@ -1,14 +1,28 @@
+using Application.XRays.Commands.CreateXRays;
 using Domain.Interfaces;
 using FluentValidation;
 
-namespace Application.XRays.CreateXRays;
+namespace Application.XRays.Commands.CreateXRays;
 
 public class CreateXRaysCommandValidator : AbstractValidator<CreateXRaysCommand>
 {
     public CreateXRaysCommandValidator(IDateTimeProvider dateTimeProvider)
     {
+        var today = DateOnly.FromDateTime(dateTimeProvider.Now);
+        
+        RuleFor(dto => dto.MedicalRecordId)
+            .GreaterThan(0).WithMessage("Mã hồ sơ bệnh án không hợp lệ.");
+
+        RuleFor(dto => dto.DepartmentName)
+            .NotEmpty().WithMessage("Tên khoa/phòng không được để trống.")
+            .MaximumLength(255).WithMessage("Tên khoa/phòng không được vượt quá 255 ký tự.");
+
+        RuleFor(dto => dto.RequestDescription)
+            .NotEmpty().WithMessage("Nội dung yêu cầu không được để trống.")
+            .MaximumLength(1000).WithMessage("Nội dung yêu cầu không được vượt quá 1000 ký tự.");
+
         RuleFor(dto => dto.RequestedAt)
-            .LessThan(dateTimeProvider.Now).WithMessage("Ngày yêu cầu không được lớn hơn ngày hiện tại.")
-            .GreaterThan(dateTimeProvider.Now.AddYears(-150)).WithMessage("Ngày yêu cầu nhập bị sai.");
+            .LessThanOrEqualTo(today).WithMessage("Ngày yêu cầu không được lớn hơn ngày hiện tại.")
+            .GreaterThan(today.AddYears(-150)).WithMessage("Ngày yêu cầu nhập bị sai.");
     }
 }

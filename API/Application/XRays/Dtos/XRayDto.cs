@@ -1,16 +1,16 @@
 using Domain.Constants;
 
-namespace Domain.Entities;
+namespace Application.XRays.Dtos;
 
-public class XRay
+public class XRayDto
 {
     public int Id { get; set; }
-
     // Foreign Key
-    // Liên kết với Hồ sơ bệnh án
     public int MedicalRecordId { get; set; }
     public int RequestedById { get; set; }
+    public string? RequestedByName { get; set; }
     public int? PerformedById { get; set; }
+    public string? PerformedByName { get; set; }
 
     // Props
     public MedicalStatus Status { get; set; }
@@ -25,8 +25,5 @@ public class XRay
     public DateOnly? CompletedAt { get; set; }
 
     // Navigation Properties
-    public ICollection<XRayStatusLog> XRayStatusLogs { get; set; } = [];
-    public MedicalRecord MedicalRecord { get; set; } = null!;
-    public User? PerformedBy { get; set; } // Bác sĩ chuyên khoa X-Quang
-    public User RequestedBy { get; set; } = null!; // Bác sĩ điều trị
+    public ICollection<XRayStatusLogDto> XRayStatusLogs { get; set; } = [];
 }

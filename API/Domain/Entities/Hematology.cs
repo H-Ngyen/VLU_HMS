@@ -14,9 +14,11 @@ public class Hematology
     // --- Thông tin chung ---
     public bool IsEmergency { get; set; } // Thường = false, Cấp cứu = true
 
-    public required DateTime RequestedAt { get; set; }
+    public DateOnly? RequestedAt { get; set; }
 
-    public DateTime? CompletedAt { get; set; }
+    public DateOnly? CompletedAt { get; set; }
+
+    public MedicalStatus Status { get; set; }
 
     // --- Nhóm 1: Tế bào máu ngoại vi (Lưu dạng float để có số thập phân) ---
     // Hồng cầu (RBC) & Bạch cầu (WBC) & Tiểu cầu (PLT)
@@ -54,8 +56,9 @@ public class Hematology
     public BloodTypeAbo? BloodTypeAbo { get; set; }
     public BloodTypeRh? BloodTypeRh { get; set; }
 
-    
+
     // Navigation Property
+    public ICollection<HematologyStatusLog> HematologyStatusLogs { get; set; } = [];
     public MedicalRecord MedicalRecord { get; set; } = null!;
     public User? RequestedBy { get; set; } // Bác sĩ điều trị
     public User? PerformedBy { get; set; } // Trưởng khoa xét nghiệm

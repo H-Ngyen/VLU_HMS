@@ -1,22 +1,16 @@
 using MediatR;
 
-namespace Application.XRays.CreateXRays;
+namespace Application.XRays.Commands.CreateXRays;
 
-public class CreateXRaysCommand : IRequest<int>
+public class CreateXRaysCommand : IRequest
 {
     // Foreign Key
     // Liên kết với Hồ sơ bệnh án
     public int MedicalRecordId { get; set; }
-    public int RequestedById { get; set; }
-    public int PerformedById { get; set; }
-
+    // public required int RequestedById { get; set; }
+    public required string DepartmentName { get; set; }
     // Props
     // --- Phần Yêu cầu (Request) ---
     public required string RequestDescription { get; set; }
-    public required DateTime RequestedAt { get; set; }
-
-    // --- Phần Kết quả (Result) ---
-    public string? ResultDescription { get; set; }
-    public string? DoctorAdvice { get; set; }
-    public DateTime? CompletedAt { get; set; }
+    public required DateOnly RequestedAt { get; set; }
 }
