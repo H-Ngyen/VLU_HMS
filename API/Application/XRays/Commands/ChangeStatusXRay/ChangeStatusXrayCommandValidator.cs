@@ -3,16 +3,10 @@ using FluentValidation;
 
 namespace Application.XRays.Commands.ChangeStatusXRay;
 
-public class ChangeXrayCommandValidator : AbstractValidator<ChangeXrayCommand>
+public class ChangeStatusXrayCommandValidator : AbstractValidator<ChangeStatusXrayCommand>
 {
-    public ChangeXrayCommandValidator()
+    public ChangeStatusXrayCommandValidator()
     {
-        RuleFor(x => x.Id)
-            .GreaterThan(0).WithMessage("Mã X-Ray không hợp lệ.");
-
-        RuleFor(x => x.MedicalRecordId)
-            .GreaterThan(0).WithMessage("Mã hồ sơ bệnh án không hợp lệ.");
-
         RuleFor(x => x.Status)
             .IsInEnum().WithMessage("Trạng thái không hợp lệ.");
 

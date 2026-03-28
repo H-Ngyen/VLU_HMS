@@ -11,6 +11,7 @@ namespace Application.XRays.Commands.UpdateCompleteXray;
 
 public class UpdateCompleteXrayCommandHandler(ILogger<UpdateCompleteXrayCommandHandler> logger,
     IXRayRepository xRayRepository,
+    IMedicalRecordsRepository medicalRecordsRepository,
     IMapper mapper) : IRequestHandler<UpdateCompleteXrayCommand>
 {
     public async Task Handle(UpdateCompleteXrayCommand request, CancellationToken cancellationToken)
@@ -21,17 +22,20 @@ public class UpdateCompleteXrayCommandHandler(ILogger<UpdateCompleteXrayCommandH
             request.Id,
             request.MedicalRecordId);
 
-        var xray = await xRayRepository.GetByIdAsync(request.Id)
+        var medicalRecord = await medicalRecordsRepository.GetByIdAsync(request.MedicalRecordId)
+            ?? throw new NotFoundException(nameof(MedicalRecord), $"{request.MedicalRecordId}");
+
+        var xray = medicalRecord.XRays.FirstOrDefault(x => x.Id == request.Id)
             ?? throw new NotFoundException(nameof(XRay), $"{request.Id}");
 
         if (xray.MedicalRecordId != request.MedicalRecordId)
-            throw new BadRequestException($"X-Ray with ID {request.Id} does not belong to Medical Record with ID {request.MedicalRecordId}.");
+            throw new BadRequestException($"Phiếu chụp x-quang {request.Id} không thuộc hồ sơ bệnh án {request.MedicalRecordId}.");
 
         if (xray.Status == MedicalStatus.Completed)
-            throw new BadRequestException($"X-Ray {xray.Id}: Record is locked in Completed state.");
+            throw new BadRequestException($"Phiếu chụp x-quang {xray.Id}: Hồ sơ đã bị khóa.");
 
         if (xray.Status != MedicalStatus.Processing)
-            throw new BadRequestException($"Không phải là {MedicalStatus.Processing}");
+            throw new BadRequestException($"Phiếu chụp x-quang phải thuộc trạng thái {MedicalStatus.Processing} để thực hiện chức năng này");
 
         mapper.Map(request, xray);
         xray.PerformedById = userId;

@@ -1,20 +1,20 @@
-using Application.XRays.Commands.ChangeStatusXray;
-using Application.XRays.Commands.CreateXRays;
-using Application.XRays.Commands.UpdateCompleteXray;
+using Application.Hematologies.Commands.ChangeStatusHematology;
+using Application.Hematologies.Commands.CreateHematology;
+using Application.Hematologies.Commands.UpdateCompleteHematology;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppHost.Controllers;
 
 [ApiController]
-[Route("api/medical-records/{recordId:int}/clinicals/x-rays")]
-public class XRaysController(IMediator mediator) : ControllerBase
+[Route("api/medical-records/{recordId}/clinicals/hematologies")]
+public class HematologyController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
-    public async Task<ActionResult> AddXRay(int recordId, CreateXRaysCommand command)
+    public async Task<ActionResult> CreateHematology(int recordId, CreateHematologyCommand command)
     {
         command.MedicalRecordId = recordId;
         await mediator.Send(command);
@@ -23,28 +23,25 @@ public class XRaysController(IMediator mediator) : ControllerBase
 
     [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    // [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> ChangeStatusXray(int recordId, int id, ChangeStatusXrayCommand command)
+    public async Task<ActionResult> ChangeStatus(int id, int recordId, ChangeStatusHematologyCommand command)
     {
-        command.MedicalRecordId = recordId;
         command.Id = id;
+        command.MedicalRecordId = recordId;
         await mediator.Send(command);
         return NoContent();
     }
-
+    
     [HttpPut("{id:int}/complete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    // [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult> UpdateCompletedXray(int recordId, int id, UpdateCompleteXrayCommand command)
+    public async Task<ActionResult> UpdateCompleted(int id, int recordId, UpdateCompletedHematologyCommand command)
     {
-        command.MedicalRecordId = recordId;
         command.Id = id;
+        command.MedicalRecordId = recordId;
         await mediator.Send(command);
         return NoContent();
     }
-
 }

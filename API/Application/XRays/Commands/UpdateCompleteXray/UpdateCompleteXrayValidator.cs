@@ -10,14 +10,8 @@ public class UpdateCompleteXrayValidator : AbstractValidator<UpdateCompleteXrayC
     {
         var today = DateOnly.FromDateTime(dateTimeProvider.Now);
 
-        RuleFor(x => x.Id)
-            .GreaterThan(0).WithMessage("Mã X-Ray không hợp lệ.");
-
-        RuleFor(x => x.MedicalRecordId)
-            .GreaterThan(0).WithMessage("Mã hồ sơ bệnh án không hợp lệ.");
-
         RuleFor(x => x.ResultDescription)
-            .NotEmpty().WithMessage("Kết quả chẩn đoán không được để trống.")
+            // .NotEmpty().WithMessage("Kết quả chẩn đoán không được để trống.")
             .MaximumLength(4000).WithMessage("Kết quả chẩn đoán không được vượt quá 4000 ký tự.");
 
         RuleFor(x => x.DoctorAdvice)

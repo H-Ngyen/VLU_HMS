@@ -1,15 +1,14 @@
-using Application.XRays.Commands.CreateXRays;
 using Domain.Interfaces;
 using FluentValidation;
 
-namespace Application.XRays.Commands.CreateXRays;
+namespace Application.Hematologies.Commands.CreateHematology;
 
-public class CreateXRaysCommandValidator : AbstractValidator<CreateXRaysCommand>
+public class CreateHematologyCommandValidator : AbstractValidator<CreateHematologyCommand>
 {
-    public CreateXRaysCommandValidator(IDateTimeProvider dateTimeProvider)
+    public CreateHematologyCommandValidator(IDateTimeProvider dateTimeProvider)
     {
         var today = DateOnly.FromDateTime(dateTimeProvider.Now);
-    
+        
         RuleFor(dto => dto.DepartmentName)
             .NotEmpty().WithMessage("Tên khoa/phòng không được để trống.")
             .MaximumLength(255).WithMessage("Tên khoa/phòng không được vượt quá 255 ký tự.");
@@ -21,5 +20,5 @@ public class CreateXRaysCommandValidator : AbstractValidator<CreateXRaysCommand>
         RuleFor(dto => dto.RequestedAt)
             .LessThanOrEqualTo(today).WithMessage("Ngày yêu cầu không được lớn hơn ngày hiện tại.")
             .GreaterThan(today.AddYears(-150)).WithMessage("Ngày yêu cầu nhập bị sai.");
-    }
+    }    
 }

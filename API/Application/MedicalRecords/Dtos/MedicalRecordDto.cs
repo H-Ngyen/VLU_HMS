@@ -1,4 +1,5 @@
 using Application.DepartmentTransfers.Dtos;
+using Application.Hematologies.Dtos;
 using Application.MedicalRecordDetails.Dtos;
 using Application.Patients.Dtos;
 using Application.XRays.Dtos;
@@ -88,7 +89,7 @@ public class MedicalRecordDto
 
     // clinical examination form
     public ICollection<XRayDto> XRays { get; set; } = [];
-    // public ICollection<Hematology> Hematologies { get; set; } = [];
+    public ICollection<HematologyDto> Hematologies { get; set; } = [];
     // 1-1 Relationship
     public MedicalRecordDetailDto? Detail { get; set; }
 }

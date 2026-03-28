@@ -1,14 +1,16 @@
 using Domain.Constants;
 
-namespace Domain.Entities;
+namespace Application.Hematologies.Dtos;
 
-public class Hematology
+public class HematologyDto
 {
     public int Id { get; set; }
     // Foreign key
     public int MedicalRecordId { get; set; }
     public int RequestedById { get; set; }
+    public string? RequestedByName { get; set; }
     public int? PerformedById { get; set; }
+    public string? PerformedByName { get; set; }
 
     // Props
     // --- Thông tin chung ---
@@ -54,37 +56,6 @@ public class Hematology
     public BloodTypeAbo? BloodTypeAbo { get; set; }
     public BloodTypeRh? BloodTypeRh { get; set; }
 
-
     // Navigation Property
-    public ICollection<HematologyStatusLog> HematologyStatusLogs { get; set; } = [];
-    public MedicalRecord MedicalRecord { get; set; } = null!;
-    public User? RequestedBy { get; set; } // Bác sĩ điều trị
-    public User? PerformedBy { get; set; } // Trưởng khoa xét nghiệm
-
-    public bool IsCompleted()
-    {
-        // ignore
-        var metadataProps = new[]
-        {
-            nameof(Id),
-        };
-
-        var properties = GetType().GetProperties();
-
-        foreach (var prop in properties)
-        {
-            // ignore metadata, navigation (collection, class)
-            if (metadataProps.Contains(prop.Name) ||
-                prop.PropertyType.IsGenericType ||
-                (prop.PropertyType.IsClass && prop.PropertyType != typeof(string)))
-                continue;
-
-            var value = prop.GetValue(this);
-
-            if (value == null) return false;
-            if (value is string s && string.IsNullOrWhiteSpace(s)) return false;
-        }
-
-        return true;
-    }
+    public ICollection<HematologyStatusLogDto> HematologyStatusLogs { get; set; } = [];
 }

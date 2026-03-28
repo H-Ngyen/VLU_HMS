@@ -49,6 +49,8 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
                 .ThenInclude(p => p.Ethnicity)
             .Include(m => m.Detail)
                 .ThenInclude(d => d!.RiskFactors)
+
+            // xray clinical
             .Include(m => m.XRays)
                 .ThenInclude(x => x.XRayStatusLogs)
                     .ThenInclude(log => log.UpdatedBy)
@@ -56,6 +58,15 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
                 .ThenInclude(x => x.RequestedBy)
             .Include(m => m.XRays)
                 .ThenInclude(x => x.PerformedBy)
+
+            // Hematologi clinical
+            .Include(m => m.Hematologies)
+                .ThenInclude(x => x.HematologyStatusLogs)
+                    .ThenInclude(log => log.UpdatedBy)
+            .Include(m => m.Hematologies)
+                .ThenInclude(x => x.RequestedBy)
+            .Include(m => m.Hematologies)
+                .ThenInclude(x => x.PerformedBy) 
             .FirstOrDefaultAsync(m => m.Id == id);
 
     public async Task<bool> ExistAsync(int id)

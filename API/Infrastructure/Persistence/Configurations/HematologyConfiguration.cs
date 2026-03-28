@@ -11,8 +11,8 @@ internal class HematologyConfiguration : IEntityTypeConfiguration<Hematology>
               builder.ToTable("Hematologies");
 
               // ===== PROPERTIES =====
-              builder.Property(h => h.IsEmergency)
-                     .HasDefaultValue(false);
+              // builder.Property(h => h.IsEmergency)
+              //        .HasDefaultValue(false);
 
               builder.Property(h => h.Status)
                      .IsRequired();

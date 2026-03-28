@@ -1,9 +1,9 @@
 using Domain.Constants;
 using MediatR;
 
-namespace Application.XRays.Commands.ChangeStatusXray;
+namespace Application.Hematologies.Commands.ChangeStatusHematology;
 
-public class ChangeXrayCommand : IRequest
+public class ChangeStatusHematologyCommand : IRequest
 {
     public int MedicalRecordId { get; set; }
     public int Id { get; set; }
