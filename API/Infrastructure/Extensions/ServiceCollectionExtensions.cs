@@ -43,6 +43,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMedicalAttachmentRepository, MedicalAttachmentRepository>();
         services.AddScoped<IXRayRepository, XRayRepository>();
         services.AddScoped<IHematologyRepository, HematologyRepository>();
+        services.AddScoped<IUserRoleRepository, UserRolesRepository>();
 
         // add seeders scoped
         services.AddScoped<ISeeder, Seeder>();

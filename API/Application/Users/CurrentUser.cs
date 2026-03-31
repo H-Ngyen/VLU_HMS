@@ -1,7 +1,9 @@
 namespace Application.Users;
 
-public record CurrentUser(string Id,
+public record CurrentUser(int Id,
+    string Auth0Id,
     string Email,
+    bool EmailVerified,
     string Name,
     string Role)
 {

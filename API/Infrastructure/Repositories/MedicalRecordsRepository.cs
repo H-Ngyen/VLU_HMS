@@ -66,7 +66,8 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
             .Include(m => m.Hematologies)
                 .ThenInclude(x => x.RequestedBy)
             .Include(m => m.Hematologies)
-                .ThenInclude(x => x.PerformedBy) 
+                .ThenInclude(x => x.PerformedBy)
+            .AsSplitQuery() 
             .FirstOrDefaultAsync(m => m.Id == id);
 
     public async Task<bool> ExistAsync(int id)

@@ -21,7 +21,7 @@ public class CreatePatientCommandHandler(ILogger<CreatePatientCommandHandler> lo
         
         var CreatorId = 1; // để tạm, not for production
 
-        var isExistCreator = await userRepository.ExistsAsync(CreatorId);
+        var isExistCreator = await userRepository.ExistsAsync(u => u.Id == CreatorId);
         if(!isExistCreator) 
             throw new BadRequestException($"Creator with id: {CreatorId} does not exist."); 
 
