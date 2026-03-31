@@ -1,3 +1,4 @@
+using Application.Users.Commands.ChangeRole;
 using Application.Users.Commands.ChangeStatusActive;
 using Application.Users.Commands.CreateCurrentUser;
 using Application.Users.Dtos;
@@ -33,10 +34,21 @@ public class IdentitiesController(IMediator mediator) : ControllerBase
     }
     
     [HttpPut("users/{userId:int}/active")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult> ChangeActiveStatus(int userId, ChangeStatusActiveCommand command)
+    {
+        command.Id = userId;
+        await mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpPut("users/{userId:int}/roles")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> ChangeRole(int userId, ChangeRoleUserCommand command)
     {
         command.Id = userId;
         await mediator.Send(command);

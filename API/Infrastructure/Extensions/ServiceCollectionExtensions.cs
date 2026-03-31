@@ -5,6 +5,7 @@ using Infrastructure.Persistence;
 using Infrastructure.Repositories;
 using Infrastructure.Seeders;
 using Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,9 +19,9 @@ public static class ServiceCollectionExtensions
     {
         var ConnectionString = config.GetConnectionString("HopitalManagementDB");
         services.AddDbContext<AppDbContext>(options => options.UseSqlServer(ConnectionString));
-       
+
         // setting minio
-        var minioSettings = config.GetSection("MinIO").Get<FileStorageSettings>() 
+        var minioSettings = config.GetSection("MinIO").Get<FileStorageSettings>()
             ?? throw new Exception("MinIO settings are missing in appsettings.json");
         // register MinioClient is Singleton (Injectable)
         services.AddSingleton<IMinioClient>(sp =>
@@ -34,6 +35,17 @@ public static class ServiceCollectionExtensions
 
         // configure settings
         services.Configure<FileStorageSettings>(config.GetSection("MinIO"));
+
+        // Add Authentication Services
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        }).AddJwtBearer(options =>
+        {
+            options.Authority = config["Auth0:Authority"];
+            options.Audience = config["Auth0:Audience"];
+        });
 
         // add repositories scoped
         services.AddScoped<IPatientsRepository, PatientsRepository>();

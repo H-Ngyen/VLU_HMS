@@ -1,3 +1,4 @@
+using Application.Users;
 using AutoMapper;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -28,5 +29,8 @@ public static class ServiceCollectionExtensions
         
         services.AddValidatorsFromAssemblies(applicationAssemblies)
             .AddFluentValidationAutoValidation();
+        
+        services.AddScoped<IUserContext, UserContext>();
+        services.AddHttpContextAccessor();
     }
 }

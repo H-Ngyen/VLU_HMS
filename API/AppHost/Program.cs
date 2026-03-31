@@ -39,6 +39,8 @@ app.UseHttpsRedirection();
 // Enable CORS
 app.UseCors("AllowReactApp");
 
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllers();

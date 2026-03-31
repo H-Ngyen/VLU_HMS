@@ -24,7 +24,9 @@ internal class UsersRepository(AppDbContext context) : BaseRepository<User>(cont
                 .FirstOrDefaultAsync(predicate);
 
     public async Task<IEnumerable<User>?> GetAllAsync()
-            => await NoTrackingQuery.ToListAsync();
+        => await NoTrackingQuery
+                .Include(u => u.Role)
+                .ToListAsync();
     public async Task<IEnumerable<User>?> GetAllAsync(Expression<Func<User, bool>> predicate)
         => await NoTrackingQuery
                 .Include(u => u.Role)

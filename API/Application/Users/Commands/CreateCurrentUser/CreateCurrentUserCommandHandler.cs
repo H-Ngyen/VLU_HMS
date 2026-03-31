@@ -29,12 +29,28 @@ public class CreateCurrentUserCommandHandler(ILogger<CreateCurrentUserCommandHan
             return (userId, isNew);
         }
 
-        var userRole = await roleRepository.GetUserRoleAsync(r => r.Name == UserRoles.Student)
-            ?? throw new NotFoundException(nameof(Role), $"{UserRoles.Student}");
-            
+        var roleName = ResolveRoleFromEmail(request.Email)
+            ?? throw new BadRequestException($"Email không được phép truy cập vào hệ thống {request.Email}");
+
+        var userRole = await roleRepository.GetUserRoleAsync(r => r.Name == roleName)
+            ?? throw new NotFoundException(nameof(Role), $"{roleName}");
+
         var newUser = CreateUserEntity(request, userRole.Id);
         var newUserId = await userRepository.CreateAsync(newUser);
         return (newUserId, isNew);
+    }
+
+    private string? ResolveRoleFromEmail(string email)
+    {
+        var domain = EmailDomain.GetDomainEmail(email);
+        
+        return domain switch
+        {
+            EmailDomain.Admin => UserRoles.Admin,
+            EmailDomain.Teacher => UserRoles.Teacher,
+            EmailDomain.Student => UserRoles.Student,
+            _ => null
+        };
     }
 
     private User CreateUserEntity(CreateCurrentUserCommand request, int roleId)

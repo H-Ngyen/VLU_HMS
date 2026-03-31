@@ -1,3 +1,4 @@
+using Domain.Constants;
 using FluentValidation;
 
 namespace Application.Users.Commands.CreateCurrentUser;
@@ -11,7 +12,8 @@ public class CreateCurrentUserCommandValidator : AbstractValidator<CreateCurrent
 
         RuleFor(x => x.Email)
             // .NotEmpty().WithMessage("Email không được để trống.")
-            .EmailAddress().WithMessage("Định dạng email không hợp lệ.");
+            .EmailAddress().WithMessage("Định dạng email không hợp lệ.")
+            .Must(value => EmailDomain.IsInDomain(value)).WithMessage(value => $"Email không được phép truy cập vào hệ thống {value}");
 
         RuleFor(x => x.Name)
             // .NotEmpty().WithMessage("Tên người dùng không được để trống.")

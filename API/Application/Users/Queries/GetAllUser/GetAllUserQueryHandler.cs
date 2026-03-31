@@ -15,8 +15,7 @@ public class GetAllUserQueryHandler(ILogger<GetAllUserQueryHandler> logger,
     {
         var userId = 1; // this is not for production, update soon
         logger.LogInformation("User {userId} getting all user", userId);
-
-        var users = await userRepository.GetAllAsync(u => u.Role.Name != UserRoles.Admin);
+        var users = await userRepository.GetAllAsync();
         var usersDto = mapper.Map<IEnumerable<UserDto>>(users);
         return usersDto;
     }
