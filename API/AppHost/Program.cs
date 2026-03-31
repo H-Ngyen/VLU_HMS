@@ -7,6 +7,8 @@ using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.LoadEnv();
+
 // Add services to the container.
 var config = builder.Configuration;
 
