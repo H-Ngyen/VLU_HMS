@@ -15,7 +15,7 @@ public class ChangeRoleUserCommandHandler(ILogger<ChangeRoleUserCommandHandler> 
     public async Task Handle(ChangeRoleUserCommand request, CancellationToken cancellationToken)
     {
         var userContext = await _userContext.GetCurrentUser();
-        logger.LogInformation("User {UserId} changing user role {@request}", userContext!.Id, request);
+        logger.LogInformation("User {UserId} changing user role {@request}", userContext?.Id, request);
 
         var user = await userRepository.FindOneAsync(u => u.Id == request.Id)
             ?? throw new NotFoundException(nameof(User), $"{request.Id}");
