@@ -61,4 +61,10 @@ public class MedicalRecordsController(IMediator mediator) : ControllerBase
         await mediator.Send(new DeleteMedicalRecordCommand(id));
         return NoContent();
     }
+
+    // [HttpPost("{patientId:int}/import-pdf")]
+    // public async Task<ActionResult<MedicalRecordDto>> ImportPdf(int patientId, ImportPdfMedicalRecordCommand command)
+    // {
+    //     var medicalRecordDto = await mediator.Send();
+    // }
 }

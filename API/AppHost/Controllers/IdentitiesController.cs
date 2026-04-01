@@ -3,6 +3,7 @@ using Application.Users.Commands.ChangeStatusActive;
 using Application.Users.Commands.CreateCurrentUser;
 using Application.Users.Dtos;
 using Application.Users.Queries.GetAllUser;
+using Application.Users.Queries.GetByIdUser;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -53,5 +54,14 @@ public class IdentitiesController(IMediator mediator) : ControllerBase
         command.Id = userId;
         await mediator.Send(command);
         return NoContent();
+    }
+
+    [HttpGet("users/{userId:int}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserDto?>> GetById(int userId)
+    {
+        var userDto = await mediator.Send(new GetByIdUserQuery(userId));
+        return Ok(userDto);
     }
 }
