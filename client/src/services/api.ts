@@ -2,6 +2,20 @@ const API_BASE_URL = 'https://localhost:5001/api';
 
 import type { Patient } from '@/types';
 
+let accessToken: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+  accessToken = token;
+};
+
+const getHeaders = (headers: Record<string, string> = {}) => {
+  const baseHeaders: Record<string, string> = { ...headers };
+  if (accessToken) {
+    baseHeaders['Authorization'] = `Bearer ${accessToken}`;
+  }
+  return baseHeaders;
+};
+
 export const api = {
   patients: {
     getAll: async (params?: { searchPhrase?: string; pageNumber?: number; pageSize?: number }): Promise<Patient[]> => {
@@ -11,14 +25,18 @@ export const api = {
         ...(params?.searchPhrase && { searchPhrase: params.searchPhrase })
       });
       
-      const response = await fetch(`${API_BASE_URL}/patients?${queryParams}`);
+      const response = await fetch(`${API_BASE_URL}/patients?${queryParams}`, {
+        headers: getHeaders()
+      });
       if (!response.ok) throw new Error('Failed to fetch patients');
       const data = await response.json();
       return data.items || [];
     },
     
     getById: async (id: number): Promise<Patient> => {
-      const response = await fetch(`${API_BASE_URL}/patients/${id}`);
+      const response = await fetch(`${API_BASE_URL}/patients/${id}`, {
+        headers: getHeaders()
+      });
       if (!response.ok) throw new Error('Failed to fetch patient');
       return response.json();
     },
@@ -32,7 +50,7 @@ export const api = {
     }) => {
       const response = await fetch(`${API_BASE_URL}/patients`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
 
@@ -45,7 +63,6 @@ export const api = {
         }
         console.error('API Error:', error);
 
-        // Extract validation errors
         if (error?.errors) {
           const messages = Object.entries(error.errors)
             .map(([field, msgs]: [string, any]) => `${field}: ${msgs.join(', ')}`)
@@ -67,7 +84,7 @@ export const api = {
     }) => {
       const response = await fetch(`${API_BASE_URL}/patients/${id}`, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
 
@@ -98,7 +115,8 @@ export const api = {
 
     delete: async (id: number) => {
       const response = await fetch(`${API_BASE_URL}/patients/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getHeaders()
       });
 
       if (!response.ok) {
@@ -114,7 +132,9 @@ export const api = {
   
   ethnicities: {
     getAll: async () => {
-      const response = await fetch(`${API_BASE_URL}/ethinicities`);
+      const response = await fetch(`${API_BASE_URL}/ethinicities`, {
+        headers: getHeaders()
+      });
       if (!response.ok) throw new Error('Failed to fetch ethnicities');
       return response.json();
     }
@@ -129,20 +149,25 @@ export const api = {
         ...(params?.recordType && { recordType: params.recordType.toString() })
       });
 
-      const response = await fetch(`${API_BASE_URL}/medical-records?${queryParams}`);
+      const response = await fetch(`${API_BASE_URL}/medical-records?${queryParams}`, {
+        headers: getHeaders()
+      });
       if (!response.ok) throw new Error('Failed to fetch medical records');
       return response.json();
     },
 
     getById: async (id: number) => {
-      const response = await fetch(`${API_BASE_URL}/medical-records/${id}`);
+      const response = await fetch(`${API_BASE_URL}/medical-records/${id}`, {
+        headers: getHeaders()
+      });
       if (!response.ok) throw new Error('Failed to fetch medical record');
       return response.json();
     },
 
     delete: async (id: number) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${id}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: getHeaders()
       });
 
       if (!response.ok) {
@@ -154,6 +179,64 @@ export const api = {
         }
         throw new Error(error?.title || error?.message || 'Failed to delete medical record');
       }
+    }
+  },
+
+  identities: {
+    sync: async (data: {
+      auth0Id: string;
+      email: string;
+      emailVerify: boolean;
+      name: string;
+      pictureUrl: string;
+      updateAt: string;
+    }) => {
+      const response = await fetch(`${API_BASE_URL}/identities`, {
+        method: 'POST',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        let error;
+        try {
+          error = await response.json();
+        } catch {
+          throw new Error(`Failed to sync user identity (Status: ${response.status})`);
+        }
+        throw new Error(error?.message || 'Failed to sync user identity');
+      }
+
+      if (response.status === 201) {
+        return response.json();
+      }
+      return null;
+    },
+
+    getAllUsers: async (): Promise<User[]> => {
+      const response = await fetch(`${API_BASE_URL}/identities/users`, {
+        headers: getHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch users');
+      return response.json();
+    },
+
+    changeActiveStatus: async (userId: number, isActive: boolean) => {
+      const response = await fetch(`${API_BASE_URL}/identities/users/${userId}/active`, {
+        method: 'PUT',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ isActive })
+      });
+      if (!response.ok) throw new Error('Failed to change user status');
+    },
+
+    changeRole: async (userId: number, roleName: string) => {
+      const response = await fetch(`${API_BASE_URL}/identities/users/${userId}/roles`, {
+        method: 'PUT',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ roleName })
+      });
+      if (!response.ok) throw new Error('Failed to change user role');
     }
   }
 };

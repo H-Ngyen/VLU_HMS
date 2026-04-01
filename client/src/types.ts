@@ -178,9 +178,11 @@ export interface RecordType {
 }
 
 export interface User {
-  username: string;
-  password: string;
-  role: string;
+  id: number;
+  auth0Id: string;
+  email: string;
   name: string;
-  status: string;
+  active: boolean;
+  roleName: string;
+  createAt: string;
 }

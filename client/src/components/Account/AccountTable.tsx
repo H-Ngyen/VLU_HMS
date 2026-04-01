@@ -13,10 +13,10 @@ import { AccountTableRow } from "./AccountTableRow";
 
 interface AccountTableProps {
   users: UserType[];
-  onUpdate: (username: string, updates: Partial<UserType>) => void;
+  onRefresh: () => void;
 }
 
-export const AccountTable = ({ users, onUpdate }: AccountTableProps) => {
+export const AccountTable = ({ users, onRefresh }: AccountTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [prevUsersLength, setPrevUsersLength] = useState(users.length);
   const itemsPerPage = 10;
@@ -36,7 +36,7 @@ export const AccountTable = ({ users, onUpdate }: AccountTableProps) => {
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50 hover:bg-gray-50">
-            <TableHead className="font-semibold text-gray-700">Email</TableHead>
+            <TableHead className="font-semibold text-gray-700">Người dùng</TableHead>
             <TableHead className="font-semibold text-gray-700">Vai trò</TableHead>
             <TableHead className="font-semibold text-gray-700">Trạng thái</TableHead>
             <TableHead className="text-right font-semibold text-gray-700">Thao tác</TableHead>
@@ -45,9 +45,9 @@ export const AccountTable = ({ users, onUpdate }: AccountTableProps) => {
         <TableBody>
           {currentUsers.map((user) => (
             <AccountTableRow
-              key={user.username}
+              key={user.id}
               user={user}
-              onUpdate={onUpdate}
+              onRefresh={onRefresh}
             />
           ))}
         </TableBody>

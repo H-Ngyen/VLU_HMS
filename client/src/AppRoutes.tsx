@@ -8,11 +8,19 @@ import { PatientManagementView } from "./components/Patient/Management/PatientMa
 import { EditPatientForm } from "./components/Patient/Edit/EditPatientForm";
 import { AddPatientForm } from "./components/Patient/Add/AddPatientForm";
 import { AccountManagementView } from "./components/Account/AccountManagementView";
+import LoginPage from "./pages/LoginPage";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { useAuth0 } from "@auth0/auth0-react";
 
 function AppRoutes() {
+  const { user } = useAuth0();
+  const isAdmin = user?.email?.endsWith("@zer0project.onmicrosoft.com");
+
   return (
       <Routes>
-        <Route element={<Layout />}>
+        <Route path="/login" element={<LoginPage />} />
+        
+        <Route element={<ProtectedRoute component={Layout} />}>
           <Route path="/" element={<RecordsPage />} />
           <Route path="/record/:id" element={<RecordDetailView />} />
           <Route path="/record/edit/:id" element={<EditRecordView />} />
@@ -20,7 +28,7 @@ function AppRoutes() {
           <Route path="/patients" element={<PatientManagementView />} />
           <Route path="/patient/add" element={<AddPatientForm />} />
           <Route path="/patient/edit/:id" element={<EditPatientForm />} />
-          <Route path="/account" element={<AccountManagementView />} />
+          <Route path="/account" element={isAdmin ? <AccountManagementView /> : <Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
