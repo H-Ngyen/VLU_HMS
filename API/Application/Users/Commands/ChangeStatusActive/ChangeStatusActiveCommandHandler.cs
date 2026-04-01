@@ -14,7 +14,7 @@ public class ChangeStatusActiveCommandHandler(ILogger<ChangeStatusActiveCommandH
     public async Task Handle(ChangeStatusActiveCommand request, CancellationToken cancellationToken)
     {
         var userContext = await _userContext.GetCurrentUser();
-        logger.LogInformation("User {UserId} changing status active of user {Auth0Id}", userContext!.Id, request.Id);
+        logger.LogInformation("User {UserId} changing status active of user {Auth0Id}", userContext?.Id , request.Id);
 
         var user = await userRepository.FindOneAsync(u => u.Id == request.Id)
             ?? throw new NotFoundException(nameof(User), $"{request.Id}");
