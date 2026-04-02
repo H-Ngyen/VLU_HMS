@@ -1,13 +1,13 @@
 import { Outlet } from "react-router-dom";
 import { Header } from "../components/Header";
 import { Footer } from "../components/Footer";
-import { useApi } from "@/hooks/useApi";
+import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, LogOut, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth0 } from "@auth0/auth0-react";
 
 const Layout = () => {
-  const { isSynced, syncError } = useApi(); // Initialize API token and sync user
+  const { isSynced, syncError } = useAuth(); // Data now comes from AuthContext
   const { logout } = useAuth0();
 
   if (syncError) {

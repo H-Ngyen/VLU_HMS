@@ -1,18 +1,34 @@
+import React, { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
+import type { User } from "@/types";
 import { useAuth0 } from "@auth0/auth0-react";
-import { useEffect, useState, useRef } from "react";
 import { api, setAccessToken } from "@/services/api";
-import { useAuth } from "@/contexts/AuthContext";
 
-export const useApi = () => {
-  const { getAccessTokenSilently, isAuthenticated, user } = useAuth0();
-  const { setCurrentUser } = useAuth();
+interface AuthContextType {
+  currentUser: User | null;
+  setCurrentUser: (user: User | null) => void;
+  isAdmin: boolean;
+  isTeacher: boolean;
+  isStudent: boolean;
+  isSynced: boolean;
+  syncError: string | null;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isSynced, setIsSynced] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  
+  const { getAccessTokenSilently, isAuthenticated, user } = useAuth0();
   const syncingRef = useRef(false);
+
+  const isAdmin = currentUser?.roleName === "Admin";
+  const isTeacher = currentUser?.roleName === "Teacher";
+  const isStudent = currentUser?.roleName === "Student";
 
   useEffect(() => {
     const updateTokenAndSync = async () => {
-      // Chỉ đồng bộ nếu chưa đang đồng bộ và chưa hoàn thành đồng bộ
       if (isAuthenticated && user && !syncingRef.current && !isSynced) {
         syncingRef.current = true;
         try {
@@ -58,7 +74,27 @@ export const useApi = () => {
     };
 
     updateTokenAndSync();
-  }, [isAuthenticated, getAccessTokenSilently, user, isSynced, setCurrentUser]);
+  }, [isAuthenticated, getAccessTokenSilently, user, isSynced]);
 
-  return { isSynced, syncError };
+  return (
+    <AuthContext.Provider value={{ 
+      currentUser, 
+      setCurrentUser, 
+      isAdmin, 
+      isTeacher, 
+      isStudent,
+      isSynced,
+      syncError
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
 };

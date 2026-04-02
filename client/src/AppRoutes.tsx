@@ -10,11 +10,10 @@ import { AddPatientForm } from "./components/Patient/Add/AddPatientForm";
 import { AccountManagementView } from "./components/Account/AccountManagementView";
 import LoginPage from "./pages/LoginPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth } from "./contexts/AuthContext";
 
 function AppRoutes() {
-  const { user } = useAuth0();
-  const isAdmin = user?.email?.endsWith("@zer0project.onmicrosoft.com");
+  const { isAdmin } = useAuth();
 
   return (
       <Routes>

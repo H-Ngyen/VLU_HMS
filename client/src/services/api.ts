@@ -225,18 +225,36 @@ export const api = {
       const response = await fetch(`${API_BASE_URL}/identities/users/${userId}/active`, {
         method: 'PUT',
         headers: getHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ isActive })
+        body: JSON.stringify({ active: isActive })
       });
-      if (!response.ok) throw new Error('Failed to change user status');
+      if (!response.ok) {
+        let error;
+        try {
+          error = await response.json();
+        } catch {
+          const text = await response.text();
+          throw new Error(text || 'Failed to change user status');
+        }
+        throw new Error(error?.message || error?.title || 'Failed to change user status');
+      }
     },
 
     changeRole: async (userId: number, roleName: string) => {
       const response = await fetch(`${API_BASE_URL}/identities/users/${userId}/roles`, {
         method: 'PUT',
         headers: getHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify({ roleName })
+        body: JSON.stringify({ role: roleName })
       });
-      if (!response.ok) throw new Error('Failed to change user role');
+      if (!response.ok) {
+        let error;
+        try {
+          error = await response.json();
+        } catch {
+          const text = await response.text();
+          throw new Error(text || 'Failed to change user role');
+        }
+        throw new Error(error?.message || error?.title || 'Failed to change user role');
+      }
     }
   }
 };

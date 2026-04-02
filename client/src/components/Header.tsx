@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { LogOut } from "lucide-react";
 import { DropdownMenuHeader } from "./DropdownMenuHeader";
 import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navs = [
   { href: "/", label: "Bệnh án" },
@@ -15,12 +16,11 @@ const navs = [
 export function Header() {
   const { pathname } = useLocation();
   const { user, logout: auth0Logout } = useAuth0();
+  const { isAdmin } = useAuth();
 
   const handleLogout = () => {
     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
   };
-
-  const isAdmin = user?.email?.endsWith("@zer0project.onmicrosoft.com");
 
   const filteredNavs = navs.filter(nav => {
     if (nav.href === "/account") return isAdmin;
