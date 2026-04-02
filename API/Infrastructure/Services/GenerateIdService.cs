@@ -29,6 +29,6 @@ public class GenerateIdService(IDateTimeProvider dateTimeProvider,
 
         // 4. Tăng số thứ tự và format lại với 6 chữ số 0
         int nextSequence = lastSequence + 1;
-        return $"{yearPrefix}.{nextSequence.ToString("D6")}";
+        return $"{yearPrefix}.{nextSequence:D6}";
     } 
 }

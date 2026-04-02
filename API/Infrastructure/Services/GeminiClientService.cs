@@ -8,11 +8,13 @@ namespace Infrastructure.Services;
 public class GeminiClientService(HttpClient httpClient, IConfiguration config) : IGeminiClientService
 {
     private readonly string _apiKey = config["Gemini:ApiKey"]!;
-    private readonly string _url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+    private readonly string _model = config["Gemini:Model"] ?? "gemini-1.5-flash";
+    private readonly string _action = config["Gemini:Action"] ?? "generateContent";
+    private string ApiUrl => $"https://generativelanguage.googleapis.com/v1beta/models/{_model}:{_action}?key={_apiKey}";
 
     public async Task<string> GenerateContentAsync(object requestBody)
     {
-        var response = await httpClient.PostAsJsonAsync($"{_url}?key={_apiKey}", requestBody);
+        var response = await httpClient.PostAsJsonAsync(ApiUrl, requestBody);
         response.EnsureSuccessStatusCode();
 
         var result = await response.Content.ReadFromJsonAsync<JsonElement>();

@@ -1,6 +1,7 @@
 using Application.Common;
 using Application.MedicalRecords.Commands.CreateMedicalRecord;
 using Application.MedicalRecords.Commands.DeleteMedicalRecord;
+using Application.MedicalRecords.Commands.ImportMedicalRecord;
 using Application.MedicalRecords.Commands.UpdateMedicalRecord;
 using Application.MedicalRecords.Dtos;
 using Application.MedicalRecords.Queries.GetAllMedicalRecords;
@@ -62,9 +63,13 @@ public class MedicalRecordsController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
-    // [HttpPost("{patientId:int}/import-pdf")]
-    // public async Task<ActionResult<MedicalRecordDto>> ImportPdf(int patientId, ImportPdfMedicalRecordCommand command)
-    // {
-    //     var medicalRecordDto = await mediator.Send();
-    // }
+    [HttpPost("{patientId:int}/import-pdf")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<MedicalRecordDto>> ImportPdf(int patientId, ImportMedicalRecordCommand command)
+    {
+        command.PatientId = patientId;
+        var medicalRecordDto = await mediator.Send(command);
+        return Ok(medicalRecordDto);
+    }
 }

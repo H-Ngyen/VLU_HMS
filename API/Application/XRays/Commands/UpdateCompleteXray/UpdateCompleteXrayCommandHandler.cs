@@ -38,7 +38,7 @@ public class UpdateCompleteXrayCommandHandler(ILogger<UpdateCompleteXrayCommandH
             throw new BadRequestException($"Phiếu chụp x-quang phải thuộc trạng thái {MedicalStatus.Processing} để thực hiện chức năng này");
 
         mapper.Map(request, xray);
-        xray.PerformedById = userId;
+        // xray.PerformedById = userId;
         await xRayRepository.SaveChanges();
     }
 }

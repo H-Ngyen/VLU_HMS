@@ -37,7 +37,7 @@ public class UpdateCompletedHematologyCommandHandler(ILogger<UpdateCompletedHema
             throw new BadRequestException($"Phiếu xét nghiệm máu phải thuộc trạng thái {MedicalStatus.Processing} để thực hiện chức năng này");
 
         mapper.Map(request, hematology);
-        hematology.PerformedById = userId;
+        // hematology.PerformedById = userId;
         await hematologyRepository.SaveChanges();
     }
 }

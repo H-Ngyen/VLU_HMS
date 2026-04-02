@@ -11,9 +11,10 @@ public class CreateMedicalAttachmentCommandValidator : AbstractValidator<CreateM
             .Matches(@"^[\p{L}\s]+$").WithMessage("Tên không được có ký tự đặc biệt.");
 
         RuleFor(dto => dto.File)
-            .Must(file => file.ContentType == "application/pdf" || file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase))
+            .NotNull().WithMessage("Thiếu tệp đính kèm")
+            .Must(file => file != null && (file.ContentType == "application/pdf" || file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)))
             .WithMessage("Chỉ cho phép tải lên định dạng file PDF.")
-            .Must(file => file.Length <= 10 * 1024 * 1024)
+            .Must(file => file != null && file.Length <= 10 * 1024 * 1024)
             .WithMessage("Dung lượng file không được vượt quá 10MB.");
     }
 }

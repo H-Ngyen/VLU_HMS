@@ -6,7 +6,7 @@ using Minio.DataModel.Args;
 
 namespace Infrastructure.Services;
 
-public class FileStorageService (IMinioClient minioClient, IOptions<FileStorageSettings> fileStorageSettings): IFileStorageService
+public class FileStorageService(IMinioClient minioClient, IOptions<FileStorageSettings> fileStorageSettings) : IFileStorageService
 {
     private readonly FileStorageSettings _settings = fileStorageSettings.Value;
 
@@ -40,5 +40,19 @@ public class FileStorageService (IMinioClient minioClient, IOptions<FileStorageS
         await minioClient.PutObjectAsync(putObjectArgs);
         var fileUrl = $"{_settings.BucketName}/{storedFileName}";
         return fileUrl;
+    }
+    public async Task<string> GetDownloadUrlAsync(string fileUrl, int expiryInSeconds = 900)
+    {
+        if (string.IsNullOrWhiteSpace(fileUrl)) return string.Empty;
+
+        var parts = fileUrl.Split('/');
+        var objectName = parts.Length > 1 ? parts[^1] : fileUrl;
+
+        var args = new PresignedGetObjectArgs()
+            .WithBucket(_settings.BucketName)
+            .WithObject(objectName)
+            .WithExpiry(expiryInSeconds); // 15p
+
+        return await minioClient.PresignedGetObjectAsync(args);
     }
 }

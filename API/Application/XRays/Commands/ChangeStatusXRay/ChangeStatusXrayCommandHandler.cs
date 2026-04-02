@@ -41,6 +41,7 @@ public class ChangeStatusXrayCommandHandler(ILogger<ChangeStatusXrayCommandHandl
             throw new BadRequestException("Không thể hoàn thành phiếu chụp x-quang khi chưa có kết quả.");
 
         xray.Status = request.Status;
+        xray.PerformedById = userId;
         xray.XRayStatusLogs.Add(new XRayStatusLog
         {
             Status = request.Status,

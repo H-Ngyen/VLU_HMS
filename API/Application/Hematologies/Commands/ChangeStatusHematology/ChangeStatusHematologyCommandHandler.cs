@@ -40,6 +40,7 @@ public class ChangeStatusHematologyCommandHandler(ILogger<ChangeStatusHematology
             throw new BadRequestException("Không thể hoàn thành phiếu xét nghiệm máu khi chưa có kết quả đầy đủ.");
 
         hematology.Status = request.Status;
+        hematology.PerformedById = userId;
         hematology.HematologyStatusLogs.Add(new HematologyStatusLog
         {
             Status = request.Status,

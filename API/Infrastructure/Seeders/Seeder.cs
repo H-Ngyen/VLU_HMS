@@ -47,7 +47,7 @@ internal class Seeder(AppDbContext dbContext, IDateTimeProvider dateTimeProvider
     private IEnumerable<User> GetUserAdmin(int adminId)
     {
         List<User> users = [
-            new() { Auth0Id = "something",Email = "admin@gmail.com", RoleId = adminId, CreateAt = DateTime.UtcNow , Name = "admin", PictureUrl = "https://s.gravatar.com/avatar/efdf581ced25e337030ad1e8586d937b?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2F2c.png", UpdateAt = dateTimeProvider.Now},
+            new() { Auth0Id = "something",Email = "admin@gmail.com", RoleId = adminId, CreateAt = dateTimeProvider.Now , Name = "admin", PictureUrl = "https://s.gravatar.com/avatar/efdf581ced25e337030ad1e8586d937b?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2F2c.png", UpdateAt = dateTimeProvider.Now},
         ];
         return users;
     }

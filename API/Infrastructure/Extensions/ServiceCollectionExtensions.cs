@@ -24,7 +24,7 @@ public static class ServiceCollectionExtensions
         var minioSettings = config.GetSection("MinIO").Get<FileStorageSettings>()
             ?? throw new Exception("MinIO settings are missing in appsettings.json");
         // register MinioClient is Singleton (Injectable)
-        services.AddSingleton<IMinioClient>(sp =>
+        services.AddSingleton(sp =>
         {
             return new MinioClient()
                 .WithEndpoint(minioSettings.Endpoint)
@@ -64,5 +64,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IFileStorageService, FileStorageService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<IGenerateIdService, GenerateIdService>();
+        services.AddScoped<IPdfProcessorService, PdfProcessorService>();
+        services.AddHttpClient<IGeminiClientService, GeminiClientService>();
     }
 }
