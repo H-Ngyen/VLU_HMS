@@ -21,7 +21,7 @@ public class MedicalRecordsController(IMediator mediator) : ControllerBase
     {
         var medicalRecords = await mediator.Send(query);
         return Ok(medicalRecords);
-    }   
+    }
 
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
@@ -66,7 +66,7 @@ public class MedicalRecordsController(IMediator mediator) : ControllerBase
     [HttpPost("{patientId:int}/import-pdf")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<MedicalRecordDto>> ImportPdf(int patientId, ImportMedicalRecordCommand command)
+    public async Task<ActionResult<MedicalRecordDto>> ImportPdf(int patientId, [FromForm] ImportMedicalRecordCommand command)
     {
         command.PatientId = patientId;
         var medicalRecordDto = await mediator.Send(command);

@@ -20,6 +20,8 @@ public class ImportMedicalRecordCommandHandler(ILogger<ImportMedicalRecordComman
 
         var medicalRecordDto = await pdfProcessorService.ExtractAsync<MedicalRecordDto>(fileStream, GeminiPrompts.MedicalRecordImport)
             ?? throw new BadRequestException($"Something wrong went extracting pdf for patient {request.PatientId}");
+        
+        medicalRecordDto.PatientId = request.PatientId;
         return medicalRecordDto;
     }
 }

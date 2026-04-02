@@ -12,7 +12,7 @@ public class MedicalRecordDto
 {
     public int Id { get; set; }
     // Foreign Key
-    public required int PatientId { get; set; }
+    public int PatientId { get; set; }
     // public required int CreatedBy { get; set; }
 
     // Props

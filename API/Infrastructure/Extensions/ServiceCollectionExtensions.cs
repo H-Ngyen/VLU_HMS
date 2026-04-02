@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.SemanticKernel;
 using Minio;
 
 namespace Infrastructure.Extensions;
@@ -35,6 +36,19 @@ public static class ServiceCollectionExtensions
 
         // configure settings
         services.Configure<FileStorageSettings>(config.GetSection("MinIO"));
+
+        // SETUP GEMINI - SEMANTIC KERNEL
+        var geminiSettings = config.GetSection("Gemini").Get<GeminiSettings>()
+    ?? throw new Exception("Gemini settings are missing in appsettings.json");
+
+        // KIỂM TRA NHANH:
+        Console.WriteLine($"[DEBUG] Gemini Model: '{geminiSettings.Model}'");
+        Console.WriteLine($"[DEBUG] Gemini API Key length: {geminiSettings.ApiKey?.Length}");
+
+        services.AddKernel()
+                .AddGoogleAIGeminiChatCompletion(
+                    modelId: string.IsNullOrWhiteSpace(geminiSettings.Model) ? "gemini-1.5-pro" : geminiSettings.Model,
+                    apiKey: geminiSettings.ApiKey!);
 
         // Add Authentication Services
         services.AddAuthentication(options =>
