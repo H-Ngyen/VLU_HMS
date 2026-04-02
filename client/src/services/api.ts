@@ -182,6 +182,34 @@ export const api = {
     }
   },
 
+  xRays: {
+    create: async (recordId: number, data: any) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays`, {
+        method: 'POST',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to create X-Ray');
+      return response.text(); // Return ID if available
+    },
+    changeStatus: async (recordId: number, id: number, data: { status?: number, departmentName: string }) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays/${id}`, {
+        method: 'PUT',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to update X-Ray status');
+    },
+    complete: async (recordId: number, id: number, data: { resultDescription?: string, doctorAdvice?: string, completedAt?: string }) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays/${id}/complete`, {
+        method: 'PUT',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to complete X-Ray');
+    }
+  },
+
   identities: {
     sync: async (data: {
       auth0Id: string;

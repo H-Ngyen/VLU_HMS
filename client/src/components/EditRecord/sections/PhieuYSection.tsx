@@ -49,7 +49,7 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         setEditingXRayDoc(null);
     } else {
         const newDoc: Document = {
-            id: `DOC${Date.now()}`,
+            id: xrayData?.id ? `XRAY_${xrayData.id}` : `DOC${Date.now()}`,
             name: "Phiếu X-Quang",
             type: "X-Quang",
             fileName: file.name,
@@ -288,9 +288,23 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
                                 <td className="px-4 py-3 text-center text-gray-500">{index + 1}</td>
                                 <td className="px-4 py-3 font-medium text-gray-800">{doc.name}</td>
                                 <td className="px-4 py-3">
-                                    <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
-                                        {doc.type === "X-Quang" ? "X-Quang" : doc.type === "XN-HuyetHoc" ? "Huyết học" : doc.type}
-                                    </span>
+                                    <div className="flex flex-col gap-1 items-start">
+                                        <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+                                            {doc.type === "X-Quang" ? "X-Quang" : doc.type === "XN-HuyetHoc" ? "Huyết học" : doc.type}
+                                        </span>
+                                        {doc.type === "X-Quang" && doc.data?.status !== undefined && (
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                doc.data.status === 0 ? "bg-gray-100 text-gray-600" :
+                                                doc.data.status === 1 ? "bg-blue-100 text-blue-600" :
+                                                doc.data.status === 2 ? "bg-orange-100 text-orange-600" :
+                                                "bg-green-100 text-green-600"
+                                            }`}>
+                                                {doc.data.status === 0 ? "Chưa nhận mẫu" :
+                                                 doc.data.status === 1 ? "Đã nhận mẫu" :
+                                                 doc.data.status === 2 ? "Đang chạy" : "Đã có kết quả"}
+                                            </span>
+                                        )}
+                                    </div>
                                 </td>
                                 <td className="px-4 py-3 text-gray-500">{doc.date}</td>
                                 <td className="px-4 py-3 text-right flex justify-end gap-2">
@@ -335,6 +349,7 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         defaultGender={formData.gender}
         initialData={editingXRayDoc?.data || viewingXRayDoc?.data}
         readOnly={!!viewingXRayDoc || readOnly} 
+        recordId={formData.numericId}
       />
 
        <HematologyInputForm 

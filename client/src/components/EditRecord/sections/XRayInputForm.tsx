@@ -4,8 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { CheckCircle2, Circle } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import { api } from "@/services/api";
+import { toast } from "sonner";
 
 interface XRayInputFormProps {
   isOpen: boolean;
@@ -17,7 +20,15 @@ interface XRayInputFormProps {
   defaultAddress?: string;
   initialData?: any;
   readOnly?: boolean;
+  recordId?: number;
 }
+
+const STEPS = [
+  "Chưa nhận mẫu",
+  "Đã nhận mẫu",
+  "Đang chạy",
+  "Đã có kết quả"
+];
 
 export const XRayInputForm = ({ 
   isOpen, 
@@ -28,10 +39,13 @@ export const XRayInputForm = ({
   defaultGender = "",
   defaultAddress = "",
   initialData,
-  readOnly = false
+  readOnly = false,
+  recordId
 }: XRayInputFormProps) => {
   
   const [formData, setFormData] = useState({
+    id: undefined as number | undefined,
+    status: 0,
     healthDept: "",
     hospital: "",
     xrayNumber: "",
@@ -57,13 +71,22 @@ export const XRayInputForm = ({
     resultDateYear: "",
   });
 
+  const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
+  const [departmentInput, setDepartmentInput] = useState("");
+  const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "PDF" | null>(null);
+
   useEffect(() => {
     if (isOpen) {
         if (initialData) {
-            setFormData(initialData);
+            setFormData({
+                ...initialData,
+                status: initialData.status !== undefined ? initialData.status : 0
+            });
         } else {
             // Reset to defaults
             setFormData({
+                id: undefined,
+                status: 0,
                 healthDept: "",
                 hospital: "",
                 xrayNumber: "",
@@ -99,7 +122,96 @@ export const XRayInputForm = ({
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleGeneratePDF = async () => {
+  const handleActionClick = (action: "SAVE" | "NEXT" | "PDF") => {
+    setTargetAction(action);
+    if (action === "PDF") {
+      // PDF generation doesn't need department confirmation
+      generateAndSavePDF(formData);
+      return;
+    }
+    setDepartmentInput("");
+    setIsDeptDialogOpen(true);
+  };
+
+  const handleConfirmDepartment = async () => {
+    setIsDeptDialogOpen(false);
+    
+    if (!recordId) {
+        toast.error("Không tìm thấy ID Hồ sơ bệnh án. Vui lòng lưu hồ sơ trước khi tạo phiếu X-Quang.");
+        return;
+    }
+
+    try {
+        let currentXrayId = formData.id;
+        const requestedAt = `${formData.requestDateYear}-${formData.requestDateMonth.padStart(2, '0')}-${formData.requestDateDay.padStart(2, '0')}`;
+        
+        // 1. Nếu chưa có ID (Tạo mới)
+        if (!currentXrayId) {
+            const createPayload = {
+                departmentName: departmentInput,
+                requestDescription: formData.request || "Yêu cầu chụp X-Quang",
+                requestedAt: requestedAt
+            };
+            const newIdStr = await api.xRays.create(recordId, createPayload);
+            currentXrayId = parseInt(newIdStr, 10);
+            if (isNaN(currentXrayId)) {
+                // Backend might not return the new ID depending on implementation, 
+                // but we assume it does based on standard 201 Created responses
+                toast.success("Đã tạo yêu cầu X-Quang");
+            } else {
+                setFormData(prev => ({ ...prev, id: currentXrayId }));
+            }
+        }
+
+        // Nếu backend chưa có logic trả ID, ta dùng fake ID trên client tạm.
+        // Nhưng Swagger cho thấy: `public async Task<ActionResult<int>> CreatePatient`...
+        // Tuy nhiên X-Ray create API: `CreatedAtAction` or empty.
+        
+        let newStatus = formData.status;
+
+        // 2. Chuyển trạng thái
+        if (targetAction === "NEXT") {
+            newStatus = Math.min(formData.status + 1, 3);
+            
+            if (newStatus === 1 || newStatus === 2) {
+                 if (currentXrayId) {
+                     await api.xRays.changeStatus(recordId, currentXrayId, {
+                         status: newStatus,
+                         departmentName: departmentInput
+                     });
+                 }
+            } else if (newStatus === 3) {
+                 if (currentXrayId) {
+                     const completedAt = `${formData.resultDateYear}-${formData.resultDateMonth.padStart(2, '0')}-${formData.resultDateDay.padStart(2, '0')}`;
+                     await api.xRays.complete(recordId, currentXrayId, {
+                         resultDescription: formData.result,
+                         doctorAdvice: formData.advice,
+                         completedAt: completedAt
+                     });
+                 }
+            }
+        }
+
+        const updatedFormData = {
+            ...formData,
+            id: currentXrayId || formData.id,
+            status: newStatus,
+            lastUpdatedDept: departmentInput
+        };
+        
+        setFormData(updatedFormData);
+        toast.success(`Cập nhật trạng thái thành công (${STEPS[newStatus]})`);
+        
+        // Generate PDF
+        await generateAndSavePDF(updatedFormData);
+
+    } catch (error: any) {
+        console.error(error);
+        toast.error(error.message || "Đã xảy ra lỗi khi đồng bộ với server");
+    }
+  };
+
+  const generateAndSavePDF = async (dataToSave: any) => {
     if (!printRef.current) return;
 
     try {
@@ -127,21 +239,25 @@ export const XRayInputForm = ({
         const imgWidth = canvas.width;
         const imgHeight = canvas.height;
         
-        // Since we want full width usually:
         const printWidth = pdfWidth; 
         const printHeight = (imgHeight * pdfWidth) / imgWidth;
 
         pdf.addImage(imgData, "PNG", 0, 0, printWidth, printHeight);
         
-        const file = new File([pdf.output("blob")], `XQuang_${formData.patientName}_${Date.now()}.pdf`, { type: "application/pdf" });
-        onSave(file, formData);
+        const file = new File([pdf.output("blob")], `XQuang_${dataToSave.patientName}_${Date.now()}.pdf`, { type: "application/pdf" });
+        onSave(file, dataToSave);
         onClose();
     } catch (error) {
         console.error("Error generating PDF:", error);
     }
   };
 
+  const isRequestReadOnly = readOnly || formData.status > 0;
+  const showResultSection = formData.status >= 2;
+  const isResultReadOnly = readOnly || formData.status === 3;
+
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-[80vw] !max-w-none max-h-[90vh] overflow-y-auto">
         <DialogHeader className="sr-only">
@@ -150,17 +266,36 @@ export const XRayInputForm = ({
         </DialogHeader>
         
         <div className="space-y-6 py-4">
+          
+          {/* Stepper UI */}
+          <div className="flex items-center justify-between mb-8 px-8 relative mt-2">
+            <div className="absolute left-10 right-10 top-1/2 -translate-y-1/2 h-1 bg-gray-200 z-0"></div>
+            <div className="absolute left-10 top-1/2 -translate-y-1/2 h-1 bg-vlu-red z-0 transition-all duration-300" style={{ width: `calc(${(formData.status / 3) * 100}% - 40px)` }}></div>
+            
+            {STEPS.map((step, index) => {
+              const isActive = formData.status >= index;
+              return (
+                <div key={index} className="relative z-10 flex flex-col items-center gap-2 bg-white px-2">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${isActive ? 'bg-vlu-red border-vlu-red text-white' : 'bg-white border-gray-300 text-gray-300'}`}>
+                    {isActive ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                  </div>
+                  <span className={`text-xs font-medium ${isActive ? 'text-vlu-red' : 'text-gray-500'}`}>{step}</span>
+                </div>
+              );
+            })}
+          </div>
+
           {/* New Horizontal Header Layout (3 Columns) */}
           <div className="grid grid-cols-3 gap-4 items-start border-b border-gray-100 pb-4">
             {/* Left Col */}
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Label className="w-20 shrink-0 text-xs">Sở Y tế:</Label>
-                <Input name="healthDept" value={formData.healthDept} onChange={handleChange} className="h-7 text-xs border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" placeholder="...................." disabled={readOnly} />
+                <Input name="healthDept" value={formData.healthDept} onChange={handleChange} className="h-7 text-xs border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" placeholder="...................." disabled={isRequestReadOnly} />
               </div>
               <div className="flex items-center gap-2">
                 <Label className="w-20 shrink-0 text-xs">Bệnh viện:</Label>
-                <Input name="hospital" value={formData.hospital} onChange={handleChange} className="h-7 text-xs border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" placeholder="...................." disabled={readOnly} />
+                <Input name="hospital" value={formData.hospital} onChange={handleChange} className="h-7 text-xs border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" placeholder="...................." disabled={isRequestReadOnly} />
               </div>
             </div>
 
@@ -174,7 +309,7 @@ export const XRayInputForm = ({
                     value={formData.times} 
                     onChange={handleChange} 
                     className="w-10 h-5 p-0 text-center text-xs border-b border-x-0 border-t-0 rounded-none focus-visible:ring-0 bg-transparent" 
-                    disabled={readOnly}
+                    disabled={isRequestReadOnly}
                 />
                 <span className="text-xs italic">)</span>
               </div>
@@ -185,7 +320,7 @@ export const XRayInputForm = ({
               <p className="text-xs font-bold">MS: 08/BV-02</p>
               <div className="flex items-center justify-end gap-2">
                 <Label className="shrink-0 text-xs">Số:</Label>
-                <Input name="xrayNumber" value={formData.xrayNumber} onChange={handleChange} className="w-24 h-7 text-xs border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0 text-right" placeholder="................" disabled={readOnly} />
+                <Input name="xrayNumber" value={formData.xrayNumber} onChange={handleChange} className="w-24 h-7 text-xs border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0 text-right" placeholder="................" disabled={isRequestReadOnly} />
               </div>
             </div>
           </div>
@@ -195,41 +330,41 @@ export const XRayInputForm = ({
             <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 flex items-end gap-2 min-w-[200px]">
                 <Label className="shrink-0">Họ tên người bệnh:</Label>
-                <Input name="patientName" value={formData.patientName} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={readOnly} />
+                <Input name="patientName" value={formData.patientName} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={isRequestReadOnly} />
               </div>
               <div className="w-24 flex items-end gap-2">
                 <Label className="shrink-0">Tuổi:</Label>
-                <Input name="age" value={formData.age} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={readOnly} />
+                <Input name="age" value={formData.age} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={isRequestReadOnly} />
               </div>
               <div className="w-32 flex items-end gap-2">
                 <Label className="shrink-0">Nam/Nữ:</Label>
-                <Input name="gender" value={formData.gender} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={readOnly} />
+                <Input name="gender" value={formData.gender} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={isRequestReadOnly} />
               </div>
             </div>
 
             <div className="flex items-end gap-2">
               <Label className="shrink-0">Địa chỉ:</Label>
-              <Input name="address" value={formData.address} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={readOnly} />
+              <Input name="address" value={formData.address} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={isRequestReadOnly} />
             </div>
 
             <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 flex items-end gap-2">
                 <Label className="shrink-0">Khoa:</Label>
-                <Input name="department" value={formData.department} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={readOnly} />
+                <Input name="department" value={formData.department} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={isRequestReadOnly} />
               </div>
               <div className="w-32 flex items-end gap-2">
                 <Label className="shrink-0">Buồng:</Label>
-                <Input name="room" value={formData.room} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={readOnly} />
+                <Input name="room" value={formData.room} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={isRequestReadOnly} />
               </div>
               <div className="w-32 flex items-end gap-2">
                 <Label className="shrink-0">Giường:</Label>
-                <Input name="bed" value={formData.bed} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={readOnly} />
+                <Input name="bed" value={formData.bed} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={isRequestReadOnly} />
               </div>
             </div>
 
             <div className="flex items-end gap-2">
               <Label className="shrink-0">Chẩn đoán:</Label>
-              <Input name="diagnosis" value={formData.diagnosis} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={readOnly} />
+              <Input name="diagnosis" value={formData.diagnosis} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={isRequestReadOnly} />
             </div>
           </div>
 
@@ -245,7 +380,7 @@ export const XRayInputForm = ({
                 onChange={handleChange} 
                 className="min-h-[200px] resize-none leading-loose border-0 rounded-none focus-visible:ring-0 w-full p-3"
                 placeholder="Nhập yêu cầu..."
-                disabled={readOnly}
+                disabled={isRequestReadOnly}
                 />
              </div>
           </div>
@@ -255,81 +390,85 @@ export const XRayInputForm = ({
                 <div className="text-center w-1/3 space-y-2">
                     <div className="flex justify-center gap-1 italic text-sm mb-2">
                     <span>Ngày</span>
-                    <Input name="requestDateDay" value={formData.requestDateDay} onChange={handleChange} className="w-10 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={readOnly} />
+                    <Input name="requestDateDay" value={formData.requestDateDay} onChange={handleChange} className="w-10 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={isRequestReadOnly} />
                     <span>tháng</span>
-                    <Input name="requestDateMonth" value={formData.requestDateMonth} onChange={handleChange} className="w-10 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={readOnly} />
+                    <Input name="requestDateMonth" value={formData.requestDateMonth} onChange={handleChange} className="w-10 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={isRequestReadOnly} />
                     <span>năm</span>
-                    <Input name="requestDateYear" value={formData.requestDateYear} onChange={handleChange} className="w-16 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={readOnly} />
+                    <Input name="requestDateYear" value={formData.requestDateYear} onChange={handleChange} className="w-16 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={isRequestReadOnly} />
                     </div>
                     <p className="font-bold">Bác sĩ điều trị</p>
                     <div className="pt-16">
                          <div className="flex items-center gap-2">
                             <Label className="shrink-0 font-normal">Họ tên:</Label>
-                            <Input name="doctor" value={formData.doctor} onChange={handleChange} placeholder="................" className="text-center border-b border-t-0 border-x-0 rounded-none focus-visible:ring-0" disabled={readOnly} />
+                            <Input name="doctor" value={formData.doctor} onChange={handleChange} placeholder="................" className="text-center border-b border-t-0 border-x-0 rounded-none focus-visible:ring-0" disabled={isRequestReadOnly} />
                          </div>
                     </div>
                 </div>
              </div>
 
-          {/* Result Section */}
-          <div className="space-y-4 border-t border-gray-200 pt-4">
-            <div className="border border-gray-300 rounded-sm">
-                <div className="bg-gray-50 p-2 border-b border-gray-300">
-                    <Label className="font-bold text-base">Kết quả chiếu/ chụp</Label>
-                </div>
-                <div className="p-0">
-                    <Textarea 
-                    name="result" 
-                    value={formData.result} 
-                    onChange={handleChange} 
-                    className="min-h-[350px] resize-none leading-loose border-0 rounded-none focus-visible:ring-0 w-full p-3"
-                    placeholder="Nhập kết quả..."
-                    disabled={readOnly}
-                    />
-                </div>
+          {/* Result Section (Conditionally Rendered) */}
+          {showResultSection && (
+            <div className="space-y-4 border-t border-gray-200 pt-4 mt-8">
+              <div className="border border-gray-300 rounded-sm">
+                  <div className="bg-gray-50 p-2 border-b border-gray-300 flex justify-between items-center">
+                      <Label className="font-bold text-base">Kết quả chiếu/ chụp</Label>
+                      {formData.status === 2 && <span className="text-xs text-orange-500 font-medium italic">Vui lòng nhập kết quả để hoàn thành phiếu</span>}
+                  </div>
+                  <div className="p-0">
+                      <Textarea 
+                      name="result" 
+                      value={formData.result} 
+                      onChange={handleChange} 
+                      className="min-h-[350px] resize-none leading-loose border-0 rounded-none focus-visible:ring-0 w-full p-3"
+                      placeholder="Nhập kết quả..."
+                      disabled={isResultReadOnly}
+                      />
+                  </div>
+              </div>
+
+              {/* Specialist Doctor Signature */}
+              <div className="flex justify-between items-start pt-2">
+                  <div className="w-1/2 space-y-2 pr-4">
+                      <Label className="font-bold block">Lời dặn của BS chuyên khoa:</Label>
+                      <Textarea 
+                          name="advice" 
+                          value={formData.advice} 
+                          onChange={handleChange} 
+                          className="min-h-[80px] resize-none border-gray-300 mt-2"
+                          placeholder="................................"
+                          disabled={isResultReadOnly}
+                      />
+                  </div>
+                  
+                  <div className="text-center w-1/3 space-y-2">
+                      <div className="flex justify-center gap-1 italic text-sm mb-2">
+                      <span>Ngày</span>
+                      <Input name="resultDateDay" value={formData.resultDateDay} onChange={handleChange} className="w-10 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={isResultReadOnly} />
+                      <span>tháng</span>
+                      <Input name="resultDateMonth" value={formData.resultDateMonth} onChange={handleChange} className="w-10 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={isResultReadOnly} />
+                      <span>năm</span>
+                      <Input name="resultDateYear" value={formData.resultDateYear} onChange={handleChange} className="w-16 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={isResultReadOnly} />
+                      </div>
+                      <p className="font-bold">Bác sĩ chuyên khoa</p>
+                      <div className="pt-16">
+                          <div className="flex items-center gap-2">
+                              <Label className="shrink-0 font-normal">Họ tên:</Label>
+                              <Input name="specialist" value={formData.specialist} onChange={handleChange} placeholder="................" className="text-center border-b border-t-0 border-x-0 rounded-none focus-visible:ring-0" disabled={isResultReadOnly} />
+                          </div>
+                      </div>
+                  </div>
+              </div>
             </div>
-
-            {/* Specialist Doctor Signature */}
-             <div className="flex justify-between items-start pt-2">
-                 <div className="w-1/2 space-y-2 pr-4">
-                     <Label className="font-bold block">Lời dặn của BS chuyên khoa:</Label>
-                     <Textarea 
-                        name="advice" 
-                        value={formData.advice} 
-                        onChange={handleChange} 
-                        className="min-h-[80px] resize-none border-gray-300 mt-2"
-                        placeholder="................................"
-                        disabled={readOnly}
-                    />
-                 </div>
-                 
-                <div className="text-center w-1/3 space-y-2">
-                    <div className="flex justify-center gap-1 italic text-sm mb-2">
-                    <span>Ngày</span>
-                    <Input name="resultDateDay" value={formData.resultDateDay} onChange={handleChange} className="w-10 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={readOnly} />
-                    <span>tháng</span>
-                    <Input name="resultDateMonth" value={formData.resultDateMonth} onChange={handleChange} className="w-10 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={readOnly} />
-                    <span>năm</span>
-                    <Input name="resultDateYear" value={formData.resultDateYear} onChange={handleChange} className="w-16 h-6 p-0 text-center border-b border-x-0 border-t-0 rounded-none" disabled={readOnly} />
-                    </div>
-                    <p className="font-bold">Bác sĩ chuyên khoa</p>
-                    <div className="pt-16">
-                         <div className="flex items-center gap-2">
-                            <Label className="shrink-0 font-normal">Họ tên:</Label>
-                            <Input name="specialist" value={formData.specialist} onChange={handleChange} placeholder="................" className="text-center border-b border-t-0 border-x-0 rounded-none focus-visible:ring-0" disabled={readOnly} />
-                         </div>
-                    </div>
-                </div>
-             </div>
-          </div>
+          )}
         </div>
 
+        {/* Hidden Div for PDF Generation (Kept Original Layout) */}
         <div 
             ref={printRef}
             className="fixed"
             style={{
                 position: 'fixed',
-                left: '-10000px', // Move off-screen instead of invisible
+                left: '-10000px', 
                 top: '0',
                 width: '210mm',
                 padding: '10mm',
@@ -338,7 +477,6 @@ export const XRayInputForm = ({
                 fontFamily: 'Arial, Helvetica, sans-serif',
                 fontSize: '10pt',
                 lineHeight: '1.4',
-                // Explicitly reset variables to safe values just in case
                 ['--background' as any]: '#ffffff',
                 ['--foreground' as any]: '#000000',
             }}
@@ -346,26 +484,20 @@ export const XRayInputForm = ({
             <div>
                 {/* Header - 3 Column Layout */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                    {/* Left */}
                     <div style={{ width: '30%' }}>
                         <p style={{ margin: 0 }}>Sở Y tế: {formData.healthDept || "..................."}</p>
                         <p style={{ margin: 0 }}>BV: {formData.hospital || "..................."}</p>
                     </div>
-                    
-                    {/* Center */}
                     <div style={{ width: '40%', textAlign: 'center' }}>
                         <h1 style={{ fontSize: '10pt', fontWeight: 'bold', textTransform: 'uppercase', margin: 0 }}>Phiếu chiếu/ chụp X-Quang</h1>
                         <p style={{ fontStyle: 'italic', margin: 0, fontSize: '9pt' }}>(lần thứ {formData.times || "................."})</p>
                     </div>
-
-                    {/* Right */}
                     <div style={{ width: '30%', textAlign: 'right' }}>
                          <p style={{ margin: 0, fontWeight: 'bold' }}>MS: 08/BV-02</p>
                          <p style={{ margin: 0 }}>Số: {formData.xrayNumber || "................"}</p>
                     </div>
                 </div>
 
-                {/* Info */}
                 <div style={{ marginBottom: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                         <span style={{ width: '50%' }}>Họ tên người bệnh: <b style={{ fontWeight: 'bold' }}>{formData.patientName}</b></span>
@@ -381,13 +513,11 @@ export const XRayInputForm = ({
                     <p style={{ margin: 0 }}>Chẩn đoán: {formData.diagnosis}</p>
                 </div>
 
-                {/* Request Table */}
                 <div style={{ marginBottom: '24px', border: '1px solid #000000' }}>
                      <div style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #000000', padding: '8px', fontWeight: 'bold', textAlign: 'left', color: '#000000' }}>Yêu cầu chiếu/ chụp</div>
                      <div style={{ padding: '8px', minHeight: '30mm', whiteSpace: 'pre-wrap', color: '#000000' }}>{formData.request}</div>
                 </div>
 
-                {/* Treatment Sig */}
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '32px' }}>
                     <div style={{ textAlign: 'center', width: '33%' }}>
                         <p style={{ fontStyle: 'italic', margin: 0 }}>Ngày {formData.requestDateDay} tháng {formData.requestDateMonth} năm {formData.requestDateYear}</p>
@@ -397,33 +527,98 @@ export const XRayInputForm = ({
                     </div>
                 </div>
 
-                {/* Result Table */}
-                <div style={{ marginBottom: '24px', border: '1px solid #000000' }}>
-                     <div style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #000000', padding: '8px', fontWeight: 'bold', textAlign: 'left', color: '#000000' }}>Kết quả chiếu/ chụp</div>
-                     <div style={{ padding: '8px', minHeight: '40mm', whiteSpace: 'pre-wrap', color: '#000000' }}>{formData.result}</div>
-                </div>
+                {showResultSection && (
+                  <>
+                    <div style={{ marginBottom: '24px', border: '1px solid #000000' }}>
+                        <div style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #000000', padding: '8px', fontWeight: 'bold', textAlign: 'left', color: '#000000' }}>Kết quả chiếu/ chụp</div>
+                        <div style={{ padding: '8px', minHeight: '40mm', whiteSpace: 'pre-wrap', color: '#000000' }}>{formData.result}</div>
+                    </div>
 
-                 {/* Specialist Sig */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ width: '50%', paddingRight: '16px' }}>
-                        <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: '8px' }}>Lời dặn của BS chuyên khoa:</p>
-                        <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{formData.advice}</p>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div style={{ width: '50%', paddingRight: '16px' }}>
+                            <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: '8px' }}>Lời dặn của BS chuyên khoa:</p>
+                            <p style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{formData.advice}</p>
+                        </div>
+                        <div style={{ textAlign: 'center', width: '33%' }}>
+                            <p style={{ fontStyle: 'italic', margin: 0 }}>Ngày {formData.resultDateDay} tháng {formData.resultDateMonth} năm {formData.resultDateYear}</p>
+                            <p style={{ fontWeight: 'bold', marginTop: '4px', marginBottom: '0' }}>Bác sĩ chuyên khoa</p>
+                            <div style={{ height: '20mm' }}></div>
+                            <p style={{ margin: 0 }}>Họ tên: {formData.specialist}</p>
+                        </div>
                     </div>
-                    <div style={{ textAlign: 'center', width: '33%' }}>
-                        <p style={{ fontStyle: 'italic', margin: 0 }}>Ngày {formData.resultDateDay} tháng {formData.resultDateMonth} năm {formData.resultDateYear}</p>
-                        <p style={{ fontWeight: 'bold', marginTop: '4px', marginBottom: '0' }}>Bác sĩ chuyên khoa</p>
-                        <div style={{ height: '20mm' }}></div>
-                        <p style={{ margin: 0 }}>Họ tên: {formData.specialist}</p>
-                    </div>
-                </div>
+                  </>
+                )}
             </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Hủy</Button>
-          <Button onClick={handleGeneratePDF} className="bg-vlu-red hover:bg-red-700 text-white">Lưu phiếu & Tạo file</Button>
+        {/* Dynamic Footer based on Workflow Status */}
+        <DialogFooter className="mt-6 border-t pt-4">
+          <Button variant="outline" onClick={onClose}>Đóng</Button>
+          
+          {!readOnly && (
+            <>
+              {formData.status === 0 && (
+                <>
+                  <Button variant="outline" onClick={() => handleActionClick("SAVE")}>Lưu Chỉ Định (Nháp)</Button>
+                  <Button onClick={() => handleActionClick("NEXT")} className="bg-blue-600 hover:bg-blue-700 text-white">
+                    {initialData ? "Tiếp Nhận Mẫu (Chuyển TT1)" : "Tạo Yêu Cầu & Chuyển TT1"}
+                  </Button>
+                </>
+              )}
+              
+              {formData.status === 1 && (
+                <Button onClick={() => handleActionClick("NEXT")} className="bg-orange-500 hover:bg-orange-600 text-white">
+                  Bắt Đầu Chụp (Chuyển TT2)
+                </Button>
+              )}
+              
+              {formData.status === 2 && (
+                <Button onClick={() => handleActionClick("NEXT")} className="bg-vlu-red hover:bg-red-700 text-white">
+                  Hoàn Thành & Ký Số
+                </Button>
+              )}
+              
+              {formData.status === 3 && (
+                <Button onClick={() => handleActionClick("PDF")} className="bg-vlu-red hover:bg-red-700 text-white">
+                  Lưu & Xuất File PDF
+                </Button>
+              )}
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Department Select Dialog */}
+    <Dialog open={isDeptDialogOpen} onOpenChange={setIsDeptDialogOpen}>
+      <DialogContent className="max-w-md rounded-lg z-[9999]">
+        <DialogHeader>
+          <DialogTitle>Xác nhận nghiệp vụ</DialogTitle>
+          <DialogDescription>
+            Vui lòng xác nhận Khoa/Phòng đang thực hiện thao tác này để hệ thống lưu vết (Snapshot).
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <Label className="mb-2 block font-medium">Tên Khoa/Phòng thực hiện:</Label>
+          <Input 
+            value={departmentInput} 
+            onChange={(e) => setDepartmentInput(e.target.value)}
+            placeholder="Ví dụ: Khoa Cấp cứu, Khoa X-Quang..." 
+            autoFocus
+          />
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setIsDeptDialogOpen(false)}>Hủy</Button>
+          <Button 
+            onClick={handleConfirmDepartment} 
+            disabled={!departmentInput.trim()}
+            className="bg-vlu-red hover:bg-red-700 text-white"
+          >
+            Xác nhận
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 };

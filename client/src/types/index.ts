@@ -153,6 +153,7 @@ export interface DischargeStatusInfo {
 
 export interface Record {
   id: string;
+  numericId?: number;
   patientId: string;
   patientName: string;
   cccd: string;
