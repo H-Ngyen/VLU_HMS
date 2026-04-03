@@ -9,6 +9,7 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import { api } from "@/services/api";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface XRayInputFormProps {
   isOpen: boolean;
@@ -42,6 +43,7 @@ export const XRayInputForm = ({
   readOnly = false,
   recordId
 }: XRayInputFormProps) => {
+  const { currentUser } = useAuth();
   
   const [formData, setFormData] = useState({
     id: undefined as number | undefined,
@@ -69,6 +71,7 @@ export const XRayInputForm = ({
     resultDateDay: "",
     resultDateMonth: "",
     resultDateYear: "",
+    xRayStatusLogs: [] as any[]
   });
 
   const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
@@ -80,7 +83,8 @@ export const XRayInputForm = ({
         if (initialData) {
             setFormData({
                 ...initialData,
-                status: initialData.status !== undefined ? initialData.status : 0
+                status: initialData.status !== undefined ? initialData.status : 0,
+                xRayStatusLogs: initialData.xRayStatusLogs || []
             });
         } else {
             // Reset to defaults
@@ -110,6 +114,7 @@ export const XRayInputForm = ({
                 resultDateDay: new Date().getDate().toString(),
                 resultDateMonth: (new Date().getMonth() + 1).toString(),
                 resultDateYear: new Date().getFullYear().toString(),
+                xRayStatusLogs: []
             });
         }
     }
@@ -192,11 +197,19 @@ export const XRayInputForm = ({
             }
         }
 
+        const newLog = {
+            status: newStatus,
+            departmentName: departmentInput,
+            updatedByName: currentUser?.name || "Người dùng",
+            createdAt: new Date().toISOString()
+        };
+
         const updatedFormData = {
             ...formData,
             id: currentXrayId || formData.id,
             status: newStatus,
-            lastUpdatedDept: departmentInput
+            lastUpdatedDept: departmentInput,
+            xRayStatusLogs: [...(formData.xRayStatusLogs || []), newLog]
         };
         
         setFormData(updatedFormData);
@@ -274,12 +287,22 @@ export const XRayInputForm = ({
             
             {STEPS.map((step, index) => {
               const isActive = formData.status >= index;
+              const logForStep = formData.xRayStatusLogs?.find(l => l.status === index);
+              
               return (
                 <div key={index} className="relative z-10 flex flex-col items-center gap-2 bg-white px-2">
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${isActive ? 'bg-vlu-red border-vlu-red text-white' : 'bg-white border-gray-300 text-gray-300'}`}>
                     {isActive ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
                   </div>
-                  <span className={`text-xs font-medium ${isActive ? 'text-vlu-red' : 'text-gray-500'}`}>{step}</span>
+                  <div className="flex flex-col items-center">
+                      <span className={`text-xs font-medium ${isActive ? 'text-vlu-red' : 'text-gray-500'}`}>{step}</span>
+                      {logForStep && (
+                          <div className="text-[10px] text-gray-400 text-center mt-1 w-24 leading-tight">
+                              <p className="font-semibold text-gray-500 truncate" title={logForStep.updatedByName}>{logForStep.updatedByName}</p>
+                              <p>{new Date(logForStep.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - {new Date(logForStep.createdAt).toLocaleDateString('vi-VN')}</p>
+                          </div>
+                      )}
+                  </div>
                 </div>
               );
             })}
