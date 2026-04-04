@@ -37,7 +37,7 @@ public class ChangeStatusXrayCommandHandler(ILogger<ChangeStatusXrayCommandHandl
         if (!IsValidTransition(xray.Status, request.Status))
             throw new BadRequestException($"Chuyển đổi trạng thái không hợp lệ cho phiếu xét nghiệm máu {xray.Id}: {xray.Status} -> {request.Status}");
 
-        if (request.Status == MedicalStatus.Completed && xray.IsCompleted())
+        if (request.Status == MedicalStatus.Completed && !xray.IsCompleted())
             throw new BadRequestException("Không thể hoàn thành phiếu chụp x-quang khi chưa có kết quả.");
 
         xray.Status = request.Status;
