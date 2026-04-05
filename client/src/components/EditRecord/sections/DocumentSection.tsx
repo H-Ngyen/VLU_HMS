@@ -32,7 +32,7 @@ export const DocumentSection = ({ formData, setFormData, readOnly = false }: Doc
 
     const newDoc: Document = {
       id: `DOC${Date.now()}`,
-      name: "Tài liệu",
+      name: selectedFile.name,
       type: "Tài liệu",
       fileName: selectedFile.name,
       date: new Date().toISOString().split("T")[0],

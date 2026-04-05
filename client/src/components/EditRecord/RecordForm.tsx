@@ -25,17 +25,42 @@ interface RecordFormProps {
   readOnly?: boolean;
 }
 
-const createInitialRecord = (patient: any, type: "internal" | "surgery" = "internal"): Record => {
+const buildFullAddress = (parts: {
+  houseNumber?: string;
+  village?: string;
+  wardName?: string;
+  districtName?: string;
+  provinceName?: string;
+}) => {
+  const house = parts.houseNumber?.trim();
+  const village = parts.village?.trim();
+  const ward = parts.wardName?.trim();
+  const district = parts.districtName?.trim();
+  const province = parts.provinceName?.trim();
+
+  return [house, village, ward, district, province].filter((p): p is string => Boolean(p)).join(", ");
+};
+
+const createInitialRecord = (patient: Patient, type: "internal" | "surgery" = "internal"): Record => {
   const departmentName = type === "surgery" ? "Ngoại Khoa" : "Nội Khoa";
+  const address = buildFullAddress({
+    houseNumber: patient.houseNumber,
+    village: patient.village,
+    wardName: patient.wardName,
+    districtName: patient.districtName,
+    provinceName: patient.provinceName
+  });
+
   return {
     id: `REC${Date.now()}`,
     patientId: String(patient.id),
-    patientName: patient.fullName,
-    cccd: patient.cccd,
-    insuranceNumber: patient.insuranceNumber,
-    age: patient.age,
-    dob: patient.dob,
-    gender: patient.gender,
+    patientName: patient.fullName || patient.name,
+    cccd: patient.cccd || "",
+    insuranceNumber: patient.insuranceNumber || patient.healthInsuranceNumber || "",
+    address: address || patient.address || "",
+    age: patient.age || 0,
+    dob: patient.dob || patient.dateOfBirth?.split('T')[0] || "",
+    gender: String(patient.gender),
     admissionDate: new Date().toISOString().split("T")[0],
     dischargeDate: "",
     department: departmentName,
@@ -172,7 +197,7 @@ const prepareRecordData = (record: Record): Record => {
 interface SectionItem {
   id: string;
   label: string;
-  icon: any;
+  icon: React.ElementType;
   subSections?: SectionItem[];
 }
 
@@ -211,7 +236,10 @@ const getFlattenedSections = () => {
 export const RecordForm = ({ record, patient, mode, initialType = "internal", onSubmit, onCancel, readOnly = false }: RecordFormProps) => {
   const [formData, setFormData] = useState<Record | null>(null);
   const [editablePatient, setEditablePatient] = useState<Patient>(patient);
-  const [activeTab, setActiveTab] = useState("details"); // 'details' | 'forms' | 'documents'
+  
+  const queryParams = new URLSearchParams(window.location.search);
+  const initialTab = queryParams.get("tab") || "details";
+  const [activeTab, setActiveTab] = useState(initialTab); // 'details' | 'forms' | 'documents'
   
   // Initialize with the first section
   const [activeSection, setActiveSection] = useState("administrative");
@@ -230,6 +258,45 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
       setEditablePatient(patient); 
     }
   }, [mode, record, patient, initialType]);
+
+  // Sync editablePatient changes to formData (important for PhieuYSection)
+  useEffect(() => {
+    if (formData && editablePatient) {
+      // Reconstruct address from parts as requested by user
+      const parts = [
+        editablePatient.houseNumber,
+        editablePatient.village,
+        editablePatient.wardName,
+        editablePatient.districtName,
+        editablePatient.provinceName
+      ].filter((p): p is string => Boolean(p)).map(p => p.trim());
+      
+      const fullAddress = parts.join(", ");
+      
+      // Re-calculate age accurately
+      const dob = new Date(editablePatient.dateOfBirth);
+      const today = new Date();
+      let newAge = 0;
+      if (!isNaN(dob.getTime())) {
+        newAge = today.getFullYear() - dob.getFullYear();
+        const m = today.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+          newAge--;
+        }
+        if (newAge < 0) newAge = 0;
+      }
+
+      if (formData.address !== fullAddress || formData.age !== newAge || formData.patientName !== (editablePatient.fullName || editablePatient.name)) {
+        setFormData(prev => prev ? ({
+          ...prev,
+          patientName: editablePatient.fullName || editablePatient.name,
+          address: fullAddress,
+          age: newAge,
+          dob: editablePatient.dateOfBirth?.split('T')[0] || ""
+        }) : null);
+      }
+    }
+  }, [editablePatient, formData]);
 
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -293,7 +360,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
             <span className="text-vlu-red">{typeLabel}</span>
           </h1>
           <p className="text-gray-500">
-            {isCreate ? `Bệnh nhân: ${(patient as any).fullName}` : `Mã lưu trữ: ${record?.id}`}
+            {isCreate ? `Bệnh nhân: ${patient.fullName || patient.name}` : `Mã lưu trữ: ${record?.id}`}
           </p>
         </div>
         <div className="flex gap-2">

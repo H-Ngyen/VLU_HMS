@@ -198,7 +198,10 @@ export const api = {
         headers: getHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error('Failed to update X-Ray status');
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Failed to update X-Ray status: ${errorText}`);
+      }
     },
     complete: async (recordId: number, id: number, data: { resultDescription?: string, doctorAdvice?: string, completedAt?: string }) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays/${id}/complete`, {
@@ -206,7 +209,10 @@ export const api = {
         headers: getHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error('Failed to complete X-Ray');
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Failed to complete X-Ray: ${errorText}`);
+      }
     }
   },
 

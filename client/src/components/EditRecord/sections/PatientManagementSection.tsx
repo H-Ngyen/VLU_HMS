@@ -16,7 +16,7 @@ interface PatientManagementSectionProps {
 export const PatientManagementSection = ({ formData, setFormData, readOnly = false }: PatientManagementSectionProps) => {
   const managementData = formData.managementData;
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = <K extends keyof typeof managementData>(field: K, value: (typeof managementData)[K]) => {
     if (readOnly) return;
     setFormData((prev) => {
       if (!prev) return null;
@@ -30,15 +30,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
     });
   };
 
-  const handleRootChange = (field: keyof Record, value: any) => {
-      if (readOnly) return;
-      setFormData((prev) => {
-          if (!prev) return null;
-          return { ...prev, [field]: value };
-      });
-  };
-
-  const handleTransferChange = (index: number, field: keyof Transfer, value: any) => {
+  const handleTransferChange = <K extends keyof Transfer>(index: number, field: K, value: Transfer[K]) => {
     if (readOnly) return;
     const newTransfers = [...managementData.transfers];
     newTransfers[index] = { ...newTransfers[index], [field]: value };
