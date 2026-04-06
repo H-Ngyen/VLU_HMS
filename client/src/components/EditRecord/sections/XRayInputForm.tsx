@@ -160,6 +160,13 @@ export const XRayInputForm = ({
             status: initialData.status !== undefined ? initialData.status : 0,
             xRayStatusLogs: initialData.xRayStatusLogs || []
         };
+        
+        // Ensure result date is populated if missing
+        const now = new Date();
+        if (!data.resultDateDay) data.resultDateDay = now.getDate().toString();
+        if (!data.resultDateMonth) data.resultDateMonth = (now.getMonth() + 1).toString();
+        if (!data.resultDateYear) data.resultDateYear = now.getFullYear().toString();
+
         const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
         data.age = (calculatedAge === "" && defaultAge && defaultAge > 0) ? defaultAge.toString() : calculatedAge;
         
@@ -193,12 +200,6 @@ export const XRayInputForm = ({
             useCORS: true,
             backgroundColor: '#ffffff',
             onclone: (clonedDoc) => {
-                const styles = clonedDoc.getElementsByTagName('style');
-                for (let i = styles.length - 1; i >= 0; i--) styles[i].remove();
-                const links = clonedDoc.getElementsByTagName('link');
-                for (let i = links.length - 1; i >= 0; i--) {
-                    if (links[i].rel === 'stylesheet') links[i].remove();
-                }
                 const root = clonedDoc.documentElement;
                 root.style.backgroundColor = 'white';
                 root.style.color = 'black';
@@ -226,12 +227,9 @@ export const XRayInputForm = ({
             useCORS: true, 
             backgroundColor: '#ffffff',
             onclone: (clonedDoc) => {
-                const styles = clonedDoc.getElementsByTagName('style');
-                for (let i = styles.length - 1; i >= 0; i--) styles[i].remove();
-                const links = clonedDoc.getElementsByTagName('link');
-                for (let i = links.length - 1; i >= 0; i--) {
-                    if (links[i].rel === 'stylesheet') links[i].remove();
-                }
+                const root = clonedDoc.documentElement;
+                root.style.backgroundColor = 'white';
+                root.style.color = 'black';
             }
         });
         const imgData = canvas.toDataURL("image/png");
@@ -367,8 +365,14 @@ export const XRayInputForm = ({
 
         setFormData(prev => {
             const updated = { ...prev, status: newStatus, xRayStatusLogs: [...(prev.xRayStatusLogs || []), ...newLogs] };
-            if (!readOnly && updated.status === 2 && !updated.specialist && currentUser?.name) {
-                updated.specialist = currentUser.name;
+            if (!readOnly && updated.status === 2) {
+                if (!updated.specialist && currentUser?.name) {
+                    updated.specialist = currentUser.name;
+                }
+                const now = new Date();
+                updated.resultDateDay = now.getDate().toString();
+                updated.resultDateMonth = (now.getMonth() + 1).toString();
+                updated.resultDateYear = now.getFullYear().toString();
             }
             return updated;
         });
@@ -548,81 +552,69 @@ export const XRayInputForm = ({
 
         <div 
             ref={printRef} 
-            className="fixed" 
-            style={{ 
-                position: 'fixed', 
-                left: '-10000px', 
-                top: '0', 
-                width: '210mm', 
-                padding: '10mm', 
-                backgroundColor: '#ffffff', 
-                color: '#000000', 
-                fontFamily: 'Arial, Helvetica, sans-serif', 
-                fontSize: '10pt', 
-                lineHeight: '1.4' 
-            }}
+            className="fixed left-[-10000px] top-0 w-[210mm] p-[10mm] bg-white text-black font-sans text-[10pt] leading-[1.4]"
         >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
-                <div style={{ width: '30%' }}>
-                    <p style={{ margin: 0 }}>Sở Y tế: {formData.healthDept || "..................."}</p>
-                    <p style={{ margin: 0 }}>BV: {formData.hospital || "..................."}</p>
+            <div className="flex justify-between items-start mb-5">
+                <div className="w-[30%]">
+                    <p className="m-0">Sở Y tế: {formData.healthDept || "..................."}</p>
+                    <p className="m-0">BV: {formData.hospital || "..................."}</p>
                 </div>
-                <div style={{ width: '40%', textAlign: 'center' }}>
-                    <h1 style={{ fontSize: '10pt', fontWeight: 'bold', textTransform: 'uppercase', margin: 0 }}>Phiếu chiếu/ chụp X-Quang</h1>
-                    <p style={{ fontStyle: 'italic', margin: 0, fontSize: '9pt' }}>(lần thứ {formData.times || "................."})</p>
+                <div className="w-[40%] text-center">
+                    <h1 className="text-[10pt] font-bold uppercase m-0">Phiếu chiếu/ chụp X-Quang</h1>
+                    <p className="italic m-0 text-[9pt]">(lần thứ {formData.times || "................."})</p>
                 </div>
-                <div style={{ width: '30%', textAlign: 'right' }}>
-                     <p style={{ margin: 0, fontWeight: 'bold' }}>MS: 08/BV-02</p>
-                     <p style={{ margin: 0 }}>Số: {formData.xrayNumber || "................"}</p>
+                <div className="w-[30%] text-right">
+                     <p className="m-0 font-bold">MS: 08/BV-02</p>
+                     <p className="m-0">Số: {formData.xrayNumber || "................"}</p>
                 </div>
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ width: '50%' }}>Họ tên người bệnh: <b style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{formData.patientName}</b></span>
-                    <span style={{ width: '25%' }}>Tuổi: {formData.age}</span>
-                    <span style={{ width: '25%', textAlign: 'right' }}>Nam/Nữ: {formData.gender}</span>
+            <div className="mb-4">
+                <div className="flex justify-between mb-2">
+                    <span className="w-1/2">Họ tên người bệnh: <b className="font-bold uppercase">{formData.patientName}</b></span>
+                    <span className="w-1/4">Tuổi: {formData.age}</span>
+                    <span className="w-1/4 text-right">Nam/Nữ: {formData.gender}</span>
                 </div>
-                <p style={{ margin: '0 0 8px 0' }}>Địa chỉ: {formData.address}</p>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                    <span style={{ width: '50%' }}>Khoa: {formData.department}</span>
-                    <span style={{ width: '25%' }}>Buồng: {formData.room}</span>
-                    <span style={{ width: '25%', textAlign: 'right' }}>Giường: {formData.bed}</span>
+                <p className="m-0 mb-2">Địa chỉ: {formData.address}</p>
+                <div className="flex justify-between mb-2">
+                    <span className="w-1/2">Khoa: {formData.department}</span>
+                    <span className="w-1/4">Buồng: {formData.room}</span>
+                    <span className="w-1/4 text-right">Giường: {formData.bed}</span>
                 </div>
-                <p style={{ margin: 0 }}>Chẩn đoán: {formData.diagnosis}</p>
+                <p className="m-0">Chẩn đoán: {formData.diagnosis}</p>
             </div>
 
-            <div style={{ marginBottom: '24px', border: '1px solid #000000' }}>
-                 <div style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #000000', padding: '8px', fontWeight: 'bold', textAlign: 'left', color: '#000000' }}>Yêu cầu chiếu/ chụp</div>
-                 <div style={{ padding: '8px', minHeight: '30mm', whiteSpace: 'pre-wrap', color: '#000000' }}>{formData.request}</div>
+            <div className="mb-6 border border-black">
+                 <div className="bg-white border-b border-black p-2 font-bold text-left text-black">Yêu cầu chiếu/ chụp</div>
+                 <div className="p-2 min-h-[30mm] whitespace-pre-wrap text-black">{formData.request}</div>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '32px' }}>
-                <div style={{ textAlign: 'center', width: '33%' }}>
-                    <p style={{ fontStyle: 'italic', margin: 0 }}>Ngày {formData.requestDateDay} tháng {formData.requestDateMonth} năm {formData.requestDateYear}</p>
-                    <p style={{ fontWeight: 'bold', marginTop: '4px', marginBottom: '0', textTransform: 'uppercase' }}>Bác sĩ điều trị</p>
-                    <div style={{ height: '20mm' }}></div>
-                    <p style={{ margin: 0, fontWeight: 'bold', textTransform: 'uppercase' }}>{formData.doctor}</p>
+            <div className="flex justify-end mb-8">
+                <div className="text-center w-1/3">
+                    <p className="italic m-0">Ngày {formData.requestDateDay} tháng {formData.requestDateMonth} năm {formData.requestDateYear}</p>
+                    <p className="font-bold mt-1 mb-0 uppercase">Bác sĩ điều trị</p>
+                    <div className="h-[20mm]"></div>
+                    <p className="m-0 font-bold uppercase">{formData.doctor}</p>
                 </div>
             </div>
 
             {(showResultSection || formData.status === 3) && (
               <>
-                <div style={{ marginBottom: '24px', border: '1px solid #000000' }}>
-                    <div style={{ backgroundColor: '#ffffff', borderBottom: '1px solid #000000', padding: '8px', fontWeight: 'bold', textAlign: 'left', color: '#000000' }}>Kết quả chiếu/ chụp</div>
-                    <div style={{ padding: '8px', minHeight: '40mm', whiteSpace: 'pre-wrap', color: '#000000', fontWeight: 'bold' }}>{formData.result}</div>
+                <div className="mb-6 border border-black">
+                    <div className="bg-white border-b border-black p-2 font-bold text-left text-black">Kết quả chiếu/ chụp</div>
+                    <div className="p-2 min-h-[40mm] whitespace-pre-wrap text-black font-bold">{formData.result}</div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ width: '50%', paddingRight: '16px' }}>
-                        <p style={{ fontWeight: 'bold', textDecoration: 'underline', marginBottom: '8px' }}>Lời dặn của BS chuyên khoa:</p>
-                        <p style={{ whiteSpace: 'pre-wrap', margin: 0, fontStyle: 'italic' }}>{formData.advice}</p>
+                <div className="flex justify-between items-start">
+                    <div className="w-1/2 pr-4">
+                        <p className="font-bold underline mb-2">Lời dặn của BS chuyên khoa:</p>
+                        <p className="whitespace-pre-wrap m-0 italic">{formData.advice}</p>
                     </div>
-                    <div style={{ textAlign: 'center', width: '33%' }}>
-                        <p style={{ fontStyle: 'italic', margin: 0 }}>Ngày {formData.resultDateDay} tháng {formData.resultDateMonth} năm {formData.resultDateYear}</p>
-                        <p style={{ fontWeight: 'bold', marginTop: '4px', marginBottom: '0', textTransform: 'uppercase' }}>Bác sĩ chuyên khoa</p>
-                        <div style={{ height: '20mm' }}></div>
-                        <p style={{ margin: 0, fontWeight: 'bold', textTransform: 'uppercase' }}>{formData.specialist}</p>
+                    <div className="text-center w-1/3">
+                        <p className="italic m-0">Ngày {formData.resultDateDay} tháng {formData.resultDateMonth} năm {formData.resultDateYear}</p>
+                        <p className="font-bold mt-1 mb-0 uppercase">Bác sĩ chuyên khoa</p>
+                        <div className="h-[20mm]"></div>
+                        <p className="m-0 font-bold uppercase">{formData.specialist}</p>
                     </div>
                 </div>
               </>

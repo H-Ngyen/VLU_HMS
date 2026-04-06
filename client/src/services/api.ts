@@ -250,6 +250,52 @@ export const api = {
     }
   },
 
+  medicalAttachments: {
+    getAll: async (recordId: number) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/attachments`, {
+        headers: getHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch medical attachments');
+      return response.json();
+    },
+    create: async (recordId: number, file: File) => {
+      const formData = new FormData();
+      formData.append('File', file);
+      
+      // Extract name without extension and sanitize
+      const nameWithoutExtension = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+      
+      // Remove Vietnamese accents and special characters strictly
+      const sanitizedName = nameWithoutExtension
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+        .replace(/[^a-zA-Z0-9 ]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      formData.append('Name', sanitizedName);
+      
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/attachments`, {
+        method: 'POST',
+        headers: getHeaders(), // Don't set Content-Type, fetch will set it with boundary
+        body: formData
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to upload attachment: ${errorText}`);
+      }
+      return response.json();
+    },
+    delete: async (recordId: number, attachmentId: number) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/attachments/${attachmentId}`, {
+        method: 'DELETE',
+        headers: getHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to delete attachment');
+    }
+  },
+
   identities: {
     sync: async (data: {
       auth0Id: string;

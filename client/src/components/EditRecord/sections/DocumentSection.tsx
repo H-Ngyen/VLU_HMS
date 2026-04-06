@@ -1,7 +1,15 @@
-import { useState } from "react";
-import { FileText, Upload, Trash2, Eye, Edit2, Save, X } from "lucide-react";
-import type { Record, Document } from "@/types";
+import { useState, useEffect } from "react";
+import { FileText, Upload, Trash2, Eye, Loader2 } from "lucide-react";
+import type { Record } from "@/types";
 import { Button } from "@/components/ui/button";
+import { api } from "@/services/api";
+import { toast } from "sonner";
+
+interface AttachmentDto {
+  id: number;
+  name: string;
+  path: string;
+}
 
 interface DocumentSectionProps {
   formData: Record;
@@ -9,75 +17,76 @@ interface DocumentSectionProps {
   readOnly?: boolean;
 }
 
-export const DocumentSection = ({ formData, setFormData, readOnly = false }: DocumentSectionProps) => {
-  const documents = (formData.documents || []).filter(d => d.type !== "X-Quang" && d.type !== "XN-HuyetHoc");
+export const DocumentSection = ({ formData, readOnly = false }: DocumentSectionProps) => {
+  const [attachments, setAttachments] = useState<AttachmentDto[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  
-  // Edit State
-  const [editingDocId, setEditingDocId] = useState<string | null>(null);
-  const [editName, setEditName] = useState("");
 
-  const handleView = (doc: Document) => {
-    if (doc.url) {
-        window.open(doc.url, "_blank");
-    } else {
-        alert("Tài liệu này không có file đính kèm hoặc nội dung để xem.");
+  const fetchAttachments = async () => {
+    if (!formData.numericId) return;
+    setLoading(true);
+    try {
+      const data = await api.medicalAttachments.getAll(formData.numericId);
+      setAttachments(data);
+    } catch (error) {
+      console.error("Failed to fetch attachments:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpload = (e?: React.FormEvent) => {
-    if (readOnly) return;
+  useEffect(() => {
+    fetchAttachments();
+  }, [formData.numericId]);
+
+  const handleView = (attachment: AttachmentDto) => {
+    if (attachment.path) {
+      window.open(attachment.path, "_blank");
+    } else {
+      toast.error("Không tìm thấy đường dẫn tài liệu");
+    }
+  };
+
+  const handleUpload = async (e?: React.FormEvent) => {
+    if (readOnly || !formData.numericId) return;
     if (e) e.preventDefault();
     if (!selectedFile) return;
 
-    const newDoc: Document = {
-      id: `DOC${Date.now()}`,
-      name: selectedFile.name,
-      type: "Tài liệu",
-      fileName: selectedFile.name,
-      date: new Date().toISOString().split("T")[0],
-      url: URL.createObjectURL(selectedFile),
-    };
-
-    setFormData((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        documents: [...(prev.documents || []), newDoc],
-      };
-    });
-
-    setSelectedFile(null);
+    setUploading(true);
+    try {
+      await api.medicalAttachments.create(formData.numericId, selectedFile);
+      toast.success("Tải lên tài liệu thành công");
+      setSelectedFile(null);
+      fetchAttachments();
+    } catch (error: any) {
+      console.error("Upload failed:", error);
+      toast.error(error.message || "Tải lên thất bại");
+    } finally {
+      setUploading(false);
+    }
   };
 
-  const handleDelete = (docId: string) => {
-    if (readOnly) return;
+  const handleDelete = async (attachmentId: number) => {
+    if (readOnly || !formData.numericId) return;
     if (!window.confirm("Bạn có chắc chắn muốn xóa tài liệu này?")) return;
-    setFormData((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        documents: prev.documents.filter((d) => d.id !== docId),
-      };
-    });
+    
+    try {
+      await api.medicalAttachments.delete(formData.numericId, attachmentId);
+      toast.success("Đã xóa tài liệu");
+      fetchAttachments();
+    } catch (error) {
+      console.error("Delete failed:", error);
+      toast.error("Xóa tài liệu thất bại");
+    }
   };
 
-  const startEdit = (doc: Document) => {
-    if (readOnly) return;
-    setEditingDocId(doc.id);
-    setEditName(doc.name);
-  };
-
-  const saveEdit = (docId: string) => {
-    if (readOnly) return;
-    setFormData((prev) => {
-      if (!prev) return null;
-      const updatedDocs = prev.documents.map((d) => 
-        d.id === docId ? { ...d, name: editName } : d
-      );
-      return { ...prev, documents: updatedDocs };
-    });
-    setEditingDocId(null);
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   return (
@@ -85,7 +94,7 @@ export const DocumentSection = ({ formData, setFormData, readOnly = false }: Doc
       <div className="flex justify-between items-end mb-3">
         <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wide flex items-center">
           <FileText size={16} className="mr-2 text-vlu-red" />
-          Tài liệu đính kèm ({documents.length})
+          Tài liệu đính kèm ({attachments.length})
         </h4>
       </div>
 
@@ -95,17 +104,19 @@ export const DocumentSection = ({ formData, setFormData, readOnly = false }: Doc
             <div className="flex flex-col md:flex-row gap-3 items-center">
             <input
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.jpg,.jpeg,.png,.docx,.doc"
                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-vlu-red file:text-white hover:file:bg-red-700"
                 onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                disabled={uploading}
             />
             <Button
-                disabled={!selectedFile}
+                disabled={!selectedFile || uploading}
                 type="button"
                 onClick={() => handleUpload()}
-                className="bg-vlu-red hover:bg-red-700"
+                className="bg-vlu-red hover:bg-red-700 min-w-[120px]"
             >
-                <Upload size={16} /> Tải lên
+                {uploading ? <Loader2 size={16} className="animate-spin mr-2" /> : <Upload size={16} className="mr-2" />}
+                {uploading ? "Đang tải..." : "Tải lên"}
             </Button>
             </div>
         </div>
@@ -117,51 +128,30 @@ export const DocumentSection = ({ formData, setFormData, readOnly = false }: Doc
           <thead className="bg-gray-50 text-gray-500 font-medium">
             <tr>
               <th className="px-4 py-3 w-16 text-center">STT</th>
-              <th className="px-4 py-3">Tên tập tin</th>
-              <th className="px-4 py-3">Loại tài liệu</th>
-              <th className="px-4 py-3">Ngày tạo</th>
+              <th className="px-4 py-3">Tên tài liệu</th>
               <th className="px-4 py-3 text-right">Thao tác</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
-            {documents.length > 0 ? (
-              documents.map((doc, index) => (
+            {loading ? (
+                <tr>
+                    <td colSpan={3} className="px-4 py-8 text-center text-gray-400">
+                        <div className="flex justify-center items-center gap-2">
+                            <Loader2 size={16} className="animate-spin" />
+                            <span>Đang tải danh sách tài liệu...</span>
+                        </div>
+                    </td>
+                </tr>
+            ) : attachments.length > 0 ? (
+              attachments.map((doc, index) => (
                 <tr key={doc.id} className="hover:bg-gray-50 transition">
                   <td className="px-4 py-3 text-center text-gray-500">{index + 1}</td>
                   
                   <td className="px-4 py-3 font-medium text-gray-800">
-                     {editingDocId === doc.id && !readOnly ? (
-                        <div className="flex items-center gap-2">
-                            <input
-                            type="text"
-                            className="border border-gray-300 rounded px-2 py-1 w-full"
-                            value={editName}
-                            onChange={(e) => setEditName(e.target.value)}
-                            autoFocus
-                            />
-                            <Button size="icon-sm" variant="ghost" onClick={() => saveEdit(doc.id)} className="text-green-600">
-                                <Save size={16} />
-                            </Button>
-                            <Button size="icon-sm" variant="ghost" onClick={() => setEditingDocId(null)} className="text-red-500">
-                                <X size={16} />
-                            </Button>
-                        </div>
-                     ) : (
-                         <div className="flex items-center gap-2 group">
-                             <FileText size={16} className="text-gray-400" />
-                             <span title={doc.name} className="truncate max-w-[200px]">{doc.fileName}</span>
-                         </div>
-                     )}
-                  </td>
-
-                  <td className="px-4 py-3">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {doc.type}
-                      </span>
-                  </td>
-
-                  <td className="px-4 py-3 text-gray-500 text-xs">
-                    {doc.date}
+                     <div className="flex items-center gap-2 group">
+                         <FileText size={16} className="text-gray-400" />
+                         <span title={doc.name} className="truncate max-w-[500px]">{doc.name}</span>
+                     </div>
                   </td>
 
                   <td className="px-4 py-3 text-right flex justify-end gap-2">
@@ -169,21 +159,16 @@ export const DocumentSection = ({ formData, setFormData, readOnly = false }: Doc
                         <Eye size={16} />
                     </Button>
                     {!readOnly && (
-                        <>
-                            <Button type="button" size="icon-sm" variant="ghost" onClick={() => startEdit(doc)} className="text-orange-600 bg-orange-50 hover:bg-orange-100" title="Sửa">
-                                <Edit2 size={16} />
-                            </Button>
-                            <Button type="button" size="icon-sm" variant="ghost" onClick={() => handleDelete(doc.id)} className="text-red-600 bg-red-50 hover:bg-red-100" title="Xóa">
+                        <Button type="button" size="icon-sm" variant="ghost" onClick={() => handleDelete(doc.id)} className="text-red-600 bg-red-50 hover:bg-red-100" title="Xóa">
                             <Trash2 size={16} />
-                            </Button>
-                        </>
+                        </Button>
                     )}
                   </td>
                 </tr>
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-gray-400 italic">
+                <td colSpan={3} className="px-4 py-8 text-center text-gray-400 italic">
                   Chưa có tài liệu đính kèm
                 </td>
               </tr>
