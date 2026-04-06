@@ -595,11 +595,11 @@ export const HematologyInputForm = ({
 
           <div className="flex items-center justify-start gap-8 text-sm pl-1">
               <div className="flex items-center space-x-2">
-                <Checkbox id="normal" checked={!formData.isEmergency} onCheckedChange={() => handleCheckboxChange(false)} disabled={isRequestReadOnly} />
+                <Checkbox id="normal" isX checked={!formData.isEmergency} onCheckedChange={() => handleCheckboxChange(false)} disabled={isRequestReadOnly} />
                 <label htmlFor="normal" className="font-medium">Thường</label>
               </div>
               <div className="flex items-center space-x-2">
-                <Checkbox id="emergency" checked={formData.isEmergency} onCheckedChange={() => handleCheckboxChange(true)} disabled={isRequestReadOnly} />
+                <Checkbox id="emergency" isX checked={formData.isEmergency} onCheckedChange={() => handleCheckboxChange(true)} disabled={isRequestReadOnly} />
                 <label htmlFor="emergency" className="font-medium">Cấp cứu</label>
               </div>
           </div>
@@ -689,7 +689,7 @@ export const HematologyInputForm = ({
                         ].map(item => (
                             <div key={item.name} className="grid grid-cols-3 gap-2 items-center">
                                 <div className="col-span-2 flex items-start gap-2">
-                                    <Checkbox checked={(formData as any)[item.check]} onCheckedChange={(c) => handleCheckChange(item.check, c as boolean)} disabled={isRequestReadOnly} />
+                                    <div className="size-2 rounded-full bg-black mt-1.5 shrink-0" />
                                     <div><p className="font-medium">{item.label} {item.r && <span className="text-red-500">*</span>}</p><p className="text-[10px] text-gray-500 italic">{item.sub}</p></div>
                                 </div>
                                 <Input name={item.name} value={(formData as any)[item.name]} onChange={handleChange} className="h-7 text-center font-bold" disabled={isResultReadOnly} />
@@ -702,7 +702,7 @@ export const HematologyInputForm = ({
                     <div className="border border-gray-300 rounded p-4 space-y-3 bg-white text-xs">
                         <div className="grid grid-cols-3 gap-2 items-center">
                             <div className="col-span-2 flex items-start gap-2">
-                                <Checkbox checked={formData.check_wbc} onCheckedChange={(c) => handleCheckChange("check_wbc", c as boolean)} disabled={isRequestReadOnly} />
+                                <div className="size-2 rounded-full bg-black mt-1.5 shrink-0" />
                                 <div><p className="font-medium">Số lượng BC <span className="text-red-500">*</span></p><p className="text-[10px] text-gray-500 italic">(4-10 x 10^9/l)</p></div>
                             </div>
                             <Input name="wbc" value={formData.wbc} onChange={handleChange} className="h-7 text-center font-bold" disabled={isResultReadOnly} />
@@ -716,7 +716,7 @@ export const HematologyInputForm = ({
                         {[ { label: "Số lượng tiểu cầu", sub: "(150-400 x10^9/l)", name: "plt", check: "check_plt" }, { label: "KSV sốt rét", sub: "", name: "malaria", check: "check_malaria" } ].map(item => (
                             <div key={item.name} className="grid grid-cols-3 gap-2 items-center">
                                 <div className="col-span-2 flex items-start gap-2">
-                                    <Checkbox checked={(formData as any)[item.check]} onCheckedChange={(c) => handleCheckChange(item.check, c as boolean)} disabled={isRequestReadOnly} />
+                                    <div className="size-2 rounded-full bg-black mt-1.5 shrink-0" />
                                     <div><p className="font-medium">{item.label}</p>{item.sub && <p className="text-[10px] text-gray-500 italic">{item.sub}</p>}</div>
                                 </div>
                                 <Input name={item.name} value={(formData as any)[item.name]} onChange={handleChange} className="h-7 text-center font-bold" disabled={isResultReadOnly} />
@@ -728,13 +728,13 @@ export const HematologyInputForm = ({
                     <div className="border border-gray-300 rounded p-4 space-y-2 bg-white">
                         <h4 className="font-bold underline">2. Đông máu:</h4>
                         {[ {l:"Máu chảy:", n:"bleedingTime", c:"check_bleedingTime"}, {l:"Máu đông:", n:"clottingTime", c:"check_clottingTime"} ].map(i => (
-                            <div key={i.n} className="flex items-center gap-2"><Checkbox checked={(formData as any)[i.c]} onCheckedChange={(c) => handleCheckChange(i.c, c as boolean)} disabled={isRequestReadOnly} /><span>{i.l}</span><Input name={i.n} value={(formData as any)[i.n]} onChange={handleChange} className="w-16 h-6 text-center font-bold" disabled={isResultReadOnly} /><span>phút</span></div>
+                            <div key={i.n} className="flex items-center gap-2"><div className="size-2 rounded-full bg-black shrink-0" /><span>{i.l}</span><Input name={i.n} value={(formData as any)[i.n]} onChange={handleChange} className="w-16 h-6 text-center font-bold" disabled={isResultReadOnly} /><span>phút</span></div>
                         ))}
                     </div>
                     <div className="border border-gray-300 rounded p-4 space-y-2 bg-white">
                         <h4 className="font-bold underline">3. Nhóm máu:</h4>
                         {[ {l:"Hệ ABO:", n:"bloodGroupABO", c:"check_bloodGroupABO", p:"A, B, AB, O", r:true}, {l:"Hệ Rh:", n:"bloodGroupRh", c:"check_bloodGroupRh", p:"+ / -", r:true} ].map(i => (
-                            <div key={i.n} className="flex items-center gap-2"><Checkbox checked={(formData as any)[i.c]} onCheckedChange={(c) => handleCheckChange(i.c, c as boolean)} disabled={isRequestReadOnly} /><span>{i.l} {i.r && <span className="text-red-500">*</span>}</span><Input name={i.n} value={(formData as any)[i.n]} onChange={handleChange} className="w-20 h-6 text-center font-bold" disabled={isResultReadOnly} placeholder={i.p} /></div>
+                            <div key={i.n} className="flex items-center gap-2"><div className="size-2 rounded-full bg-black shrink-0" /><span>{i.l} {i.r && <span className="text-red-500">*</span>}</span><Input name={i.n} value={(formData as any)[i.n]} onChange={handleChange} className="w-20 h-6 text-center font-bold" disabled={isResultReadOnly} placeholder={i.p} /></div>
                         ))}
                     </div>
                 </div>
@@ -903,15 +903,13 @@ export const HematologyInputForm = ({
                                 {/* Left Side */}
                                 <td style={{ border: '1px solid black', padding: '4px', verticalAlign: 'middle' }}>
                                     {row.l1 && (
-                                        <>
-                                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                <span style={{ border: '1px solid #000', width: '12px', height: '12px', display: 'inline-block', textAlign: 'center', lineHeight: '10px', fontSize: '10px', verticalAlign: 'middle', marginRight: '5px' }}>
-                                                    {row.l1.c ? 'x' : ''}
-                                                </span>
+                                        <div style={{ display: 'flex', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                            <div style={{ display: 'inline-block' }}>
                                                 <span style={{ verticalAlign: 'middle' }}>{row.l1.l}</span>
+                                                {row.l1.s && <div style={{ fontSize: '9pt', fontStyle: 'italic', color: '#444' }}>{row.l1.s}</div>}
                                             </div>
-                                            {row.l1.s && <div style={{ fontSize: '9pt', fontStyle: 'italic', color: '#444', marginLeft: '20px' }}>{row.l1.s}</div>}
-                                        </>
+                                        </div>
                                     )}
                                 </td>
                                 <td style={{ border: '1px solid black', padding: '4px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle' }}>
@@ -925,23 +923,17 @@ export const HematologyInputForm = ({
                                             {row.l2.type === 'header' ? (
                                                 <div style={{ fontStyle: 'italic' }}>{row.l2.l}</div>
                                             ) : row.l2.type === 'esr' ? (
-                                                <>
-                                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                        <span style={{ border: '1px solid #000', width: '12px', height: '12px', display: 'inline-block', textAlign: 'center', lineHeight: '10px', fontSize: '10px', verticalAlign: 'middle', marginRight: '5px' }}>
-                                                            {row.l2.c ? 'x' : ''}
-                                                        </span>
+                                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                                    <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                                    <div style={{ display: 'inline-block' }}>
                                                         <span style={{ verticalAlign: 'middle' }}>{row.l2.l}</span>
+                                                        <div style={{ fontSize: '9pt', fontStyle: 'italic' }}>giờ 1 (&lt; 15 mm)</div>
+                                                        <div style={{ fontSize: '9pt', fontStyle: 'italic' }}>giờ 2 (&lt; 20 mm)</div>
                                                     </div>
-                                                    <div style={{ fontSize: '9pt', fontStyle: 'italic', paddingLeft: '20px' }}>giờ 1 (&lt; 15 mm)</div>
-                                                    <div style={{ fontSize: '9pt', fontStyle: 'italic', paddingLeft: '20px' }}>giờ 2 (&lt; 20 mm)</div>
-                                                </>
+                                                </div>
                                             ) : (
                                                 <div style={{ display: 'flex', alignItems: 'center', paddingLeft: row.l2.indent ? '20px' : '0' }}>
-                                                    {row.l2.c !== null && (
-                                                        <span style={{ border: '1px solid #000', width: '12px', height: '12px', display: 'inline-block', textAlign: 'center', lineHeight: '10px', fontSize: '10px', verticalAlign: 'middle', marginRight: '5px', flexShrink: 0 }}>
-                                                            {row.l2.c ? 'x' : ''}
-                                                        </span>
-                                                    )}
+                                                    {!row.l2.indent && <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>}
                                                     <span style={{ verticalAlign: 'middle' }}>{row.l2.l}</span>
                                                 </div>
                                             )}
@@ -970,34 +962,26 @@ export const HematologyInputForm = ({
                         <tr>
                             <td style={{ width: '50%', verticalAlign: 'top', border: 'none', paddingRight: '10px' }}>
                                 <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>2. Đông máu:</div>
-                                <div style={{ paddingLeft: '15px' }}>
+                                <div style={{ paddingLeft: '5px' }}>
                                     <div style={{ marginBottom: '5px' }}>
-                                        <span style={{ border: '1px solid #000', width: '12px', height: '12px', display: 'inline-block', textAlign: 'center', lineHeight: '10px', fontSize: '10px', verticalAlign: 'middle', marginRight: '5px' }}>
-                                            {formData.check_bleedingTime ? 'x' : ''}
-                                        </span>
+                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
                                         <span style={{ verticalAlign: 'middle' }}>Thời gian máu chảy: ...........{formData.bleedingTime}......... phút ............</span>
                                     </div>
                                     <div>
-                                        <span style={{ border: '1px solid #000', width: '12px', height: '12px', display: 'inline-block', textAlign: 'center', lineHeight: '10px', fontSize: '10px', verticalAlign: 'middle', marginRight: '5px' }}>
-                                            {formData.check_clottingTime ? 'x' : ''}
-                                        </span>
+                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
                                         <span style={{ verticalAlign: 'middle' }}>Thời gian máu đông: ...........{formData.clottingTime}......... phút ............</span>
                                     </div>
                                 </div>
                             </td>
                             <td style={{ width: '50%', verticalAlign: 'top', border: 'none', paddingLeft: '10px' }}>
                                 <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>3. Nhóm máu:</div>
-                                <div style={{ paddingLeft: '15px' }}>
+                                <div style={{ paddingLeft: '5px' }}>
                                     <div style={{ marginBottom: '5px' }}>
-                                        <span style={{ border: '1px solid #000', width: '12px', height: '12px', display: 'inline-block', textAlign: 'center', lineHeight: '10px', fontSize: '10px', verticalAlign: 'middle', marginRight: '5px' }}>
-                                            {formData.check_bloodGroupABO ? 'x' : ''}
-                                        </span>
+                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
                                         <span style={{ verticalAlign: 'middle', marginRight: '5px' }}>Hệ ABO: <b>{formData.bloodGroupABO}</b></span>
                                     </div>
                                     <div>
-                                        <span style={{ border: '1px solid #000', width: '12px', height: '12px', display: 'inline-block', textAlign: 'center', lineHeight: '10px', fontSize: '10px', verticalAlign: 'middle', marginRight: '5px' }}>
-                                            {formData.check_bloodGroupRh ? 'x' : ''}
-                                        </span>
+                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
                                         <span style={{ verticalAlign: 'middle', marginRight: '5px' }}>Hệ Rh: <b>{formData.bloodGroupRh}</b></span>
                                     </div>
                                 </div>

@@ -369,6 +369,112 @@ const mapDtoToRecord = (dto: MedicalRecordDto): MedicalRecord => {
     }
   });
 
+  const documents: Document[] = [];
+  if (dto.xRays && Array.isArray(dto.xRays)) {
+    dto.xRays.forEach((x: XRayDto) => {
+      const reqDate = x.requestedAt ? new Date(x.requestedAt) : null;
+      const resDate = x.completedAt ? new Date(x.completedAt) : null;
+      
+      documents.push({
+        id: `XRAY_${x.id}`,
+        name: "Phiếu X-Quang",
+        type: "X-Quang",
+        fileName: "X-Quang.pdf",
+        date: x.requestedAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+        data: {
+          id: x.id,
+          status: x.status,
+          department: x.departmentName || "",
+          request: x.requestDescription || "",
+          result: x.resultDescription || "",
+          advice: x.doctorAdvice || "",
+          doctor: x.requestedByName || "",
+          specialist: x.performedByName || "",
+          xRayStatusLogs: x.xRayStatusLogs || [],
+          requestDateDay: reqDate ? reqDate.getDate().toString() : "",
+          requestDateMonth: reqDate ? (reqDate.getMonth() + 1).toString() : "",
+          requestDateYear: reqDate ? reqDate.getFullYear().toString() : "",
+          resultDateDay: resDate ? resDate.getDate().toString() : "",
+          resultDateMonth: resDate ? (resDate.getMonth() + 1).toString() : "",
+          resultDateYear: resDate ? resDate.getFullYear().toString() : ""
+        }
+      });
+    });
+  }
+  if (dto.hematologies && Array.isArray(dto.hematologies)) {
+    dto.hematologies.forEach((h: HematologyDto) => {
+      const reqDate = h.requestedAt ? new Date(h.requestedAt) : null;
+      const resDate = h.completedAt ? new Date(h.completedAt) : null;
+
+      documents.push({
+        id: `HEMA_${h.id}`,
+        name: "Phiếu Xét Nghiệm Huyết Học",
+        type: "XN-HuyetHoc",
+        fileName: "XN_HuyetHoc.pdf",
+        date: h.requestedAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+        data: {
+          id: h.id,
+          status: h.status,
+          diagnosis: h.requestDescription || "",
+          department: h.departmentName || "",
+          doctor: h.requestedByName || "",
+          technician: h.performedByName || "",
+          hematologyStatusLogs: h.hematologyStatusLogs || [],
+          requestDateDay: reqDate ? reqDate.getDate().toString() : "",
+          requestDateMonth: reqDate ? (reqDate.getMonth() + 1).toString() : "",
+          requestDateYear: reqDate ? reqDate.getFullYear().toString() : "",
+          resultDateDay: resDate ? resDate.getDate().toString() : "",
+          resultDateMonth: resDate ? (resDate.getMonth() + 1).toString() : "",
+          resultDateYear: resDate ? resDate.getFullYear().toString() : "",
+          check_rbc: h.redBloodCellCount != null,
+          check_wbc: h.whiteBloodCellCount != null,
+          check_hgb: h.hemoglobin != null,
+          check_hct: h.hematocrit != null,
+          check_mcv: h.mcv != null,
+          check_mch: h.mch != null,
+          check_mchc: h.mchc != null,
+          check_reticulocytes: h.reticulocyteCount != null,
+          check_plt: h.plateletCount != null,
+          check_neutrophils: h.neutrophil != null,
+          check_eosinophils: h.eosinophil != null,
+          check_basophils: h.basophil != null,
+          check_monocytes: h.monocyte != null,
+          check_lymphocytes: h.lymphocyte != null,
+          check_nrbc: h.nucleatedRedBloodCell != null,
+          check_malaria: h.malariaParasite != null,
+          check_esr: h.esr1h != null || h.esr2h != null,
+          check_bleedingTime: h.bleedingTime != null,
+          check_clottingTime: h.clottingTime != null,
+          check_bloodGroupABO: h.bloodTypeAbo != null,
+          check_bloodGroupRh: h.bloodTypeRh != null,
+          rbc: h.redBloodCellCount || "",
+          wbc: h.whiteBloodCellCount || "",
+          hgb: h.hemoglobin || "",
+          hct: h.hematocrit || "",
+          mcv: h.mcv || "",
+          mch: h.mch || "",
+          mchc: h.mchc || "",
+          reticulocytes: h.reticulocyteCount || "",
+          plt: h.plateletCount || "",
+          neutrophils: h.neutrophil || "",
+          eosinophils: h.eosinophil || "",
+          basophils: h.basophil || "",
+          monocytes: h.monocyte || "",
+          lymphocytes: h.lymphocyte || "",
+          nrbc: h.nucleatedRedBloodCell || "",
+          abnormalCells: h.abnormalCells || "",
+          malaria: h.malariaParasite || "",
+          esr1: h.esr1h || "",
+          esr2: h.esr2h || "",
+          bleedingTime: h.bleedingTime || "",
+          clottingTime: h.clottingTime || "",
+          bloodGroupABO: h.bloodTypeAbo === 1 ? "A" : h.bloodTypeAbo === 2 ? "B" : h.bloodTypeAbo === 3 ? "AB" : h.bloodTypeAbo === 4 ? "O" : "",
+          bloodGroupRh: h.bloodTypeRh === 1 ? "+" : h.bloodTypeRh === 2 ? "-" : ""
+        }
+      });
+    });
+  }
+
   return {
     id: dto.storageCode || dto.id.toString(),
     numericId: dto.id,
@@ -385,7 +491,7 @@ const mapDtoToRecord = (dto: MedicalRecordDto): MedicalRecord => {
     dischargeDate: dischargeDate,
     department: dto.recordType === 1 ? "Nội Khoa" : "Ngoại Khoa",
     type: recordTypeMapInv[dto.recordType] || "internal",
-    documents: [],
+    documents: documents,
     managementData: {
       admissionTime: admissionTime,
       admissionType: admissionTypeMapInv[dto.admissionType] || "",
