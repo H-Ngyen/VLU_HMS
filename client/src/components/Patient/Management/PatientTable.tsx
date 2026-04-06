@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Table,
@@ -19,12 +19,13 @@ interface PatientTableProps {
 
 export const PatientTable = ({ patients, onPatientDeleted }: PatientTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [prevPatientsCount, setPrevPatientsCount] = useState(patients.length);
   const itemsPerPage = 10;
 
-  // Reset to page 1 when data changes (e.g. search)
-  useEffect(() => {
+  if (patients.length !== prevPatientsCount) {
+    setPrevPatientsCount(patients.length);
     setCurrentPage(1);
-  }, [patients.length]);
+  }
 
   const totalPages = Math.ceil(patients.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;

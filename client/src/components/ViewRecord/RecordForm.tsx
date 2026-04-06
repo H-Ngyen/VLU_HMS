@@ -99,7 +99,7 @@ const getFlattenedSections = () => {
 };
 
 export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProps) => {
-  const [formData, setFormData] = useState<Record>(() => prepareRecordData(record));
+  const [formData, setFormData] = useState<Record | null>(() => prepareRecordData(record));
   const [editablePatient, setEditablePatient] = useState<Patient>(patient);
   
   const [activeSection, setActiveSection] = useState("administrative");

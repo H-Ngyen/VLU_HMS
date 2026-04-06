@@ -6,7 +6,6 @@ import type { Patient } from "@/types";
 
 export const PatientManagementView = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [ethnicities, setEthnicities] = useState<{ id: number; name: string }[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -25,11 +24,10 @@ export const PatientManagementView = () => {
       // Map ethnicityId to ethnicity object
       const patientsWithEthnicity = patientsData.map(patient => ({
         ...patient,
-        ethnicity: ethnicitiesData.find(e => e.id === patient.ethnicityId)
+        ethnicity: ethnicitiesData.find((e: any) => e.id === patient.ethnicityId)
       }));
       
       setPatients(patientsWithEthnicity);
-      setEthnicities(ethnicitiesData);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {

@@ -45,7 +45,7 @@ export const RecordTableRow = ({ record, user, onDelete }: RecordTableRowProps) 
           <Button variant="ghost" size="icon" onClick={() => navigate(`/record/${record.id}`)} className="text-blue-600 hover:text-blue-800 hover:bg-blue-50 h-8 w-8" title="Xem chi tiết">
             <Eye size={16} />
           </Button>
-          {user?.role !== "student" && (
+          {user?.roleName !== "Student" && (
             <>
               <Button variant="ghost" size="icon" onClick={() => navigate(`/record/edit/${record.id}`)} className="text-green-600 hover:text-green-800 hover:bg-green-50 h-8 w-8" title="Chỉnh sửa HSBA & Tài liệu">
                 <FilePenLine size={16} />

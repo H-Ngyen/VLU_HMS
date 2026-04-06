@@ -30,7 +30,6 @@ export const TreatmentSection = ({ formData, setFormData, readOnly = false }: Tr
     if (readOnly) return;
     setFormData((prev) => {
       if (!prev) return null;
-      // @ts-expect-error - parent is dynamic string indexing MedicalRecordContent which doesn't have index signature
       const parentObj = prev.medicalRecordContent[parent as keyof typeof prev.medicalRecordContent] || {};
       
       return {

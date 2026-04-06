@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/services/api";
 import { ViewRecordForm } from "../ViewRecord/RecordForm";
 import { Button } from "@/components/ui/button";
-import type { Record as MedicalRecord, Patient, Document, RelatedCharacteristics } from "@/types";
+import type { Record as MedicalRecord, Patient, RelatedCharacteristics } from "@/types";
 import { toast } from "sonner";
 
 // --- API DTO TYPES ---

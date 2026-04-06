@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Circle, Download as DownloadIcon, Loader2 } from "lucide-react";
+import { CheckCircle2, Circle, Loader2 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
 import { api } from "@/services/api";
@@ -52,7 +52,6 @@ export interface XRayData {
 interface XRayInputFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (file: File, formData?: XRayData) => void;
   defaultPatientName?: string;
   defaultAge?: number;
   defaultDob?: string;
@@ -67,7 +66,7 @@ const parseDate = (dateStr?: string) => {
   if (!dateStr) return null;
   let date = new Date(dateStr);
   if (!isNaN(date.getTime())) return date;
-  const parts = dateStr.split(/[\/\-]/);
+  const parts = dateStr.split(/[/ -]/);
   if (parts.length === 3) {
     if (parts[0].length === 4) {
         date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
@@ -98,10 +97,9 @@ const STEPS = [
   "Đã có kết quả"
 ];
 
-export const XRayInputForm = ({ 
-  isOpen, 
-  onClose, 
-  onSave,
+export const XRayInputForm = ({
+  isOpen,
+  onClose,
   defaultPatientName = "",
   defaultAge,
   defaultDob = "",
@@ -110,8 +108,7 @@ export const XRayInputForm = ({
   initialData,
   readOnly = false,
   recordId
-}: XRayInputFormProps) => {
-  const { currentUser } = useAuth();
+}: XRayInputFormProps) => {  const { currentUser } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
   
   const defaultState: XRayData = {
@@ -145,18 +142,48 @@ export const XRayInputForm = ({
     xRayStatusLogs: []
   };
 
-  const [formData, setFormData] = useState<XRayData>(defaultState);
-  const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
-  const [departmentInput, setDepartmentInput] = useState("");
-  const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "PDF" | "FAST_TRACK" | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-
   const getRequestDateString = (data: XRayData) => {
     const year = data.requestDateYear || new Date().getFullYear().toString();
     const month = (data.requestDateMonth || "1").padStart(2, '0');
     const day = (data.requestDateDay || "1").padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  const [formData, setFormData] = useState<XRayData>(() => {
+    if (initialData) {
+        const data: XRayData = {
+            ...defaultState,
+            ...initialData,
+            patientName: defaultPatientName,
+            gender: defaultGender,
+            address: defaultAddress,
+            status: initialData.status !== undefined ? initialData.status : 0,
+            xRayStatusLogs: initialData.xRayStatusLogs || []
+        };
+        const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
+        data.age = (calculatedAge === "" && defaultAge && defaultAge > 0) ? defaultAge.toString() : calculatedAge;
+        
+        if (!readOnly && data.status === 2 && !data.specialist && currentUser?.name) {
+            data.specialist = currentUser.name;
+        }
+        return data;
+    } else {
+        const data: XRayData = {
+            ...defaultState,
+            patientName: defaultPatientName,
+            gender: defaultGender,
+            address: defaultAddress,
+            doctor: currentUser?.name || ""
+        };
+        const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
+        data.age = (calculatedAge === "" && defaultAge && defaultAge > 0) ? defaultAge.toString() : calculatedAge;
+        return data;
+    }
+  });
+  const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
+  const [departmentInput, setDepartmentInput] = useState("");
+  const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "PDF" | "FAST_TRACK" | null>(null);
+  const [isGenerating, setIsGenerating] = useState(!!(isOpen && initialData && readOnly));
 
   const generateAndOpenPDF = async (dataToSave: XRayData) => {
     if (!printRef.current) return;
@@ -181,6 +208,9 @@ export const XRayInputForm = ({
         const pdf = new jsPDF("p", "mm", "a4");
         const pdfWidth = pdf.internal.pageSize.getWidth();
         pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, (canvas.height * pdfWidth) / canvas.width);
+        
+        console.log(`Opening PDF for ${dataToSave.patientName}`);
+        
         window.open(URL.createObjectURL(pdf.output("blob")), "_blank");
     } catch (error) {
         console.error("Error direct viewing PDF:", error);
@@ -213,62 +243,28 @@ export const XRayInputForm = ({
   };
 
   useEffect(() => {
-    if (isOpen) {
-        if (initialData) {
-            const data: XRayData = {
-                ...defaultState,
-                ...initialData,
-                patientName: defaultPatientName,
-                gender: defaultGender,
-                address: defaultAddress,
-                status: initialData.status !== undefined ? initialData.status : 0,
-                xRayStatusLogs: initialData.xRayStatusLogs || []
-            };
-            const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
-            data.age = (calculatedAge === "" && defaultAge && defaultAge > 0) ? defaultAge.toString() : calculatedAge;
-            setFormData(data);
-
-            if (readOnly) {
-                setIsGenerating(true);
-                setTimeout(async () => {
-                    await generateAndOpenPDF(data);
-                    setIsGenerating(false);
-                    onClose();
-                }, 1000);
-            }
-        } else {
-            const data: XRayData = {
-                ...defaultState,
-                patientName: defaultPatientName,
-                gender: defaultGender,
-                address: defaultAddress,
-                doctor: currentUser?.name || ""
-            };
-            const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
-            data.age = (calculatedAge === "" && defaultAge && defaultAge > 0) ? defaultAge.toString() : calculatedAge;
-            setFormData(data);
-        }
+    if (isGenerating) {
+        const timer = setTimeout(async () => {
+            await generateAndOpenPDF(formData);
+            setIsGenerating(false);
+            onClose();
+        }, 1000);
+        return () => clearTimeout(timer);
     }
-  }, [isOpen, initialData, defaultPatientName, defaultAge, defaultDob, defaultGender, defaultAddress, currentUser, readOnly]);
-
-  useEffect(() => {
-    if (isOpen && defaultDob && !readOnly) {
-        const newAge = calculateAgeAtDate(defaultDob, getRequestDateString(formData));
-        if (newAge !== "" && newAge !== formData.age) {
-            setFormData(prev => ({ ...prev, age: newAge }));
-        }
-    }
-  }, [formData.requestDateDay, formData.requestDateMonth, formData.requestDateYear, defaultDob, isOpen, readOnly]);
-
-  useEffect(() => {
-    if (!readOnly && formData.status === 2 && !formData.specialist && currentUser?.name) {
-        setFormData(prev => ({ ...prev, specialist: currentUser.name }));
-    }
-  }, [formData.status, currentUser, readOnly]);
+  }, [isGenerating, formData, onClose]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+        const newData = { ...prev, [name]: value };
+        if (["requestDateDay", "requestDateMonth", "requestDateYear"].includes(name) && defaultDob && !readOnly) {
+            const newAge = calculateAgeAtDate(defaultDob, getRequestDateString(newData));
+            if (newAge !== "" && newAge !== newData.age) {
+                newData.age = newAge;
+            }
+        }
+        return newData;
+    });
   };
 
   const validateForm = (action: "SAVE" | "NEXT" | "FAST_TRACK") => {
@@ -333,7 +329,7 @@ export const XRayInputForm = ({
         }
 
         let newStatus = formData.status;
-        let newLogs: XRayStatusLog[] = [];
+        const newLogs: XRayStatusLog[] = [];
 
         if (targetAction === "NEXT") {
             newStatus = Math.min(formData.status + 1, 3);
@@ -369,7 +365,13 @@ export const XRayInputForm = ({
             }
         }
 
-        setFormData(prev => ({ ...prev, status: newStatus, xRayStatusLogs: [...(prev.xRayStatusLogs || []), ...newLogs] }));
+        setFormData(prev => {
+            const updated = { ...prev, status: newStatus, xRayStatusLogs: [...(prev.xRayStatusLogs || []), ...newLogs] };
+            if (!readOnly && updated.status === 2 && !updated.specialist && currentUser?.name) {
+                updated.specialist = currentUser.name;
+            }
+            return updated;
+        });
         toast.success(`Cập nhật thành công`);
         setTimeout(() => { window.location.search = "?tab=forms"; }, 1000);
     } catch (error: unknown) {

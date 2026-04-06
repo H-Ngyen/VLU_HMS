@@ -32,11 +32,7 @@ export interface HematologyData {
   age: string;
   gender: string;
   address: string;
-  insuranceCard1: string;
-  insuranceCard2: string;
-  insuranceCard3: string;
-  insuranceCard4: string;
-  insuranceCard5: string;
+  insuranceNumber: string;
   department: string;
   room: string;
   bed: string;
@@ -70,12 +66,12 @@ export interface HematologyData {
 interface HematologyInputFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (file: File, formData?: HematologyData) => void;
   defaultPatientName?: string;
   defaultAge?: number;
   defaultDob?: string;
   defaultGender?: string;
   defaultAddress?: string;
+  defaultInsuranceNumber?: string;
   initialData?: HematologyData;
   readOnly?: boolean;
   recordId?: number;
@@ -85,7 +81,7 @@ const parseDate = (dateStr?: string) => {
   if (!dateStr) return null;
   let date = new Date(dateStr);
   if (!isNaN(date.getTime())) return date;
-  const parts = dateStr.split(/[\/\-]/);
+  const parts = dateStr.split(/[/ -]/);
   if (parts.length === 3) {
     if (parts[0].length === 4) {
         date = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
@@ -116,20 +112,19 @@ const STEPS = [
   "Đã có kết quả"
 ];
 
-export const HematologyInputForm = ({ 
-  isOpen, 
-  onClose, 
-  onSave,
+export const HematologyInputForm = ({
+  isOpen,
+  onClose,
   defaultPatientName = "",
   defaultAge,
   defaultDob = "",
   defaultGender = "",
   defaultAddress = "",
+  defaultInsuranceNumber = "",
   initialData,
   readOnly = false,
   recordId
-}: HematologyInputFormProps) => {
-  const { currentUser } = useAuth();
+}: HematologyInputFormProps) => {  const { currentUser } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
   
   const defaultState: HematologyData = {
@@ -146,11 +141,7 @@ export const HematologyInputForm = ({
     age: "",
     gender: "",
     address: "",
-    insuranceCard1: "",
-    insuranceCard2: "",
-    insuranceCard3: "",
-    insuranceCard4: "",
-    insuranceCard5: "",
+    insuranceNumber: "",
     department: "",
     room: "",
     bed: "",
@@ -182,18 +173,63 @@ export const HematologyInputForm = ({
     resultDateYear: new Date().getFullYear().toString(),
   };
 
-  const [formData, setFormData] = useState<HematologyData>(defaultState);
-  const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
-  const [departmentInput, setDepartmentInput] = useState("");
-  const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "PDF" | "FAST_TRACK" | null>(null);
-  const [isGenerating, setIsGenerating] = useState(false);
-
   const getRequestDateString = (data: HematologyData) => {
     const year = data.requestDateYear || new Date().getFullYear().toString();
     const month = (data.requestDateMonth || "1").padStart(2, '0');
     const day = (data.requestDateDay || "1").padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  const [formData, setFormData] = useState<HematologyData>(() => {
+    if (initialData) {
+        const data: HematologyData = {
+            ...defaultState,
+            ...initialData,
+            patientName: defaultPatientName,
+            gender: defaultGender,
+            address: defaultAddress,
+            insuranceNumber: defaultInsuranceNumber,
+            status: initialData.status !== undefined ? initialData.status : 0,
+            hematologyStatusLogs: initialData.hematologyStatusLogs || []
+        };
+        const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
+        data.age = (calculatedAge === "" && defaultAge && defaultAge > 0) ? defaultAge.toString() : calculatedAge;
+
+        if (!readOnly && data.status === 2) {
+            if (!data.technician && currentUser?.name) {
+                data.technician = currentUser.name;
+            }
+            if (!data.resultDateDay || data.resultDateDay === "") {
+                data.resultDateDay = new Date().getDate().toString();
+            }
+            if (!data.resultDateMonth || data.resultDateMonth === "") {
+                data.resultDateMonth = (new Date().getMonth() + 1).toString();
+            }
+            if (!data.resultDateYear || data.resultDateYear === "") {
+                data.resultDateYear = new Date().getFullYear().toString();
+            }
+        }
+
+        return data;
+    } else {
+        const data: HematologyData = {
+            ...defaultState,
+            patientName: defaultPatientName,
+            gender: defaultGender,
+            address: defaultAddress,
+            insuranceNumber: defaultInsuranceNumber,
+            doctor: currentUser?.name || ""
+        };
+        const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
+        data.age = (calculatedAge === "" && defaultAge && defaultAge > 0) ? defaultAge.toString() : calculatedAge;
+        return data;
+    }
+  });
+
+  const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
+  const [departmentInput, setDepartmentInput] = useState("");
+  const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "PDF" | "FAST_TRACK" | null>(null);
+  const [isGenerating, setIsGenerating] = useState(!!(isOpen && initialData && readOnly));
 
   const generateAndOpenPDF = async (dataToSave: HematologyData) => {
     if (!printRef.current) return;
@@ -224,6 +260,8 @@ export const HematologyInputForm = ({
         const pdfWidth = pdf.internal.pageSize.getWidth();
         pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, (canvas.height * pdfWidth) / canvas.width);
         
+        console.log(`Opening PDF for ${dataToSave.patientName}`);
+        
         const blob = pdf.output("blob");
         const url = URL.createObjectURL(blob);
         window.open(url, "_blank");
@@ -233,63 +271,61 @@ export const HematologyInputForm = ({
     }
   };
 
-  useEffect(() => {
-    if (isOpen) {
-        if (initialData) {
-            const data: HematologyData = {
-                ...defaultState,
-                ...initialData,
-                patientName: defaultPatientName,
-                gender: defaultGender,
-                address: defaultAddress,
-                status: initialData.status !== undefined ? initialData.status : 0,
-                hematologyStatusLogs: initialData.hematologyStatusLogs || []
-            };
-            const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
-            data.age = (calculatedAge === "" && defaultAge && defaultAge > 0) ? defaultAge.toString() : calculatedAge;
-            setFormData(data);
-
-            if (readOnly) {
-                setIsGenerating(true);
-                setTimeout(async () => {
-                    await generateAndOpenPDF(data);
-                    setIsGenerating(false);
-                    onClose();
-                }, 800);
+  const handleGeneratePDF = async (dataToSave: HematologyData) => {
+    if (!printRef.current) return;
+    try {
+        const canvas = await html2canvas(printRef.current, { 
+            scale: 2, 
+            useCORS: true, 
+            backgroundColor: '#ffffff', 
+            onclone: (clonedDoc) => {
+                const styles = clonedDoc.getElementsByTagName('style');
+                for (let i = styles.length - 1; i >= 0; i--) styles[i].remove();
+                const links = clonedDoc.getElementsByTagName('link');
+                for (let i = links.length - 1; i >= 0; i--) {
+                    if (links[i].rel === 'stylesheet') links[i].remove();
+                }
+                const root = clonedDoc.documentElement;
+                root.style.setProperty('--background', '#ffffff');
+                root.style.setProperty('--foreground', '#000000');
+                root.style.setProperty('--primary', '#000000');
+                root.style.setProperty('--card', '#ffffff');
+                root.style.setProperty('--popover', '#ffffff');
+                root.style.setProperty('--muted', '#f3f4f6');
+                root.style.setProperty('--border', '#e5e7eb');
             }
-        } else {
-            const data: HematologyData = {
-                ...defaultState,
-                patientName: defaultPatientName,
-                gender: defaultGender,
-                address: defaultAddress,
-                doctor: currentUser?.name || ""
-            };
-            const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
-            data.age = (calculatedAge === "" && defaultAge && defaultAge > 0) ? defaultAge.toString() : calculatedAge;
-            setFormData(data);
-        }
-    }
-  }, [isOpen, initialData, defaultPatientName, defaultAge, defaultDob, defaultGender, defaultAddress, currentUser, readOnly]);
+        });
+        const imgData = canvas.toDataURL("image/png");
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, (canvas.height * pdfWidth) / canvas.width);
+        pdf.save(`XNHuyetHoc_${dataToSave.patientName}.pdf`);
+    } catch (error) { console.error(error); }
+  };
 
   useEffect(() => {
-    if (isOpen && defaultDob && !readOnly) {
-        const newAge = calculateAgeAtDate(defaultDob, getRequestDateString(formData));
-        if (newAge !== "" && newAge !== formData.age) {
-            setFormData(prev => ({ ...prev, age: newAge }));
-        }
+    if (isGenerating) {
+        const timer = setTimeout(async () => {
+            await generateAndOpenPDF(formData);
+            setIsGenerating(false);
+            onClose();
+        }, 800);
+        return () => clearTimeout(timer);
     }
-  }, [formData.requestDateDay, formData.requestDateMonth, formData.requestDateYear, defaultDob, isOpen, readOnly]);
-
-  useEffect(() => {
-    if (!readOnly && formData.status === 2 && !formData.technician && currentUser?.name) {
-        setFormData(prev => ({ ...prev, technician: currentUser.name }));
-    }
-  }, [formData.status, currentUser, readOnly]);
+  }, [isGenerating, formData, onClose]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+        const newData = { ...prev, [name]: value };
+        if (["requestDateDay", "requestDateMonth", "requestDateYear"].includes(name) && defaultDob && !readOnly) {
+            const newAge = calculateAgeAtDate(defaultDob, getRequestDateString(newData));
+            if (newAge !== "" && newAge !== newData.age) {
+                newData.age = newAge;
+            }
+        }
+        return newData;
+    });
   };
 
   const handleCheckChange = (name: string, checked: boolean) => {
@@ -402,7 +438,7 @@ export const HematologyInputForm = ({
         }
 
         let newStatus = formData.status;
-        let newLogs: HematologyStatusLog[] = [];
+        const newLogs: HematologyStatusLog[] = [];
 
         if (targetAction === "NEXT") {
             newStatus = Math.min(formData.status + 1, 3);
@@ -461,7 +497,24 @@ export const HematologyInputForm = ({
             }
         }
 
-        setFormData(prev => ({ ...prev, status: newStatus, hematologyStatusLogs: [...(prev.hematologyStatusLogs || []), ...newLogs] }));
+        setFormData(prev => {
+            const updated = { ...prev, status: newStatus, hematologyStatusLogs: [...(prev.hematologyStatusLogs || []), ...newLogs] };
+            if (!readOnly && updated.status === 2) {
+                if (!updated.technician && currentUser?.name) {
+                    updated.technician = currentUser.name;
+                }
+                if (!updated.resultDateDay || updated.resultDateDay === "") {
+                    updated.resultDateDay = new Date().getDate().toString();
+                }
+                if (!updated.resultDateMonth || updated.resultDateMonth === "") {
+                    updated.resultDateMonth = (new Date().getMonth() + 1).toString();
+                }
+                if (!updated.resultDateYear || updated.resultDateYear === "") {
+                    updated.resultDateYear = new Date().getFullYear().toString();
+                }
+            }
+            return updated;
+        });
         toast.success(`Cập nhật thành công`);
         setTimeout(() => { window.location.search = "?tab=forms"; }, 1000);
     } catch (error: unknown) {
@@ -469,38 +522,6 @@ export const HematologyInputForm = ({
         const message = error instanceof Error ? error.message : "Lỗi đồng bộ server.";
         toast.error(message);
     }
-  };
-
-  const handleGeneratePDF = async (dataToSave: HematologyData) => {
-    if (!printRef.current) return;
-    try {
-        const canvas = await html2canvas(printRef.current, { 
-            scale: 2, 
-            useCORS: true, 
-            backgroundColor: '#ffffff', 
-            onclone: (clonedDoc) => {
-                const styles = clonedDoc.getElementsByTagName('style');
-                for (let i = styles.length - 1; i >= 0; i--) styles[i].remove();
-                const links = clonedDoc.getElementsByTagName('link');
-                for (let i = links.length - 1; i >= 0; i--) {
-                    if (links[i].rel === 'stylesheet') links[i].remove();
-                }
-                const root = clonedDoc.documentElement;
-                root.style.setProperty('--background', '#ffffff');
-                root.style.setProperty('--foreground', '#000000');
-                root.style.setProperty('--primary', '#000000');
-                root.style.setProperty('--card', '#ffffff');
-                root.style.setProperty('--popover', '#ffffff');
-                root.style.setProperty('--muted', '#f3f4f6');
-                root.style.setProperty('--border', '#e5e7eb');
-            }
-        });
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF("p", "mm", "a4");
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, (canvas.height * pdfWidth) / canvas.width);
-        pdf.save(`XNHuyetHoc_${dataToSave.patientName}.pdf`);
-    } catch (error) { console.error(error); }
   };
 
   const isRequestReadOnly = readOnly || formData.status > 0 || !!initialData;
@@ -605,15 +626,8 @@ export const HematologyInputForm = ({
                 </div>
                 <div className="flex-1 flex items-end gap-2">
                     <Label className="shrink-0">Số thẻ BHYT:</Label>
-                    <div className="flex flex-1 items-end">
-                        <Input name="insuranceCard1" value={formData.insuranceCard1} onChange={handleChange} className="w-12 text-center" disabled={isRequestReadOnly} />
-                        <Input name="insuranceCard2" value={formData.insuranceCard2} onChange={handleChange} className="w-12 text-center" disabled={isRequestReadOnly} />
-                        <Input name="insuranceCard3" value={formData.insuranceCard3} onChange={handleChange} className="w-12 text-center" disabled={isRequestReadOnly} />
-                        <Input name="insuranceCard4" value={formData.insuranceCard4} onChange={handleChange} className="w-12 text-center" disabled={isRequestReadOnly} />
-                        <Input name="insuranceCard5" value={formData.insuranceCard5} onChange={handleChange} className="flex-1 text-center" disabled={isRequestReadOnly} />
-                    </div>
-                </div>
-            </div>
+                    <Input name="insuranceNumber" value={formData.insuranceNumber} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={true} />
+                </div>            </div>
              <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 flex items-end gap-2">
                 <Label className="shrink-0">Khoa:</Label>
@@ -805,7 +819,7 @@ export const HematologyInputForm = ({
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                         <div style={{ flex: 1 }}>- Địa chỉ: {formData.address}</div>
-                        <div style={{ width: '40%' }}>Số thẻ BHYT: {formData.insuranceCard1} {formData.insuranceCard2} {formData.insuranceCard3} {formData.insuranceCard4} {formData.insuranceCard5}</div>
+                        <div style={{ width: '40%' }}>Số thẻ BHYT: {formData.insuranceNumber}</div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                         <div style={{ flex: 1 }}>- Khoa: {formData.department}</div>

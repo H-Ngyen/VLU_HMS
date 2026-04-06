@@ -8,8 +8,8 @@ import {
 } from "@/components/ui/accordion";
 import { FileText, Eye, Edit2, Trash2 } from "lucide-react";
 import type { Record as MedicalRecord, Document } from "@/types";
-import { XRayInputForm, type XRayData } from "./XRayInputForm";
-import { HematologyInputForm, type HematologyData } from "./HematologyInputForm";
+import { XRayInputForm } from "./XRayInputForm";
+import { HematologyInputForm } from "./HematologyInputForm";
 
 interface PhieuYSectionProps {
   formData: MedicalRecord;
@@ -30,83 +30,6 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
   const [editingHematologyDoc, setEditingHematologyDoc] = useState<Document | null>(null);
   const [viewingHematologyDoc, setViewingHematologyDoc] = useState<Document | null>(null);
 
-
-  // xrayData is generic object from form
-  const handleXRaySave = (file: File, xrayData?: XRayData) => {
-    if (readOnly) return;
-    if (editingXRayDoc) {
-        setFormData((prev) => {
-            if (!prev) return null;
-            const updatedDocs = prev.documents.map((d) => 
-              d.id === editingXRayDoc.id ? { 
-                  ...d, 
-                  fileName: file.name, 
-                  url: URL.createObjectURL(file),
-                  data: xrayData 
-              } : d
-            );
-            return { ...prev, documents: updatedDocs };
-        });
-        setEditingXRayDoc(null);
-    } else {
-        const idVal = xrayData?.id;
-        const newDoc: Document = {
-            id: idVal ? `XRAY_${idVal}` : `DOC${Date.now()}`,
-            name: "Phiếu X-Quang",
-            type: "X-Quang",
-            fileName: file.name,
-            date: new Date().toISOString().split("T")[0],
-            url: URL.createObjectURL(file),
-            data: xrayData
-        };
-        setFormData((prev) => {
-            if (!prev) return null;
-            return {
-                ...prev,
-                documents: [...(prev.documents || []), newDoc],
-            };
-        });
-    }
-    setIsXRayFormOpen(false); 
-  };
-
-  // data is generic object from form
-  const handleHematologySave = (file: File, data?: HematologyData) => {
-    if (readOnly) return;
-    if (editingHematologyDoc) {
-        setFormData((prev) => {
-            if (!prev) return null;
-            const updatedDocs = prev.documents.map((d) => 
-              d.id === editingHematologyDoc.id ? { 
-                  ...d, 
-                  fileName: file.name, 
-                  url: URL.createObjectURL(file),
-                  data: data 
-              } : d
-            );
-            return { ...prev, documents: updatedDocs };
-        });
-        setEditingHematologyDoc(null);
-    } else {
-        const newDoc: Document = {
-            id: `DOC${Date.now()}`,
-            name: "Phiếu XN Huyết Học",
-            type: "XN-HuyetHoc",
-            fileName: file.name,
-            date: new Date().toISOString().split("T")[0],
-            url: URL.createObjectURL(file),
-            data: data
-        };
-        setFormData((prev) => {
-            if (!prev) return null;
-            return {
-                ...prev,
-                documents: [...(prev.documents || []), newDoc],
-            };
-        });
-    }
-    setIsHematologyFormOpen(false); 
-  };
 
   const handleDelete = (docId: string) => {
     if (readOnly) return;
@@ -354,13 +277,13 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
       </div>
 
       <XRayInputForm 
+        key={isXRayFormOpen ? (editingXRayDoc?.id || viewingXRayDoc?.id || 'new_xray') : 'closed_xray'}
         isOpen={isXRayFormOpen}
         onClose={() => {
             setIsXRayFormOpen(false);
             setEditingXRayDoc(null);
             setViewingXRayDoc(null);
         }}
-        onSave={handleXRaySave}
         defaultPatientName={formData.patientName}
         defaultAge={formData.age}
         defaultDob={formData.dob}
@@ -372,17 +295,19 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
       />
 
        <HematologyInputForm 
+        key={isHematologyFormOpen ? (editingHematologyDoc?.id || viewingHematologyDoc?.id || 'new_hema') : 'closed_hema'}
         isOpen={isHematologyFormOpen}
         onClose={() => {
             setIsHematologyFormOpen(false);
             setEditingHematologyDoc(null);
             setViewingHematologyDoc(null);
         }}
-        onSave={handleHematologySave}
         defaultPatientName={formData.patientName}
         defaultAge={formData.age}
+        defaultDob={formData.dob}
         defaultGender={formData.gender}
         defaultAddress={formData.address}
+        defaultInsuranceNumber={formData.insuranceNumber}
         initialData={editingHematologyDoc?.data || viewingHematologyDoc?.data}
         readOnly={!!viewingHematologyDoc || readOnly} 
         recordId={formData.numericId}
