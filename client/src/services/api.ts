@@ -216,6 +216,40 @@ export const api = {
     }
   },
 
+  hematologies: {
+    create: async (recordId: number, data: any) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/hematologies`, {
+        method: 'POST',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to create Hematology');
+      return response.text(); // Return ID if available
+    },
+    changeStatus: async (recordId: number, id: number, data: { status?: number, departmentName: string }) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/hematologies/${id}`, {
+        method: 'PUT',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Failed to update Hematology status: ${errorText}`);
+      }
+    },
+    complete: async (recordId: number, id: number, data: any) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/hematologies/${id}/complete`, {
+        method: 'PUT',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Failed to complete Hematology: ${errorText}`);
+      }
+    }
+  },
+
   identities: {
     sync: async (data: {
       auth0Id: string;

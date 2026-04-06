@@ -276,8 +276,8 @@ export const XRayInputForm = ({
         toast.error("Vui lòng nhập 'Yêu cầu chiếu/ chụp'.");
         return false;
     }
-    if (!formData.requestDateYear?.trim()) {
-        toast.error("Vui lòng nhập 'Năm' của ngày yêu cầu.");
+    if (!formData.requestDateDay?.trim() || !formData.requestDateMonth?.trim() || !formData.requestDateYear?.trim()) {
+        toast.error("Vui lòng nhập đầy đủ ngày, tháng, năm của ngày yêu cầu.");
         return false;
     }
     if (action === "NEXT" && formData.status === 2) {
@@ -289,8 +289,8 @@ export const XRayInputForm = ({
             toast.error("Vui lòng nhập 'Lời dặn của BS chuyên khoa'.");
             return false;
         }
-        if (!formData.resultDateYear?.trim()) {
-            toast.error("Vui lòng nhập 'Năm' của ngày trả kết quả.");
+        if (!formData.resultDateDay?.trim() || !formData.resultDateMonth?.trim() || !formData.resultDateYear?.trim()) {
+            toast.error("Vui lòng nhập đầy đủ ngày, tháng, năm của ngày trả kết quả.");
             return false;
         }
     }
@@ -499,8 +499,7 @@ export const XRayInputForm = ({
           <div className="flex justify-end pt-4">
                 <div className="text-center w-1/3 space-y-2 italic text-sm">
                     <div className="flex justify-center gap-1">
-                    <Input name="requestTime" value={formData.requestTime} onChange={handleChange} className="w-10 h-6 p-0 text-center border-b border-x-0 border-t-0" placeholder="..." disabled={isRequestReadOnly} />
-                    <span>Giờ ........ ngày</span>
+                    <span>Ngày</span>
                     <Input name="requestDateDay" value={formData.requestDateDay} onChange={handleChange} className="w-8 h-6 p-0 text-center border-b border-x-0 border-t-0" disabled={isRequestReadOnly} />
                     <span>tháng</span>
                     <Input name="requestDateMonth" value={formData.requestDateMonth} onChange={handleChange} className="w-8 h-6 p-0 text-center border-b border-x-0 border-t-0" disabled={isRequestReadOnly} />
@@ -527,8 +526,7 @@ export const XRayInputForm = ({
                   </div>
                   <div className="text-center w-1/3 space-y-2 italic text-sm">
                       <div className="flex justify-center gap-1">
-                      <Input name="resultTime" value={formData.resultTime} onChange={handleChange} className="w-10 h-6 p-0 text-center border-b border-x-0 border-t-0" placeholder="..." disabled={isResultReadOnly} />
-                      <span>Giờ ........ ngày</span>
+                      <span>Ngày</span>
                       <Input name="resultDateDay" value={formData.resultDateDay} onChange={handleChange} className="w-8 h-6 p-0 text-center border-b border-x-0 border-t-0" disabled={isResultReadOnly} />
                       <span>tháng</span>
                       <Input name="resultDateMonth" value={formData.resultDateMonth} onChange={handleChange} className="w-8 h-6 p-0 text-center border-b border-x-0 border-t-0" disabled={isResultReadOnly} />
@@ -599,7 +597,7 @@ export const XRayInputForm = ({
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '32px' }}>
                 <div style={{ textAlign: 'center', width: '33%' }}>
-                    <p style={{ fontStyle: 'italic', margin: 0 }}>{formData.requestTime && `${formData.requestTime} Giờ `}Ngày {formData.requestDateDay} tháng {formData.requestDateMonth} năm {formData.requestDateYear}</p>
+                    <p style={{ fontStyle: 'italic', margin: 0 }}>Ngày {formData.requestDateDay} tháng {formData.requestDateMonth} năm {formData.requestDateYear}</p>
                     <p style={{ fontWeight: 'bold', marginTop: '4px', marginBottom: '0', textTransform: 'uppercase' }}>Bác sĩ điều trị</p>
                     <div style={{ height: '20mm' }}></div>
                     <p style={{ margin: 0, fontWeight: 'bold', textTransform: 'uppercase' }}>{formData.doctor}</p>
@@ -619,7 +617,7 @@ export const XRayInputForm = ({
                         <p style={{ whiteSpace: 'pre-wrap', margin: 0, fontStyle: 'italic' }}>{formData.advice}</p>
                     </div>
                     <div style={{ textAlign: 'center', width: '33%' }}>
-                        <p style={{ fontStyle: 'italic', margin: 0 }}>{formData.resultTime && `${formData.resultTime} Giờ `}Ngày {formData.resultDateDay} tháng {formData.resultDateMonth} năm {formData.resultDateYear}</p>
+                        <p style={{ fontStyle: 'italic', margin: 0 }}>Ngày {formData.resultDateDay} tháng {formData.resultDateMonth} năm {formData.resultDateYear}</p>
                         <p style={{ fontWeight: 'bold', marginTop: '4px', marginBottom: '0', textTransform: 'uppercase' }}>Bác sĩ chuyên khoa</p>
                         <div style={{ height: '20mm' }}></div>
                         <p style={{ margin: 0, fontWeight: 'bold', textTransform: 'uppercase' }}>{formData.specialist}</p>
