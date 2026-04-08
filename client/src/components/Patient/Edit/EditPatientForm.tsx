@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
-import type { Patient } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { PatientInfoSection } from "./sections/PatientInfoSection";
@@ -40,7 +39,7 @@ export const EditPatientForm = () => {
           name: patient.name,
           dateOfBirth: patient.dateOfBirth.split('T')[0],
           age: new Date().getFullYear() - new Date(patient.dateOfBirth).getFullYear(),
-          gender: patient.gender,
+          gender: patient.gender as number,
           ethnicityId: patient.ethnicityId,
           healthInsuranceNumber: patient.healthInsuranceNumber
         });

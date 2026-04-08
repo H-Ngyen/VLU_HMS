@@ -55,9 +55,9 @@ export const PatientTableRow = ({ patient, onDelete }: PatientTableRowProps) => 
       </TableCell>
       <TableCell className="text-gray-600">{formatDate(patient.dateOfBirth)}</TableCell>
       <TableCell className="text-gray-600">
-        {calculateAge(patient.dateOfBirth)} / {getGenderText(patient.gender)}
+        {calculateAge(patient.dateOfBirth)} / {getGenderText(patient.gender as number)}
       </TableCell>
-      <TableCell className="text-gray-600">{patient.ethnicity?.name || '---'}</TableCell>
+      <TableCell className="text-gray-600">{(patient.ethnicity as any)?.name || '---'}</TableCell>
       <TableCell className="text-gray-600 font-mono text-xs">{patient.healthInsuranceNumber}</TableCell>
       <TableCell className="text-right">
         <div className="flex justify-end gap-2">

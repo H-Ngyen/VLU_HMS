@@ -1,6 +1,6 @@
 const API_BASE_URL = 'https://localhost:5001/api';
 
-import type { Patient } from '@/types';
+import type { Patient, User } from '@/types';
 
 let accessToken: string | null = null;
 
@@ -198,7 +198,10 @@ export const api = {
         headers: getHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error('Failed to update X-Ray status');
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Failed to update X-Ray status: ${errorText}`);
+      }
     },
     complete: async (recordId: number, id: number, data: { resultDescription?: string, doctorAdvice?: string, completedAt?: string }) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays/${id}/complete`, {
@@ -206,7 +209,90 @@ export const api = {
         headers: getHeaders({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error('Failed to complete X-Ray');
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Failed to complete X-Ray: ${errorText}`);
+      }
+    }
+  },
+
+  hematologies: {
+    create: async (recordId: number, data: any) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/hematologies`, {
+        method: 'POST',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) throw new Error('Failed to create Hematology');
+      return response.text(); // Return ID if available
+    },
+    changeStatus: async (recordId: number, id: number, data: { status?: number, departmentName: string }) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/hematologies/${id}`, {
+        method: 'PUT',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Failed to update Hematology status: ${errorText}`);
+      }
+    },
+    complete: async (recordId: number, id: number, data: any) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/hematologies/${id}/complete`, {
+        method: 'PUT',
+        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+         const errorText = await response.text();
+         throw new Error(`Failed to complete Hematology: ${errorText}`);
+      }
+    }
+  },
+
+  medicalAttachments: {
+    getAll: async (recordId: number) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/attachments`, {
+        headers: getHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch medical attachments');
+      return response.json();
+    },
+    create: async (recordId: number, file: File) => {
+      const formData = new FormData();
+      formData.append('File', file);
+      
+      // Extract name without extension and sanitize
+      const nameWithoutExtension = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+      
+      // Remove Vietnamese accents and special characters strictly
+      const sanitizedName = nameWithoutExtension
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+        .replace(/[^a-zA-Z0-9 ]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      
+      formData.append('Name', sanitizedName);
+      
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/attachments`, {
+        method: 'POST',
+        headers: getHeaders(), // Don't set Content-Type, fetch will set it with boundary
+        body: formData
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to upload attachment: ${errorText}`);
+      }
+      return response.json();
+    },
+    delete: async (recordId: number, attachmentId: number) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/attachments/${attachmentId}`, {
+        method: 'DELETE',
+        headers: getHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to delete attachment');
     }
   },
 

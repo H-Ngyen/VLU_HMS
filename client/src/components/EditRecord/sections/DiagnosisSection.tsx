@@ -13,7 +13,7 @@ interface DiagnosisSectionProps {
 export const DiagnosisSection = ({ formData, setFormData, readOnly = false }: DiagnosisSectionProps) => {
   const diagnosisInfo = formData.diagnosisInfo;
 
-  const handleChange = (path: string[], value: any) => {
+  const handleChange = (path: string[], value: string | boolean | "indeterminate") => {
     if (readOnly) return;
     setFormData((prev) => {
       if (!prev) return null;

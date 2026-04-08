@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { api } from "@/services/api";
 import { RecordForm } from "./RecordForm";
-import type { Record } from "@/types";
+import type { Record, Patient, RelatedCharacteristics } from "@/types";
 import { toast } from "sonner";
 
 export const CreateRecordView = () => {
   const { patientId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [patient, setPatient] = useState<any>(null);
+  const [patient, setPatient] = useState<Patient | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   // Get initial type from URL parameter (default to internal)
@@ -43,15 +43,21 @@ export const CreateRecordView = () => {
         const genderText =
           apiPatient.gender === 1 ? "Nam" : apiPatient.gender === 2 ? "Nữ" : "Khác";
 
+        const ethnicityName = typeof apiPatient.ethnicity === 'object' 
+          ? apiPatient.ethnicity?.name 
+          : (typeof apiPatient.ethnicity === 'string' ? apiPatient.ethnicity : "");
+
         setPatient({
           id: apiPatient.id,
+          name: apiPatient.name,
           fullName: apiPatient.name,
           cccd: "",
           insuranceNumber: apiPatient.healthInsuranceNumber,
+          dateOfBirth: apiPatient.dateOfBirth,
           dob: apiPatient.dateOfBirth?.split('T')[0] || "",
           age,
           gender: genderText,
-          ethnicity: apiPatient.ethnicity?.name ?? "",
+          ethnicity: ethnicityName ?? "",
           // Các trường còn lại UI chưa có trong DTO Patient API
           job: "",
           jobCode: "",
@@ -62,6 +68,8 @@ export const CreateRecordView = () => {
           insuranceExpiry: "",
           relativeInfo: "",
           relativePhone: "",
+          ethnicityId: apiPatient.ethnicityId,
+          healthInsuranceNumber: apiPatient.healthInsuranceNumber,
         });
       } catch (e) {
         console.error(e);
@@ -91,7 +99,7 @@ export const CreateRecordView = () => {
     );
   }
 
-  const handleCreate = (newRecord: Record, patientSnapshot: any) => {
+  const handleCreate = (newRecord: Record, patientSnapshot: Patient) => {
     // Map UI "III. Chuẩn đoán" (nested) -> Swagger "/api/medical-records" (flat)
     const diagnosis = newRecord.diagnosisInfo;
     const diagnosisPayload = {
@@ -185,9 +193,7 @@ export const CreateRecordView = () => {
     const riskFactors = Object.entries(riskFactorSignedMap)
       .map(([key, signed]) => {
         // UI has: relatedCharacteristics.{key}.isChecked / time
-        const item = (content.relatedCharacteristics as any)?.[key] as
-          | { isChecked: boolean; time: string }
-          | undefined;
+        const item = (content.relatedCharacteristics as RelatedCharacteristics)[key];
         if (!item?.isChecked) return null;
 
         const duration = item.time ? Number.parseInt(item.time, 10) : NaN;
@@ -305,20 +311,6 @@ export const CreateRecordView = () => {
       "Đưa về": 4,
     };
 
-    const departmentTransfers = newRecord.managementData.transfers.map((t, idx) => {
-      const transferType = t.transferType ?? (idx === 0 ? 1 : 2);
-      const admissionTimeLocal = combineDateTimeToLocal(t.date || newRecord.admissionDate, t.time || "00:00");
-      const localNow = new Date();
-      const localNowStr = `${localNow.getFullYear()}-${String(localNow.getMonth() + 1).padStart(2, '0')}-${String(localNow.getDate()).padStart(2, '0')}T${String(localNow.getHours()).padStart(2, '0')}:${String(localNow.getMinutes()).padStart(2, '0')}:00`;
-      
-      return {
-        name: t.department || "",
-        admissionTime: admissionTimeLocal ?? localNowStr,
-        transferType,
-        treatmentDays: String(t.days ?? 0),
-      };
-    });
-
     const admissionTimeLocal = combineDateTimeToLocal(newRecord.admissionDate, newRecord.managementData.admissionTime);
     const dischargeTimeLocal = combineDateTimeToLocal(newRecord.dischargeDate, newRecord.managementData.dischargeTime);
 
@@ -336,16 +328,16 @@ export const CreateRecordView = () => {
       addressJob: patientSnapshot.workplace || "",
 
       address: patientSnapshot.address || "",
-      provinceCode: patientSnapshot.provinceCode ?? null,
-      districtCode: patientSnapshot.districtCode ?? null,
-      provinceName: patientSnapshot.provinceName ?? null,
-      districtName: patientSnapshot.districtName ?? null,
-      wardName: patientSnapshot.wardName ?? null,
+      provinceCode: patientSnapshot.provinceCode || null,
+      districtCode: patientSnapshot.districtCode || null,
+      provinceName: patientSnapshot.provinceName || null,
+      districtName: patientSnapshot.districtName || null,
+      wardName: patientSnapshot.wardName || null,
 
       healthInsuranceExpiryDate: isoDateAtMidnight(patientSnapshot.insuranceExpiry),
       relativeInfo: patientSnapshot.relativeInfo || "",
       relativePhone: patientSnapshot.relativePhone || "",
-      paymentCategory: paymentCategoryMap[patientSnapshot.subjectType] ?? null,
+      paymentCategory: paymentCategoryMap[patientSnapshot.subjectType ?? ""] ?? null,
 
       admissionTime: admissionTimeLocal,
       admissionType: admissionTypeMap[newRecord.managementData.admissionType] ?? null,

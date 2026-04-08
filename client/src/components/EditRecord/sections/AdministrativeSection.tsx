@@ -14,11 +14,16 @@ interface AdministrativeSectionProps {
 
 export const AdministrativeSection = ({ patient, setPatient, readOnly = false }: AdministrativeSectionProps) => {
   
-  // Use `any` for address-part fields because the Patient type currently
-  // only defines the "base" patient info for the patient table.
-  const handleChange = (field: string, value: any) => {
+  const handleChange = <K extends keyof Patient>(field: K, value: Patient[K]) => {
     if (readOnly) return;
-    setPatient({ ...(patient as any), [field]: value });
+    const updatedPatient = { ...patient, [field]: value };
+    
+    // Auto-build full address if any part changes
+    if (["houseNumber", "village", "wardName", "districtName", "provinceName"].includes(field)) {
+        updatedPatient.address = buildFullAddress(updatedPatient);
+    }
+    
+    setPatient(updatedPatient);
   };
 
   const buildFullAddress = (parts: {
@@ -34,8 +39,7 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
     const district = parts.districtName?.trim();
     const province = parts.provinceName?.trim();
 
-    // Keep it simple: join with commas, without trying to normalize Vietnamese address formats.
-    return [house, village, ward, district, province].filter(Boolean).join(", ");
+    return [house, village, ward, district, province].filter((p): p is string => Boolean(p)).join(", ");
   };
 
   return (
@@ -44,35 +48,35 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
         {/* 1. Họ và tên */}
         <InfoRow
           label="1. Họ và tên"
-          value={<span className="font-bold uppercase">{(patient as any).fullName}</span>}
+          value={<span className="font-bold uppercase">{patient.fullName || patient.name}</span>}
         />
 
         {/* 2. Sinh ngày & Tuổi */}
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
              <label className="text-sm text-gray-700 font-medium">2. Sinh ngày</label>
              <div className="flex items-center gap-4">
-                 <span>{(patient as any).dob}</span>
+                 <span>{patient.dob || patient.dateOfBirth?.split('T')[0]}</span>
                  <span className="text-gray-400">|</span>
-                 <span className="text-gray-700">Tuổi: {(patient as any).age}</span>
+                 <span className="text-gray-700">Tuổi: {patient.age}</span>
              </div>
         </div>
 
         {/* 3. Giới tính */}
-        <InfoRow label="3. Giới tính" value={patient.gender} />
+        <InfoRow label="3. Giới tính" value={String(patient.gender)} />
 
         {/* 4. Nghề nghiệp & Mã nghề */}
          <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
             <label className="text-sm text-gray-700 font-medium">4. Nghề nghiệp</label>
             <div className="flex items-center gap-2">
                 <Input
-                    value={(patient as any).job}
+                    value={patient.job || ""}
                     onChange={(e) => handleChange("job", e.target.value)}
                     className="h-8 text-sm flex-1"
                     placeholder="Nhập nghề nghiệp..."
                     disabled={readOnly}
                 />
                 <Input 
-                    value={(patient as any).jobCode || ""} 
+                    value={patient.jobCode || ""} 
                     onChange={(e) => handleChange("jobCode", e.target.value)}
                     className="h-8 text-sm w-24"
                     placeholder="Mã"
@@ -85,7 +89,7 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
             <label className="text-sm text-gray-700 font-medium">5. Dân tộc</label>
             <Input
-                value={(patient as any).ethnicity} 
+                value={typeof patient.ethnicity === 'string' ? patient.ethnicity : patient.ethnicity?.name || ""} 
                 readOnly
                 className="h-8 text-sm w-full md:w-64 bg-gray-50 text-gray-900 pointer-events-none"
             />
@@ -98,172 +102,60 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
             <div className="space-y-2">
               <Label className="text-xs text-gray-700 font-medium">Số nhà</Label>
               <Input
-                value={(patient as any).houseNumber || ""}
-                onChange={(e) => {
-                  const houseNumber = e.target.value;
-                  const next = buildFullAddress({
-                    houseNumber,
-                    village: (patient as any).village,
-                    wardName: (patient as any).wardName,
-                    districtName: (patient as any).districtName,
-                    provinceName: (patient as any).provinceName,
-                  });
-                  setPatient({
-                    ...(patient as any),
-                    houseNumber,
-                    address: next,
-                  });
-                }}
-                className="h-9 text-sm"
-                placeholder="Ví dụ: 12"
+                value={patient.houseNumber || ""}
+                onChange={(e) => handleChange("houseNumber", e.target.value)}
+                className="h-8 text-sm"
+                placeholder="Ví dụ: 123/45"
                 disabled={readOnly}
               />
             </div>
-
             <div className="space-y-2">
               <Label className="text-xs text-gray-700 font-medium">Thôn, phố</Label>
               <Input
-                value={(patient as any).village || ""}
-                onChange={(e) => {
-                  const village = e.target.value;
-                  const next = buildFullAddress({
-                    houseNumber: (patient as any).houseNumber,
-                    village,
-                    wardName: (patient as any).wardName,
-                    districtName: (patient as any).districtName,
-                    provinceName: (patient as any).provinceName,
-                  });
-                  setPatient({
-                    ...(patient as any),
-                    village,
-                    address: next,
-                  });
-                }}
-                className="h-9 text-sm"
-                placeholder="Ví dụ: Thôn/Phố ABC"
+                value={patient.village || ""}
+                onChange={(e) => handleChange("village", e.target.value)}
+                className="h-8 text-sm"
+                placeholder="Ví dụ: Đường Lê Lợi"
                 disabled={readOnly}
               />
             </div>
-
             <div className="space-y-2">
               <Label className="text-xs text-gray-700 font-medium">Xã, phường</Label>
               <Input
-                value={(patient as any).wardName || ""}
-                onChange={(e) => {
-                  const wardName = e.target.value;
-                  const next = buildFullAddress({
-                    houseNumber: (patient as any).houseNumber,
-                    village: (patient as any).village,
-                    wardName,
-                    districtName: (patient as any).districtName,
-                    provinceName: (patient as any).provinceName,
-                  });
-                  setPatient({
-                    ...(patient as any),
-                    wardName,
-                    address: next,
-                  });
-                }}
-                className="h-9 text-sm"
-                placeholder="Ví dụ: Phường XYZ"
+                value={patient.wardName || ""}
+                onChange={(e) => handleChange("wardName", e.target.value)}
+                className="h-8 text-sm"
+                placeholder="Ví dụ: Phường Bến Nghé"
                 disabled={readOnly}
               />
             </div>
-
             <div className="space-y-2">
-              <Label className="text-xs text-gray-700 font-medium">Huyện(Q.Tx)</Label>
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  value={(patient as any).districtCode ?? ""}
-                  onChange={(e) => {
-                    const districtCodeRaw = e.target.value;
-                    const districtCode = districtCodeRaw === "" ? null : Number(districtCodeRaw);
-                    const next = buildFullAddress({
-                      houseNumber: (patient as any).houseNumber,
-                      village: (patient as any).village,
-                      wardName: (patient as any).wardName,
-                      districtName: (patient as any).districtName,
-                      provinceName: (patient as any).provinceName,
-                    });
-                    setPatient({
-                      ...(patient as any),
-                      districtCode,
-                      address: next,
-                    });
-                  }}
-                  className="h-9 w-24"
-                  placeholder="Số"
-                  disabled={readOnly}
-                />
-                <Input
-                  value={(patient as any).districtName || ""}
-                  onChange={(e) => {
-                    const districtName = e.target.value;
-                    const next = buildFullAddress({
-                      houseNumber: (patient as any).houseNumber,
-                      village: (patient as any).village,
-                      wardName: (patient as any).wardName,
-                      districtName,
-                      provinceName: (patient as any).provinceName,
-                    });
-                    setPatient({
-                      ...(patient as any),
-                      districtName,
-                      address: next,
-                    });
-                  }}
-                  className="h-9 flex-1"
-                  placeholder="Tên huyện"
-                  disabled={readOnly}
-                />
-              </div>
+              <Label className="text-xs text-gray-700 font-medium">Huyện, quận</Label>
+              <Input
+                value={patient.districtName || ""}
+                onChange={(e) => handleChange("districtName", e.target.value)}
+                className="h-8 text-sm"
+                placeholder="Ví dụ: Quận 1"
+                disabled={readOnly}
+              />
             </div>
-
             <div className="space-y-2 md:col-span-2">
               <Label className="text-xs text-gray-700 font-medium">Tỉnh, thành phố</Label>
-              <div className="flex gap-2 items-start">
-                <Input
-                  type="number"
-                  inputMode="numeric"
-                  value={(patient as any).provinceCode ?? ""}
-                  onChange={(e) => {
-                    const provinceCodeRaw = e.target.value;
-                    const provinceCode = provinceCodeRaw === "" ? null : Number(provinceCodeRaw);
-                    setPatient({
-                      ...(patient as any),
-                      provinceCode,
-                    });
-                  }}
-                  className="h-9 w-24"
-                  placeholder="Mã"
-                  disabled={readOnly}
-                />
-
-                <Input
-                  value={(patient as any).provinceName || ""}
-                  onChange={(e) => {
-                    const provinceName = e.target.value;
-                    const next = buildFullAddress({
-                      houseNumber: (patient as any).houseNumber,
-                      village: (patient as any).village,
-                      wardName: (patient as any).wardName,
-                      districtName: (patient as any).districtName,
-                      provinceName,
-                    });
-                    setPatient({
-                      ...(patient as any),
-                      provinceName,
-                      address: next,
-                    });
-                  }}
-                  className="h-9 text-sm flex-1"
-                  placeholder="Ví dụ: TP.HCM"
-                  disabled={readOnly}
-                />
-              </div>
+              <Input
+                value={patient.provinceName || ""}
+                onChange={(e) => handleChange("provinceName", e.target.value)}
+                className="h-8 text-sm"
+                placeholder="Ví dụ: TP. Hồ Chí Minh"
+                disabled={readOnly}
+              />
             </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-blue-50/50 rounded-md border border-blue-100">
+             <Label className="text-[10px] uppercase text-blue-600 font-bold mb-1 block">Xem trước địa chỉ gộp</Label>
+             <p className="text-sm font-medium text-blue-900 italic">
+                {patient.address || "Chưa nhập địa chỉ"}
+             </p>
           </div>
         </div>
 
@@ -271,9 +163,9 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
             <label className="text-sm text-gray-700 font-medium">7. Nơi làm việc</label>
             <Input
-                value={(patient as any).workplace}
+                value={patient.workplace || ""}
                 onChange={(e) => handleChange("workplace", e.target.value)}
-                className="h-8 text-sm bg-white"
+                className="h-8 text-sm"
                 placeholder="Nhập nơi làm việc..."
                 disabled={readOnly}
             />
@@ -282,60 +174,53 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
         {/* 8. Đối tượng */}
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
             <label className="text-sm text-gray-700 font-medium">8. Đối tượng</label>
-            <Select value={(patient as any).subjectType} onValueChange={(val) => handleChange("subjectType", val)} disabled={readOnly}>
-                <SelectTrigger className="h-8 w-full md:w-64">
-                    <SelectValue placeholder="Chọn đối tượng" />
+            <Select 
+                value={patient.subjectType || ""} 
+                onValueChange={(val) => handleChange("subjectType", val)}
+                disabled={readOnly}
+            >
+                <SelectTrigger className="h-8 text-sm w-full md:w-64">
+                    <SelectValue placeholder="Chọn đối tượng..." />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="BHYT">BHYT</SelectItem>
-                    <SelectItem value="Thu phí">Thu phí</SelectItem>
-                    <SelectItem value="Miễn">Miễn</SelectItem>
-                    <SelectItem value="Khác">Khác</SelectItem>
+                    <SelectItem value="BHYT">1. BHYT</SelectItem>
+                    <SelectItem value="Thu phí">2. Thu phí</SelectItem>
+                    <SelectItem value="Miễn">3. Miễn</SelectItem>
+                    <SelectItem value="Khác">4. Khác</SelectItem>
                 </SelectContent>
             </Select>
         </div>
 
-        {/* 9. BHYT */}
+        {/* 9. BHYT giá trị đến ngày */}
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
             <label className="text-sm text-gray-700 font-medium">9. BHYT giá trị đến ngày</label>
-            <div className="flex flex-col md:flex-row gap-2 items-start md:items-center">
-                 <Input 
-                    type="date"
-                    value={(patient as any).insuranceExpiry}
-                    onChange={(e) => handleChange("insuranceExpiry", e.target.value)}
-                    className="h-8 w-36 text-sm"
-                    disabled={readOnly}
-                />
-                <div className="flex items-center gap-2 ml-2">
-                    <span className="text-sm text-gray-700">Số thẻ BHYT:</span>
-                    <Input 
-                        value={(patient as any).insuranceNumber || ""} 
-                        readOnly
-                        className="h-8 w-48 text-sm bg-gray-50 text-gray-900 pointer-events-none"
-                        placeholder="Số thẻ..."
-                    />
-                </div>
-            </div>
+            <Input
+                type="date"
+                value={patient.insuranceExpiry || ""}
+                onChange={(e) => handleChange("insuranceExpiry", e.target.value)}
+                className="h-8 text-sm w-full md:w-64"
+                disabled={readOnly}
+            />
         </div>
 
-        {/* 10. Người nhà */}
-        <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-start">
-            <label className="text-sm text-gray-700 font-medium mt-2">10. Họ tên, địa chỉ người nhà</label>
-            <div className="w-full space-y-2">
-                <Textarea 
-                    value={(patient as any).relativeInfo} 
+        {/* 10. Họ tên, địa chỉ người nhà */}
+        <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
+            <label className="text-sm text-gray-700 font-medium">10. Người nhà</label>
+            <div className="space-y-3">
+                <Textarea
+                    value={patient.relativeInfo || ""}
                     onChange={(e) => handleChange("relativeInfo", e.target.value)}
-                    className="min-h-[60px] text-sm"
-                    placeholder="Họ tên, địa chỉ người nhà cần báo tin..."
+                    placeholder="Họ tên, địa chỉ người nhà khi cần báo tin..."
+                    className="text-sm min-h-[80px]"
                     disabled={readOnly}
                 />
-                 <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-700 w-24 flex-shrink-0">Điện thoại số:</span>
-                    <Input 
-                        value={(patient as any).relativePhone || ""} 
+                <div className="flex items-center gap-2">
+                    <Label className="text-xs text-gray-500 shrink-0">Điện thoại:</Label>
+                    <Input
+                        value={patient.relativePhone || ""}
                         onChange={(e) => handleChange("relativePhone", e.target.value)}
-                        className="h-8 w-40 text-sm"
-                        placeholder="SĐT..."
+                        className="h-8 text-sm w-full md:w-64"
+                        placeholder="Số điện thoại liên hệ..."
                         disabled={readOnly}
                     />
                 </div>

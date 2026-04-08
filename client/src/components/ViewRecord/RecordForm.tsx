@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Download as DownloadIcon, FileText, User, Activity, LogOut, ClipboardList, Thermometer, Pill, ChevronDown, ChevronRight } from "lucide-react";
+import { Download as DownloadIcon, FileText, User, Activity, LogOut, ClipboardList, Thermometer, Pill, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Record, Patient } from "@/types";
+import { api } from "@/services/api";
 
 import { AdministrativeSection } from "../EditRecord/sections/AdministrativeSection";
 import { PatientManagementSection } from "../EditRecord/sections/PatientManagementSection";
@@ -11,8 +12,13 @@ import { DischargeStatusSection } from "../EditRecord/sections/DischargeStatusSe
 import { MedicalHistorySection } from "../EditRecord/sections/MedicalHistorySection";
 import { ExaminationSection } from "../EditRecord/sections/ExaminationSection";
 import { TreatmentSection } from "../EditRecord/sections/TreatmentSection";
-import { DocumentSection } from "../EditRecord/sections/DocumentSection";
-import { PhieuYSection } from "../EditRecord/sections/PhieuYSection";
+import { XRayResultView, HematologyResultView, AttachmentResultView } from "./sections/ClinicalResultViews";
+
+interface AttachmentDto {
+  id: number;
+  name: string;
+  path: string;
+}
 
 interface ViewRecordFormProps {
   record: Record;
@@ -80,8 +86,8 @@ const FORM_SECTIONS: SectionItem[] = [
       { id: "treatment", label: "Chẩn Đoán & Điều Trị", icon: Pill },
     ],
   },
-  { id: "forms", label: "Phiếu Cận Lâm Sàng", icon: Activity },
-  { id: "documents", label: "Tài Liệu Đính Kèm", icon: FileText },
+  { id: "forms", label: "V. Phiếu Cận Lâm Sàng", icon: Activity },
+  { id: "documents", label: "VI. Tài Liệu Đính Kèm", icon: FileText },
 ];
 
 const getFlattenedSections = () => {
@@ -99,11 +105,29 @@ const getFlattenedSections = () => {
 };
 
 export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProps) => {
-  const [formData, setFormData] = useState<Record>(() => prepareRecordData(record));
+  const [formData, setFormData] = useState<Record | null>(() => prepareRecordData(record));
   const [editablePatient, setEditablePatient] = useState<Patient>(patient);
   
   const [activeSection, setActiveSection] = useState("administrative");
   const [isMedicalGroupOpen, setIsMedicalGroupOpen] = useState(true);
+  const [attachments, setAttachments] = useState<AttachmentDto[]>([]);
+  const [loadingAttachments, setLoadingAttachments] = useState(false);
+
+  useEffect(() => {
+    const fetchAttachments = async () => {
+      if (!record.numericId) return;
+      setLoadingAttachments(true);
+      try {
+        const data = await api.medicalAttachments.getAll(record.numericId);
+        setAttachments(data);
+      } catch (error) {
+        console.error("Failed to fetch attachments:", error);
+      } finally {
+        setLoadingAttachments(false);
+      }
+    };
+    fetchAttachments();
+  }, [record.numericId]);
 
   const isScrollingByClick = useRef(false);
 
@@ -290,12 +314,44 @@ export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProp
 
             <div id="section-forms" className="scroll-mt-8">
               <h3 className="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-6 text-xl">V. Phiếu Cận Lâm Sàng</h3>
-              <PhieuYSection formData={formData} setFormData={setFormData} readOnly={true} />
+              <div className="space-y-8">
+                {(() => {
+                    const completedForms = (formData.documents || []).filter(doc => (doc.type === "X-Quang" || doc.type === "XN-HuyetHoc") && doc.data?.status === 3);
+                    if (completedForms.length > 0) {
+                        return completedForms.map((doc) => (
+                            <div key={doc.id}>
+                                {doc.type === "X-Quang" && <XRayResultView data={doc.data} />}
+                                {doc.type === "XN-HuyetHoc" && <HematologyResultView data={doc.data} />}
+                            </div>
+                        ));
+                    }
+                    return (
+                        <div className="bg-white p-10 text-center rounded-lg border border-dashed border-gray-300 text-gray-400 italic">
+                            Chưa có phiếu cận lâm sàng nào hoàn thành kết quả.
+                        </div>
+                    );
+                })()}
+              </div>
             </div>
 
             <div id="section-documents" className="scroll-mt-8">
               <h3 className="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-6 text-xl">VI. Tài Liệu Đính Kèm</h3>
-              <DocumentSection formData={formData} setFormData={setFormData} readOnly={true} />
+              <div className="space-y-8">
+                {loadingAttachments ? (
+                    <div className="flex justify-center items-center py-10 gap-2 text-gray-500">
+                        <Loader2 className="animate-spin" size={20} />
+                        <span>Đang tải tài liệu đính kèm...</span>
+                    </div>
+                ) : attachments.length > 0 ? (
+                    attachments.map((att) => (
+                        <AttachmentResultView key={att.id} path={att.path} name={att.name} />
+                    ))
+                ) : (
+                    <div className="bg-white p-10 text-center rounded-lg border border-dashed border-gray-300 text-gray-400 italic">
+                        Chưa có tài liệu đính kèm nào.
+                    </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

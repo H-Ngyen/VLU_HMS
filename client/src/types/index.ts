@@ -1,14 +1,35 @@
 export interface Patient {
   id: number;
   name: string;
+  fullName?: string;
+  cccd?: string;
   dateOfBirth: string;
-  gender: number; // 1=Male, 2=Female, 3=Other
+  dob?: string;
+  age?: number;
+  gender: number | string; // API uses number (1,2,3), UI uses string (Nam, Nữ, Khác)
   healthInsuranceNumber: string;
+  insuranceNumber?: string;
   ethnicityId: number;
   ethnicity?: {
     id: number;
     name: string;
-  };
+  } | string;
+  job?: string;
+  jobCode?: string;
+  nationality?: string;
+  address?: string;
+  houseNumber?: string;
+  village?: string;
+  wardName?: string;
+  districtName?: string;
+  provinceName?: string;
+  provinceCode?: string;
+  districtCode?: string;
+  workplace?: string;
+  subjectType?: string;
+  insuranceExpiry?: string;
+  relativeInfo?: string;
+  relativePhone?: string;
 }
 
 export interface Document {
@@ -26,10 +47,6 @@ export interface Transfer {
   date: string;
   days: number | string;
   time?: string;
-  // Swagger "/api/medical-records" requires departmentTransfers[].transferType
-  // UI will auto-fill based on index:
-  // - index 0 => 1 (Admission)
-  // - index > 0 => 2 (DepartmentTransfer)
   transferType?: number;
 }
 
@@ -46,7 +63,6 @@ export interface ManagementData {
   transfers: Transfer[];
   hospitalTransfer: HospitalTransfer;
   dischargeType: string;
-  // UI now captures both date + time for "Ra viện"
   dischargeTime?: string;
   totalDays: number | string;
 }
@@ -154,10 +170,12 @@ export interface DischargeStatusInfo {
 export interface Record {
   id: string;
   numericId?: number;
+  storageCode?: string;
   patientId: string;
   patientName: string;
   cccd: string;
   insuranceNumber: string;
+  address: string;
   dob: string;
   age: number;
   gender: string;

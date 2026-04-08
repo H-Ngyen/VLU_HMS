@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { Record } from "@/types";
 import { RecordFilter } from "./RecordFilter";
@@ -7,17 +7,10 @@ import { DeleteRecordDialog } from "./DeleteRecordDialog";
 import { useRecordFilter } from "./hooks/useRecordFilter";
 import { api } from "@/services/api";
 import { toast } from "sonner";
-
-// Mock user
-const mockUser = {
-  username: "teacher",
-  password: "",
-  role: "teacher",
-  name: "TS. Trần Văn Giảng Viên",
-  status: "active",
-};
+import { useAuth } from "@/contexts/AuthContext";
 
 export const StudentRepositoryView = () => {
+  const { currentUser } = useAuth();
   const [records, setRecords] = useState<Record[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
@@ -119,7 +112,7 @@ export const StudentRepositoryView = () => {
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={setCurrentPage}
-        user={mockUser}
+        user={currentUser}
         onEdit={() => {}} // No-op, navigation handled in Row
         onDelete={setRecordToDelete}
       />

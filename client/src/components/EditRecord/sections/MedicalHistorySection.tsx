@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { Record } from "@/types";
+import type { Record, RelatedCharacteristic } from "@/types";
 
 interface MedicalHistorySectionProps {
   formData: Record;
@@ -14,7 +14,7 @@ interface MedicalHistorySectionProps {
 export const MedicalHistorySection = ({ formData, setFormData, readOnly = false }: MedicalHistorySectionProps) => {
   const content = formData.medicalRecordContent;
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: string | boolean | "indeterminate" | number | null | undefined) => {
     if (readOnly) return;
     setFormData((prev) => {
       if (!prev) return null;
@@ -28,13 +28,12 @@ export const MedicalHistorySection = ({ formData, setFormData, readOnly = false 
     });
   };
 
-  const handleRelatedChange = (key: string, field: 'isChecked' | 'time', value: any) => {
+  const handleRelatedChange = (key: string, field: 'isChecked' | 'time', value: string | boolean | "indeterminate" | number | null | undefined) => {
     if (readOnly) return;
     setFormData((prev) => {
       if (!prev) return null;
       const related = { ...prev.medicalRecordContent.relatedCharacteristics };
-      // @ts-ignore
-      related[key] = { ...related[key], [field]: value };
+      related[key] = { ...related[key], [field]: value } as RelatedCharacteristic;
       
       return {
         ...prev,

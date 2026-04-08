@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect, useRef } from "react";
+import { createContext, useContext, useState, useEffect, useRef, type ReactNode } from "react";
 import type { User } from "@/types";
 import { useAuth0 } from "@auth0/auth0-react";
 import { api, setAccessToken } from "@/services/api";
