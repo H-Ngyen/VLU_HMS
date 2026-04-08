@@ -7,12 +7,14 @@ using Application.MedicalRecords.Dtos;
 using Application.MedicalRecords.Queries.GetAllMedicalRecords;
 using Application.MedicalRecords.Queries.GetMedicalRecordById;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppHost.Controllers;
 
 [ApiController]
 [Route("api/medical-records")]
+[Authorize]
 public class MedicalRecordsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

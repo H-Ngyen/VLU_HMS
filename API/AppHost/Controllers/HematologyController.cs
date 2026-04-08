@@ -2,12 +2,14 @@ using Application.Hematologies.Commands.ChangeStatusHematology;
 using Application.Hematologies.Commands.CreateHematology;
 using Application.Hematologies.Commands.UpdateCompleteHematology;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppHost.Controllers;
 
 [ApiController]
 [Route("api/medical-records/{recordId}/clinicals/hematologies")]
+[Authorize]
 public class HematologyController(IMediator mediator) : ControllerBase
 {
     [HttpPost]

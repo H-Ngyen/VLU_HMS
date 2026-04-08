@@ -6,12 +6,14 @@ using Application.Patients.Dtos;
 using Application.Patients.Queries.GetAllPatients;
 using Application.Patients.Queries.GetPatientById;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppHost.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class PatientsController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

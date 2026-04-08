@@ -4,12 +4,14 @@ using Application.MedicalAttachments.Commands.UpdateMedicalAttachment;
 using Application.MedicalAttachments.Dtos;
 using Application.MedicalAttachments.Queries;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppHost.Controllers;
 
 [ApiController]
 [Route("api/medical-records/{recordId}/attachments")]
+[Authorize]
 public class MedicalAttachmentController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

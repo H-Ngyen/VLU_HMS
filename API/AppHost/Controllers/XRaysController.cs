@@ -2,12 +2,14 @@ using Application.XRays.Commands.ChangeStatusXray;
 using Application.XRays.Commands.CreateXRays;
 using Application.XRays.Commands.UpdateCompleteXray;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppHost.Controllers;
 
 [ApiController]
 [Route("api/medical-records/{recordId:int}/clinicals/x-rays")]
+[Authorize]
 public class XRaysController(IMediator mediator) : ControllerBase
 {
     [HttpPost]
