@@ -1,3 +1,4 @@
+using Application.Users;
 using Domain.Constants;
 using Domain.Entities;
 using Domain.Exceptions;
@@ -11,11 +12,14 @@ namespace Application.XRays.Commands.ChangeStatusXray;
 public class ChangeStatusXrayCommandHandler(ILogger<ChangeStatusXrayCommandHandler> logger,
     IMedicalRecordsRepository medicalRecordsRepository,
     IXRayRepository xRayRepository,
+    IUserContext userContext,
+    IXrayAuthorizationService xrayAuthorizationService,
     IDateTimeProvider dateTimeProvider) : IRequestHandler<ChangeStatusXrayCommand>
 {
     public async Task Handle(ChangeStatusXrayCommand request, CancellationToken cancellationToken)
     {
-        var userId = 1; // this is not for production, update soon
+        var user = await userContext.GetCurrentUser();
+        var userId = user.Id;
 
         logger.LogInformation("User {UserId} changing status for Xray {XrayId} of medicalRecord {medicalRecordId}",
             userId,
@@ -39,6 +43,9 @@ public class ChangeStatusXrayCommandHandler(ILogger<ChangeStatusXrayCommandHandl
 
         if (request.Status == MedicalStatus.Completed && !xray.IsCompleted())
             throw new BadRequestException("Không thể hoàn thành phiếu chụp x-quang khi chưa có kết quả.");
+
+        if (!xrayAuthorizationService.Authorize(user, xray, ResourceOperation.Update))
+            throw new ForbidException();
 
         xray.Status = request.Status;
         xray.PerformedById = userId;

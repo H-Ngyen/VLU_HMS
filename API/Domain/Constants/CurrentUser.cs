@@ -1,4 +1,4 @@
-namespace Application.Users;
+namespace Domain.Constants;
 
 public record CurrentUser(int Id,
     string Auth0Id,

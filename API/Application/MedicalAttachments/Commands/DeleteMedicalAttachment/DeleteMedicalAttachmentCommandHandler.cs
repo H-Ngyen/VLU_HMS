@@ -1,3 +1,4 @@
+using Domain.Constants;
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -9,16 +10,20 @@ namespace Application.MedicalAttachments.Commands.DeleteMedicalAttachment;
 
 public class DeleteMedicalAttachmentCommandHandler(ILogger<DeleteMedicalAttachmentCommandHandler> logger,
     IMedicalAttachmentRepository attachmentRepository,
+    IMedicalRecordAuthorizationService medicalRecordAuthorizationService,
     IFileStorageService objService) : IRequestHandler<DeleteMedicalAttachmentCommand>
 {
     public async Task Handle(DeleteMedicalAttachmentCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Deleting attachment with id: {attachmentId}", request.Id);
-        var attachment = await attachmentRepository.GetByIdAsync(request.Id) 
+        var attachment = await attachmentRepository.GetByIdAsync(request.Id)
             ?? throw new NotFoundException(nameof(MedicalAttachment), request.Id.ToString());
 
-        if(attachment.MedicalRecordId != request.MedicalRecordId)
+        if (attachment.MedicalRecordId != request.MedicalRecordId)
             throw new BadRequestException("Tệp đính kèm này không thuộc Hồ sơ Y tế đã được chỉ định.");
+
+        if (!await medicalRecordAuthorizationService.Authorize(ResourceOperation.Delete))
+            throw new ForbidException();
 
         await objService.DeleteFileAsync(attachment.Path);
         await attachmentRepository.DeleteAsync(attachment);

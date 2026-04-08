@@ -8,7 +8,7 @@ public class ChangeRoleUserCommandValidator : AbstractValidator<ChangeRoleUserCo
     public ChangeRoleUserCommandValidator()
     {
         RuleFor(dto => dto.Role)
-            .Must(value => UserRoles.IsInRoles(value)).WithMessage("UserRole hợp lệ")
+            .Must(UserRoles.IsInRoles).WithMessage("UserRole không hợp lệ")
             .Must(value => !UserRoles.IsAdmin(value)).WithMessage($"Không thể thay đổi role thành {UserRoles.Admin}");
     }
 }

@@ -1,5 +1,6 @@
 using Domain.Interfaces;
 using Domain.Repositories;
+using Infrastructure.Authorization.Services;
 using Infrastructure.Configurations;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;
@@ -70,6 +71,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IXRayRepository, XRayRepository>();
         services.AddScoped<IHematologyRepository, HematologyRepository>();
         services.AddScoped<IUserRoleRepository, UserRolesRepository>();
+        services.AddScoped<IUserAuthorizationService, UserAuthorizationService>();
+        services.AddScoped<IPatientAuthorizationService, PatientAuthorizationService>();
+        services.AddScoped<IMedicalRecordAuthorizationService, MedicalRecordAuthorizationService>();
+        services.AddScoped<IXrayAuthorizationService, XrayAuthorizationService>();
+        services.AddScoped<IHematologyAuthorizationService, HematologyAuthorizationService>();
 
         // add seeders scoped
         services.AddScoped<ISeeder, Seeder>();

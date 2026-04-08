@@ -5,12 +5,14 @@ using Application.Users.Dtos;
 using Application.Users.Queries.GetAllUser;
 using Application.Users.Queries.GetByIdUser;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AppHost.Controllers;
 
 [ApiController]
 [Route("api/identities")]
+[Authorize]
 public class IdentitiesController(IMediator mediator) : ControllerBase
 {
     [HttpPost]

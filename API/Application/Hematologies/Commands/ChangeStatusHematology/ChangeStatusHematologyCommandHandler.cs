@@ -1,3 +1,4 @@
+using Application.Users;
 using Domain.Constants;
 using Domain.Entities;
 using Domain.Exceptions;
@@ -9,13 +10,17 @@ using Microsoft.Extensions.Logging;
 namespace Application.Hematologies.Commands.ChangeStatusHematology;
 
 public class ChangeStatusHematologyCommandHandler(ILogger<ChangeStatusHematologyCommandHandler> logger,
+    IUserContext userContext,
+    IHematologyAuthorizationService hematologyAuthorizationService,
     IMedicalRecordsRepository medicalRecordsRepository,
     IHematologyRepository hematologyRepository,
     IDateTimeProvider dateTimeProvider) : IRequestHandler<ChangeStatusHematologyCommand>
 {
     public async Task Handle(ChangeStatusHematologyCommand request, CancellationToken cancellationToken)
     {
-        var userId = 1; // this is not for production, update soon
+        var user = await userContext.GetCurrentUser();
+        var userId = user.Id;
+
         logger.LogInformation("User {UserId} changing status for Hematology {HematologyId} of medicalRecord {medicalRecordId}",
             userId,
             request.Id,
@@ -39,6 +44,9 @@ public class ChangeStatusHematologyCommandHandler(ILogger<ChangeStatusHematology
         if (request.Status == MedicalStatus.Completed && !hematology.IsCompleted())
             throw new BadRequestException("Không thể hoàn thành phiếu xét nghiệm máu khi chưa có kết quả đầy đủ.");
 
+        if (!hematologyAuthorizationService.Authorize(user, hematology, ResourceOperation.Update))
+            throw new ForbidException();
+
         hematology.Status = request.Status;
         hematology.PerformedById = userId;
         hematology.HematologyStatusLogs.Add(new HematologyStatusLog
@@ -51,6 +59,6 @@ public class ChangeStatusHematologyCommandHandler(ILogger<ChangeStatusHematology
         await hematologyRepository.SaveChanges();
     }
 
-    private static bool IsValidTransition(MedicalStatus current, MedicalStatus next) 
+    private static bool IsValidTransition(MedicalStatus current, MedicalStatus next)
         => next == current + 1;
 }

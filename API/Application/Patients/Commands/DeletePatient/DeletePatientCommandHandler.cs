@@ -1,6 +1,8 @@
 using AutoMapper;
+using Domain.Constants;
 using Domain.Entities;
 using Domain.Exceptions;
+using Domain.Interfaces;
 using Domain.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -8,7 +10,8 @@ using Microsoft.Extensions.Logging;
 namespace Application.Patients.Commands.DeletePatient;
 
 public class DeletePatientCommandHandler(ILogger<DeletePatientCommandHandler> logger,
-    IPatientsRepository patientsRepository) : IRequestHandler<DeletePatientCommand>
+    IPatientsRepository patientsRepository,
+    IPatientAuthorizationService patientAuthorizationService) : IRequestHandler<DeletePatientCommand>
 {
     public async Task Handle(DeletePatientCommand request, CancellationToken cancellationToken)
     {
@@ -16,6 +19,9 @@ public class DeletePatientCommandHandler(ILogger<DeletePatientCommandHandler> lo
         var patient = await patientsRepository.GetByIdAsync(request.Id)
             ?? throw new NotFoundException(nameof(Patient), request.Id.ToString());
         
+        if(!await patientAuthorizationService.Authorize(ResourceOperation.Delete))
+            throw new ForbidException();
+
         await patientsRepository.DeleteAsync(patient);
     }
 }

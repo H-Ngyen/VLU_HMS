@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using Domain.Entities;
+using Domain.Constants;
 using Domain.Exceptions;
 using Domain.Repositories;
 using Microsoft.AspNetCore.Http;
@@ -8,36 +8,58 @@ namespace Application.Users;
 
 public interface IUserContext
 {
-    Task<CurrentUser?> GetCurrentUser();
+    Task<CurrentUser> GetCurrentUser();
+    UserTokenData GetPayloadTokenUser();
 }
 
 public class UserContext(IHttpContextAccessor httpContextAccessor, IUserRepository userRepository) : IUserContext
 {
-    public async Task<CurrentUser?> GetCurrentUser()
+    public async Task<CurrentUser> GetCurrentUser()
     {
-        var user = (httpContextAccessor?.HttpContext?.User) 
-            ?? throw new InvalidOperationException("User context is not present");
-        
-        if (user.Identity == null || !user.Identity.IsAuthenticated)
-            return null;
+        var payload = GetPayloadTokenUser();
+        var user = await userRepository.FindOneAsync(u => u.Auth0Id == payload.Auth0Id)
+            ?? throw new ForbidException();
 
-        var auth0Id = user.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? throw new InvalidOperationException("User ID claim is missing");
+        var role = user.Role.Name;
 
-        var email = user.FindFirst(ClaimTypes.Email)?.Value
-            ?? throw new InvalidOperationException("Email claim is missing");
+        var id = user.Id;
 
-        var emailVerified = bool.TryParse(user.FindFirst("email_verified")?.Value, out var ev) && ev;
+        return new CurrentUser(id, payload.Auth0Id, payload.Email, payload.EmailVerified, payload.Name, role);
+    }
 
-        var name = user.FindFirst(ClaimTypes.Name)?.Value;
+    public UserTokenData GetPayloadTokenUser()
+    {
+        var user = httpContextAccessor.HttpContext?.User;
 
-        var userRole = await userRepository.FindOneAsync(u => u.Auth0Id == auth0Id)
-            ?? throw new NotFoundException(nameof(User), $"{auth0Id}");
+        if (user?.Identity == null || !user.Identity.IsAuthenticated)
+            throw new UnauthorizedException();
 
-        var role = userRole.Role.Name;
+        string GetRequiredClaim(string type, string message)
+               => user.FindFirst(type)?.Value ?? throw new UnauthorizedException(message);
 
-        var id = userRole.Id;
+        var auth0Id = GetRequiredClaim(ClaimTypes.NameIdentifier, "Auth0Id missing in token");
 
-        return new CurrentUser(id, auth0Id, email, emailVerified, name!, role);
+        var email = GetRequiredClaim(ClaimTypes.Email, "Email missing in token");
+
+        var emailVerifiedClaim = GetRequiredClaim("email_verified", "EmailVerified missing in token");
+
+        if (!bool.TryParse(emailVerifiedClaim, out var emailVerified))
+            throw new UnauthorizedException("EmailVerified invalid format");
+
+        var name = GetRequiredClaim(ClaimTypes.Name, "Name missing in token");
+        var picture = GetRequiredClaim("picture", "Picture missing in token");
+
+        var updatedAtClaim = GetRequiredClaim("updated_at", "UpdatedAt missing in token");
+        if (!DateTime.TryParse(updatedAtClaim, out var updatedAt))
+            throw new UnauthorizedException("UpdatedAt invalid format");
+
+        return new UserTokenData(
+            auth0Id,
+            email,
+            emailVerified,
+            picture,
+            name,
+            updatedAt
+        );
     }
 }

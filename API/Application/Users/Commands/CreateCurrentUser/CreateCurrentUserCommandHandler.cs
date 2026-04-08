@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace Application.Users.Commands.CreateCurrentUser;
 
 public class CreateCurrentUserCommandHandler(ILogger<CreateCurrentUserCommandHandler> logger,
+    IUserContext userContext,
     IUserRepository userRepository,
     IUserRoleRepository roleRepository,
     IMapper mapper,
@@ -17,11 +18,12 @@ public class CreateCurrentUserCommandHandler(ILogger<CreateCurrentUserCommandHan
 {
     public async Task<(int id, bool isNew)> Handle(CreateCurrentUserCommand request, CancellationToken cancellationToken)
     {
+        var tokenPayload = userContext.GetPayloadTokenUser();
         var isNew = true;
         logger.LogInformation("Creating new user {UserEmail}",
-            request.Email);
+            tokenPayload.Email);
 
-        var userExisting = await userRepository.FindOneAsync(u => u.Auth0Id == request.Auth0Id);
+        var userExisting = await userRepository.FindOneAsync(u => u.Auth0Id == tokenPayload.Auth0Id);
         if (userExisting != null)
         {
             isNew = false;
@@ -29,13 +31,13 @@ public class CreateCurrentUserCommandHandler(ILogger<CreateCurrentUserCommandHan
             return (userId, isNew);
         }
 
-        var roleName = ResolveRoleFromEmail(request.Email)
-            ?? throw new BadRequestException($"Email không được phép truy cập vào hệ thống {request.Email}");
+        var roleName = ResolveRoleFromEmail(tokenPayload.Email)
+            ?? throw new BadRequestException($"Email không được phép truy cập vào hệ thống {tokenPayload.Email}");
 
         var userRole = await roleRepository.GetUserRoleAsync(r => r.Name == roleName)
             ?? throw new NotFoundException(nameof(Role), $"{roleName}");
 
-        var newUser = CreateUserEntity(request, userRole.Id);
+        var newUser = CreateUserEntity(tokenPayload, userRole.Id);
         var newUserId = await userRepository.CreateAsync(newUser);
         return (newUserId, isNew);
     }
@@ -53,7 +55,7 @@ public class CreateCurrentUserCommandHandler(ILogger<CreateCurrentUserCommandHan
         };
     }
 
-    private User CreateUserEntity(CreateCurrentUserCommand request, int roleId)
+    private User CreateUserEntity(UserTokenData request, int roleId)
     {
         var user = mapper.Map<User>(request);
         user.RoleId = roleId;

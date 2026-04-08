@@ -1,3 +1,4 @@
+using Application.Users;
 using AutoMapper;
 using Domain.Constants;
 using Domain.Entities;
@@ -10,13 +11,17 @@ using Microsoft.Extensions.Logging;
 namespace Application.XRays.Commands.UpdateCompleteXray;
 
 public class UpdateCompleteXrayCommandHandler(ILogger<UpdateCompleteXrayCommandHandler> logger,
+    IUserContext userContext,
     IXRayRepository xRayRepository,
+    IXrayAuthorizationService xrayAuthorizationService,
     IMedicalRecordsRepository medicalRecordsRepository,
     IMapper mapper) : IRequestHandler<UpdateCompleteXrayCommand>
 {
     public async Task Handle(UpdateCompleteXrayCommand request, CancellationToken cancellationToken)
     {
-        var userId = 1;
+        var user = await userContext.GetCurrentUser();
+        var userId = user.Id;
+
         logger.LogInformation("User {userId} completing for xray {XrayId} of medicalRecord {MedicalRecord}",
             userId,
             request.Id,
@@ -36,6 +41,9 @@ public class UpdateCompleteXrayCommandHandler(ILogger<UpdateCompleteXrayCommandH
 
         if (xray.Status != MedicalStatus.Processing)
             throw new BadRequestException($"Phiếu chụp x-quang phải thuộc trạng thái {MedicalStatus.Processing} để thực hiện chức năng này");
+
+        if (!xrayAuthorizationService.Authorize(user, xray, ResourceOperation.Update))
+            throw new ForbidException();
 
         mapper.Map(request, xray);
         // xray.PerformedById = userId;

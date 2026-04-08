@@ -1,3 +1,4 @@
+using Application.Users;
 using AutoMapper;
 using Domain.Constants;
 using Domain.Entities;
@@ -10,7 +11,9 @@ using Microsoft.Extensions.Logging;
 namespace Application.XRays.Commands.CreateXRays;
 
 public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger,
+    IUserContext userContext,
     IMedicalRecordsRepository medicalRecords,
+    IXrayAuthorizationService xrayAuthorizationService,
     IMapper mapper,
     IXRayRepository xRayRepository,
     IDateTimeProvider dateTimeProvider) : IRequestHandler<CreateXRaysCommand>
@@ -18,7 +21,8 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
     public async Task Handle(CreateXRaysCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Creating the new xray with record id: {recordId}", request.MedicalRecordId);
-        var creatorId = 1; // not for productions
+        var user = await userContext.GetCurrentUser();
+        var creatorId = user.Id;
 
         var medicalRecord = await medicalRecords.ExistAsync(request.MedicalRecordId);
         if (!medicalRecord)
@@ -34,6 +38,9 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
             UpdatedById = creatorId,
             CreatedAt = dateTimeProvider.Now
         });
+
+        if (!xrayAuthorizationService.Authorize(user, xray, ResourceOperation.Create))
+            throw new ForbidException();
 
         await xRayRepository.CreateAsync(xray);
     }

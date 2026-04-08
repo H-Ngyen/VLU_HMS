@@ -1,3 +1,4 @@
+using Application.Users;
 using AutoMapper;
 using Domain.Constants;
 using Domain.Entities;
@@ -10,6 +11,8 @@ using Microsoft.Extensions.Logging;
 namespace Application.Hematologies.Commands.CreateHematology;
 
 public class CreateHematologyCommandHandler(ILogger<CreateHematologyCommandHandler> logger,
+    IUserContext userContext,
+    IHematologyAuthorizationService hematologyAuthorizationService,
     IMapper mapper,
     IDateTimeProvider dateTimeProvider,
     IMedicalRecordsRepository recordsRepository,
@@ -17,7 +20,8 @@ public class CreateHematologyCommandHandler(ILogger<CreateHematologyCommandHandl
 {
     public async Task Handle(CreateHematologyCommand request, CancellationToken cancellationToken)
     {
-        var userId = 1; // this is not for production, update soon
+        var user = await userContext.GetCurrentUser();
+        var userId = user.Id;
 
         logger.LogInformation("User {userId} creating new hematology for medicalRecord {MedicalRecordId}",
             userId,
@@ -36,6 +40,10 @@ public class CreateHematologyCommandHandler(ILogger<CreateHematologyCommandHandl
             CreatedAt = dateTimeProvider.Now,
             UpdatedById = userId
         });
+
+        if (!hematologyAuthorizationService.Authorize(user, hematology, ResourceOperation.Create))
+            throw new ForbidException();
+
         await hematologyRepository.CreateAsync(hematology);
     }
 }

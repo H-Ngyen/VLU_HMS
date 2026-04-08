@@ -1,4 +1,6 @@
+using Application.Users;
 using AutoMapper;
+using Domain.Constants;
 using Domain.Entities;
 using Domain.Exceptions;
 using Domain.Interfaces;
@@ -9,35 +11,41 @@ using Microsoft.Extensions.Logging;
 namespace Application.Patients.Commands.CreatePatient;
 
 public class CreatePatientCommandHandler(ILogger<CreatePatientCommandHandler> logger,
+    IUserContext userContext,
     IMapper mapper,
     IUserRepository userRepository,
     IEthnicityRepository ethnicityRepository,
     IPatientsRepository patientsRepository,
+    IPatientAuthorizationService patientAuthorizationService,
     IDateTimeProvider dateTimeProvider) : IRequestHandler<CreatePatientCommand, int>
 {
     public async Task<int> Handle(CreatePatientCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Creating a new patient.");
-        
-        var CreatorId = 1; // để tạm, not for production
+        var user = await userContext.GetCurrentUser() ?? throw new UnauthorizedException();
+
+        var CreatorId = user.Id;
 
         var isExistCreator = await userRepository.ExistsAsync(u => u.Id == CreatorId);
-        if(!isExistCreator) 
-            throw new BadRequestException($"Creator with id: {CreatorId} does not exist."); 
+        if (!isExistCreator)
+            throw new BadRequestException($"Creator with id: {CreatorId} does not exist.");
 
-        var ethnicityExist = await ethnicityRepository.ExistsAsync(request.EthnicityId);        
+        var ethnicityExist = await ethnicityRepository.ExistsAsync(request.EthnicityId);
         if (!ethnicityExist)
             throw new BadRequestException($"Ethnicity with id {request.EthnicityId} does not exist.");
 
         var isDuplicateHealthInsuranceNumber = await patientsRepository.ExistHealthInsuranceNumber(request.HealthInsuranceNumber);
         if (isDuplicateHealthInsuranceNumber)
-            throw new ConflictException(nameof(Patient.HealthInsuranceNumber),
-                request.HealthInsuranceNumber.ToString());
+            throw new ConflictException(nameof(Patient.HealthInsuranceNumber), request.HealthInsuranceNumber.ToString());
+
 
         var newPatient = mapper.Map<Patient>(request);
         newPatient.CreatedBy = CreatorId;
         newPatient.CreatedAt = dateTimeProvider.Now;
-        
+
+        if (!patientAuthorizationService.Authorize(user, ResourceOperation.Create))
+            throw new ForbidException();
+
         var patientId = await patientsRepository.CreateAsync(newPatient);
         return patientId;
     }

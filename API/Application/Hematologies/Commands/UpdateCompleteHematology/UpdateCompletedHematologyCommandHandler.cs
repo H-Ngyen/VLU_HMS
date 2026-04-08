@@ -1,7 +1,9 @@
+using Application.Users;
 using AutoMapper;
 using Domain.Constants;
 using Domain.Entities;
 using Domain.Exceptions;
+using Domain.Interfaces;
 using Domain.Repositories;
 using MediatR;
 using Microsoft.Extensions.Logging;
@@ -9,13 +11,17 @@ using Microsoft.Extensions.Logging;
 namespace Application.Hematologies.Commands.UpdateCompleteHematology;
 
 public class UpdateCompletedHematologyCommandHandler(ILogger<UpdateCompletedHematologyCommandHandler> logger,
+    IUserContext userContext,
+    IHematologyAuthorizationService hematologyAuthorizationService,
     IHematologyRepository hematologyRepository,
     IMedicalRecordsRepository medicalRecordsRepository,
     IMapper mapper) : IRequestHandler<UpdateCompletedHematologyCommand>
 {
     public async Task Handle(UpdateCompletedHematologyCommand request, CancellationToken cancellationToken)
     {
-        var userId = 1;
+        var user = await userContext.GetCurrentUser();
+        var userId = user.Id;
+
         logger.LogInformation("User {userId} completing for hematology {HematologyId} of medicalRecord {MedicalRecord}",
             userId,
             request.Id,
@@ -35,6 +41,9 @@ public class UpdateCompletedHematologyCommandHandler(ILogger<UpdateCompletedHema
 
         if (hematology.Status != MedicalStatus.Processing)
             throw new BadRequestException($"Phiếu xét nghiệm máu phải thuộc trạng thái {MedicalStatus.Processing} để thực hiện chức năng này");
+
+        if (!hematologyAuthorizationService.Authorize(user, hematology, ResourceOperation.Update))
+            throw new ForbidException();
 
         mapper.Map(request, hematology);
         // hematology.PerformedById = userId;
