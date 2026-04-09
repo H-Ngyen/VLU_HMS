@@ -1,5 +1,5 @@
 using AutoMapper;
-using Domain.Constants;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Domain.Repositories;

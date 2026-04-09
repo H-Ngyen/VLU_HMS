@@ -1,4 +1,4 @@
-using Domain.Constants;
+using Domain.Enums;
 
 namespace Domain.Entities;
 
@@ -30,40 +30,40 @@ public class XRay
     public User? PerformedBy { get; set; } // Bác sĩ chuyên khoa X-Quang
     public User RequestedBy { get; set; } = null!; // Bác sĩ điều trị
 
-    public bool IsCompleted()
-    {
-        return 
-            !string.IsNullOrWhiteSpace(ResultDescription) &&
-            !string.IsNullOrWhiteSpace(DoctorAdvice) &&
-            CompletedAt.HasValue;
-    }
-
     // public bool IsCompleted()
     // {
-        // Danh sách các trường cần bỏ qua (không phải kết quả xét nghiệm)
-        // var metadataProps = new[]
-        // {
-        //     nameof(Id),
-        // };
-
-        // var properties = GetType().GetProperties();
-
-        // foreach (var prop in properties)
-        // {
-        //     // 1. Bỏ qua các trường metadata, Navigation properties (Collection, Class)
-        //     if (metadataProps.Contains(prop.Name) ||
-        //         prop.PropertyType.IsGenericType ||
-        //         (prop.PropertyType.IsClass && prop.PropertyType != typeof(string)))
-        //         continue;
-
-        //     // 2. Lấy giá trị
-        //     var value = prop.GetValue(this);
-
-        //     // 3. Kiểm tra null hoặc chuỗi rỗng
-        //     if (value == null) return false;
-        //     if (value is string s && string.IsNullOrWhiteSpace(s)) return false;
-        // }
-
-        // return true;
+    //     return 
+    //         !string.IsNullOrWhiteSpace(ResultDescription) &&
+    //         !string.IsNullOrWhiteSpace(DoctorAdvice) &&
+    //         CompletedAt.HasValue;
     // }
+
+    public bool IsCompleted()
+    {
+        // Danh sách các trường cần bỏ qua (không phải kết quả xét nghiệm)
+        var metadataProps = new[]
+        {
+            nameof(Id),
+        };
+
+        var properties = GetType().GetProperties();
+
+        foreach (var prop in properties)
+        {
+            // 1. Bỏ qua các trường metadata, Navigation properties (Collection, Class)
+            if (metadataProps.Contains(prop.Name) ||
+                prop.PropertyType.IsGenericType ||
+                (prop.PropertyType.IsClass && prop.PropertyType != typeof(string)))
+                continue;
+
+            // 2. Lấy giá trị
+            var value = prop.GetValue(this);
+
+            // 3. Kiểm tra null hoặc chuỗi rỗng
+            if (value == null) return false;
+            if (value is string s && string.IsNullOrWhiteSpace(s)) return false;
+        }
+
+        return true;
+    }
 }

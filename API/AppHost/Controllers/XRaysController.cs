@@ -1,6 +1,9 @@
 using Application.XRays.Commands.ChangeStatusXray;
 using Application.XRays.Commands.CreateXRays;
+using Application.XRays.Commands.ImportXray;
+using Application.XRays.Commands.ImportXrayCompleted;
 using Application.XRays.Commands.UpdateCompleteXray;
+using Application.XRays.Dtos;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -49,4 +52,25 @@ public class XRaysController(IMediator mediator) : ControllerBase
         return NoContent();
     }
 
+    [HttpPost("import-pdf")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<XRayDto>> ImportPdf(int recordId, [FromForm] ImportXrayCommand command)
+    {
+        command.MedicalRecordId = recordId;
+        var xrayDto = await mediator.Send(command);
+        return Ok(xrayDto);
+    }
+
+    [HttpPost("import-pdf/completed")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    // [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> ImportPdfCompleted(int recordId, ImportXrayCompletedCommand command)
+    {
+        command.MedicalRecordId = recordId;
+        var id = await mediator.Send(command);
+        return Created();
+    }
 }

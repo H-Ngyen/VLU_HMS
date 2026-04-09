@@ -7,11 +7,11 @@ namespace Infrastructure.Repositories;
 
 internal class XRayRepository(AppDbContext context) : BaseRepository<XRay>(context), IXRayRepository
 {
-    public async Task CreateAsync(XRay entity)
+    public async Task<int> CreateAsync(XRay entity)
     {
         _dbContext.XRays.Add(entity);
         await SaveChanges();
-        // return entity.Id;
+        return entity.Id;
     }
 
     public async Task<XRay?> GetByIdAsync(int id)

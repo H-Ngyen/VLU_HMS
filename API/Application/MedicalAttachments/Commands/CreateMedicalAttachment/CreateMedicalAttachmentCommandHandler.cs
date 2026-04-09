@@ -5,7 +5,7 @@ using Domain.Entities;
 using Microsoft.Extensions.Logging;
 using Domain.Exceptions;
 using Domain.Interfaces;
-using Domain.Constants;
+using Domain.Enums;
 
 namespace Application.MedicalAttachments.Commands.CreateMedicalAttachment;
 

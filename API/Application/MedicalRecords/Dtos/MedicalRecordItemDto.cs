@@ -1,6 +1,6 @@
 
 using Application.Patients.Dtos;
-using Domain.Constants;
+using Domain.Enums;
 
 namespace Application.MedicalRecords.Dtos;
 

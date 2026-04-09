@@ -1,6 +1,7 @@
 using Application.Users;
 using Domain.Constants;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -9,13 +10,13 @@ namespace Infrastructure.Authorization.Services;
 public class XrayAuthorizationService(ILogger<XrayAuthorizationService> logger,
     IUserContext userContext) : IXrayAuthorizationService
 {
-    public async Task<bool> Authorize(XRay resource, ResourceOperation resourceOperation)
+    public async Task<bool> Authorize(XRay? resource, ResourceOperation resourceOperation)
     {
         var user = await userContext.GetCurrentUser();
-        return Authorize(user, resource, resourceOperation);
+        return Authorize(user, resource ?? null, resourceOperation);
     }
 
-    public bool Authorize(CurrentUser currentUser, XRay resource, ResourceOperation resourceOperation, string resourceType = nameof(XRay))
+    public bool Authorize(CurrentUser currentUser, XRay? resource, ResourceOperation resourceOperation, string resourceType = nameof(XRay))
     {
         logger.LogInformation("Authorizing user {UserEmail}, to {Operation} for resource {ResourceName}",
             currentUser.Email,
@@ -35,13 +36,13 @@ public class XrayAuthorizationService(ILogger<XrayAuthorizationService> logger,
             return true;
         }
 
-        if (resourceOperation == ResourceOperation.Create && currentUser.Role == UserRoles.Teacher)
+        if (resourceOperation == ResourceOperation.Create && UserRoles.IsTeacher(currentUser.Role))
         {
             logger.LogInformation("Create operation - successful authorization");
             return true;
         }
 
-        if (resourceOperation == ResourceOperation.Update && currentUser.Role == UserRoles.Teacher &&
+        if (resource != null && resourceOperation == ResourceOperation.Update && UserRoles.IsTeacher(currentUser.Role) &&
             (resource.PerformedById == null || resource.PerformedById == currentUser.Id))
         {
             logger.LogInformation("Update operation - successful authorization");

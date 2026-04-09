@@ -48,21 +48,21 @@ public class PdfProcessorService(IGeminiClientService geminiClient) : IPdfProces
         };
 
         var rawJson = await geminiClient.GenerateContentAsync(requestBody);
-        
+
         // Console.WriteLine($"[DEBUG] Raw Gemini Response:\n{rawJson}\n");
-        
+
         // Xử lý markdown code block
         rawJson = rawJson.Trim();
-        
+
         // Loại bỏ ```json ... ``` hoặc ``` ... ```
         var match = Regex.Match(rawJson, @"```(?:json)?\s*\n?(.*?)\n?```", RegexOptions.Singleline);
         if (match.Success)
         {
             rawJson = match.Groups[1].Value.Trim();
         }
-        
+
         // Console.WriteLine($"[DEBUG] Cleaned JSON:\n{rawJson}\n");
-        
+
         return JsonSerializer.Deserialize<T>(rawJson, _jsonOptions);
     }
 }

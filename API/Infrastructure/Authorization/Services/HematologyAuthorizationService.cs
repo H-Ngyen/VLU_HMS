@@ -1,6 +1,7 @@
 using Application.Users;
 using Domain.Constants;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -35,13 +36,13 @@ public class HematologyAuthorizationService(ILogger<HematologyAuthorizationServi
             return true;
         }
 
-        if (resourceOperation == ResourceOperation.Create && currentUser.Role == UserRoles.Teacher)
+        if (resourceOperation == ResourceOperation.Create && UserRoles.IsTeacher(currentUser.Role))
         {
             logger.LogInformation("Create operation - successful authorization");
             return true;
         }
 
-        if (resourceOperation == ResourceOperation.Update && currentUser.Role == UserRoles.Teacher &&
+        if (resourceOperation == ResourceOperation.Update && UserRoles.IsTeacher(currentUser.Role) &&
             (resource.PerformedById == null || resource.PerformedById == currentUser.Id))
         {
             logger.LogInformation("Update operation - successful authorization");

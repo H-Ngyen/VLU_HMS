@@ -1,6 +1,7 @@
 using Application.Users;
 using Domain.Constants;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -43,7 +44,7 @@ public class PatientAuthorizationService(ILogger<PatientAuthorizationService> lo
         }
 
         if ((resourceOperation == ResourceOperation.Create || resourceOperation == ResourceOperation.Update || resourceOperation == ResourceOperation.Delete) &&
-            user.Role == UserRoles.Teacher)
+            UserRoles.IsTeacher(user.Role))
         {
             logger.LogInformation("Create/Update/Delete operation - successful authorization");
             return true;

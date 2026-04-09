@@ -1,6 +1,6 @@
 using Application.Common;
 using Application.MedicalRecords.Dtos;
-using Domain.Constants;
+using Domain.Enums;
 using MediatR;
 namespace Application.MedicalRecords.Queries.GetAllMedicalRecords;
 

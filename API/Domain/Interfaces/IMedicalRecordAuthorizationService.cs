@@ -1,5 +1,6 @@
 using Domain.Constants;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Domain.Interfaces;
 

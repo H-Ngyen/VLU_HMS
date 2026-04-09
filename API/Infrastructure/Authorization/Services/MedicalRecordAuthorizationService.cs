@@ -1,6 +1,7 @@
 using Application.Users;
 using Domain.Constants;
 using Domain.Entities;
+using Domain.Enums;
 using Domain.Exceptions;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,7 @@ public class MedicalRecordAuthorizationService(ILogger<MedicalRecordAuthorizatio
             ?? throw new UnauthorizedException();
         return Authorize(user, resourceOperation);
     }
-    
+
     public bool Authorize(CurrentUser currentUser, ResourceOperation resourceOperation, string resourceType = nameof(MedicalRecord))
     {
         logger.LogInformation("Authorizing user {UserEmail}, to {Operation} for resource {ResourceName}",
@@ -45,7 +46,7 @@ public class MedicalRecordAuthorizationService(ILogger<MedicalRecordAuthorizatio
         }
 
         if ((resourceOperation == ResourceOperation.Create || resourceOperation == ResourceOperation.Update || resourceOperation == ResourceOperation.Delete) &&
-            currentUser.Role == UserRoles.Teacher)
+            UserRoles.IsTeacher(currentUser.Role))
         {
             logger.LogInformation("Create/Update/Delete operation - successful authorization");
             return true;

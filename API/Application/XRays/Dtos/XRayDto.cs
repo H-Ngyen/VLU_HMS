@@ -1,4 +1,4 @@
-using Domain.Constants;
+using Domain.Enums;
 
 namespace Application.XRays.Dtos;
 
@@ -13,7 +13,7 @@ public class XRayDto
     public string? PerformedByName { get; set; }
 
     // Props
-    public MedicalStatus Status { get; set; }
+    public MedicalStatus? Status { get; set; }
 
     // --- Phần Yêu cầu (Request) ---
     public string? RequestDescription { get; set; }

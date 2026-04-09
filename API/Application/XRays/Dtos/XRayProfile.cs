@@ -1,4 +1,5 @@
 using Application.XRays.Commands.CreateXRays;
+using Application.XRays.Commands.ImportXrayCompleted;
 using Application.XRays.Commands.UpdateCompleteXray;
 using AutoMapper;
 using Domain.Entities;
@@ -22,5 +23,7 @@ public class XRayProfile : Profile
 
         //command -> entity
         CreateMap<UpdateCompleteXrayCommand, XRay>();
+        
+        CreateMap<ImportXrayCompletedCommand, XRay>();
     }
 }

@@ -1,4 +1,4 @@
-using Domain.Constants;
+using Domain.Enums;
 using MediatR;
 
 namespace Application.Hematologies.Commands.ChangeStatusHematology;

@@ -3,8 +3,8 @@ using Application.Hematologies.Dtos;
 using Application.MedicalRecordDetails.Dtos;
 using Application.Patients.Dtos;
 using Application.XRays.Dtos;
-using Domain.Constants;
 using Domain.Entities;
+using Domain.Enums;
 
 namespace Application.MedicalRecords.Dtos;
 

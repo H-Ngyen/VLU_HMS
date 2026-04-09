@@ -1,6 +1,6 @@
 using Application.DepartmentTransfers.Dtos;
 using Application.MedicalRecordDetails.Dtos;
-using Domain.Constants;
+using Domain.Enums;
 using MediatR;
 
 namespace Application.MedicalRecords.Commands.UpdateMedicalRecord;
