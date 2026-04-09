@@ -165,6 +165,22 @@ export const api = {
       return response.json();
     },
 
+    importPdf: async (patientId: number, file: File) => {
+      const formData = new FormData();
+      formData.append('FilePdf', file);
+      
+      const response = await fetch(`${API_BASE_URL}/medical-records/${patientId}/import-pdf`, {
+        method: 'POST',
+        headers: getHeaders(), 
+        body: formData
+      });
+      if (!response.ok) {
+        const errorText = await response.json();
+        throw new Error(errorText.message || 'Failed to import PDF');
+      }
+      return response.json();
+    },
+
     delete: async (id: number) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${id}`, {
         method: 'DELETE',

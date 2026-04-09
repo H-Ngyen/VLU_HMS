@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, ArrowRight, Save, Plus, FileText, User, Activity, LogOut, ClipboardList, Thermometer, Pill, ChevronDown, ChevronRight, Download as DownloadIcon } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowLeft, ArrowRight, Save, Plus, FileText, User, Activity, LogOut, ClipboardList, Thermometer, Pill, ChevronDown, ChevronRight, Download as DownloadIcon, FileUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import type { Record, Patient } from "@/types";
+import type { Record, Patient, RelatedCharacteristics } from "@/types";
+import { api } from "@/services/api";
+import { toast } from "sonner";
 
 import { AdministrativeSection } from "./sections/AdministrativeSection";
 import { PatientManagementSection } from "./sections/PatientManagementSection";
@@ -24,6 +26,199 @@ interface RecordFormProps {
   onCancel: () => void;
   readOnly?: boolean;
 }
+
+const mapDtoToRecord = (dto: any, patient: Patient): Record => {
+  const type: "internal" | "surgery" = dto.recordType === 2 ? "surgery" : "internal";
+  const departmentName = type === "surgery" ? "Ngoại Khoa" : "Nội Khoa";
+
+  const admissionTypeMap: { [key: number]: string } = { 1: "Cấp cứu", 2: "KKB", 3: "Khoa điều trị" };
+  const referralSourceMap: { [key: number]: string } = { 1: "Cơ quan y tế", 2: "Tự đến", 3: "Khác" };
+  const hospitalTransferTypeMap: { [key: number]: string } = { 1: "Tuyến trên", 2: "Tuyến dưới", 3: "CK" };
+  const dischargeTypeMap: { [key: number]: string } = { 1: "Ra viện", 2: "Xin về", 3: "Bỏ về", 4: "Đưa về" };
+  
+  const treatmentResultMap: { [key: number]: string } = { 1: "Khoi", 2: "DoGiam", 3: "KhongThayDoi", 4: "NangHon", 5: "TuVong" };
+  const pathologyResultMap: { [key: number]: string } = { 1: "Lành tính", 2: "Nghi ngờ", 3: "Ác tính" };
+  const deathCauseMap: { [key: number]: string } = { 1: "Do bệnh", 2: "Do tai biến điều trị", 3: "Khác" };
+  const deathTimeGroupMap: { [key: number]: string } = { 1: "Trong 24 giờ vào viện", 2: "Sau 24 giờ vào viện" };
+
+  const detail = dto.detail || {};
+  
+  const riskFactorMap: { [key: number]: string } = {
+    1: "allergy",
+    2: "drugs",
+    3: "alcohol",
+    4: "tobacco",
+    5: "pipeTobacco",
+    6: "other",
+  };
+
+  const relatedCharacteristics: RelatedCharacteristics = {
+    allergy: { isChecked: false, time: "" },
+    drugs: { isChecked: false, time: "" },
+    alcohol: { isChecked: false, time: "" },
+    tobacco: { isChecked: false, time: "" },
+    pipeTobacco: { isChecked: false, time: "" },
+    other: { isChecked: false, time: "" },
+  };
+
+  if (detail.riskFactors) {
+    detail.riskFactors.forEach((rf: any) => {
+      const key = riskFactorMap[rf.signed];
+      if (key) {
+        relatedCharacteristics[key] = {
+          isChecked: true,
+          time: rf.durationMonth ? String(rf.durationMonth) : "",
+        };
+      }
+    });
+  }
+
+  const admissionDate = dto.admissionTime ? dto.admissionTime.split("T")[0] : "";
+  const admissionTime = dto.admissionTime ? dto.admissionTime.split("T")[1]?.substring(0, 5) : "";
+  
+  const dischargeDate = dto.dischargeTime ? dto.dischargeTime.split("T")[0] : "";
+  const dischargeTime = dto.dischargeTime ? dto.dischargeTime.split("T")[1]?.substring(0, 5) : "";
+
+  return {
+    id: dto.id ? String(dto.id) : `REC${Date.now()}`,
+    patientId: String(dto.patientId || patient.id),
+    patientName: dto.patient?.name || patient.fullName || patient.name,
+    cccd: patient.cccd || "",
+    insuranceNumber: dto.patient?.healthInsuranceNumber || patient.insuranceNumber || patient.healthInsuranceNumber || "",
+    address: dto.address || patient.address || "",
+    age: patient.age || 0,
+    dob: patient.dob || patient.dateOfBirth?.split('T')[0] || "",
+    gender: String(patient.gender),
+    admissionDate,
+    dischargeDate,
+    department: departmentName,
+    type,
+    documents: [],
+    managementData: {
+      admissionTime,
+      admissionType: admissionTypeMap[dto.admissionType] || "KKB",
+      referralSource: referralSourceMap[dto.referralSource] || "Tự đến",
+      admissionCount: dto.admissionCount || 1,
+      hospitalTransfer: { 
+        type: hospitalTransferTypeMap[dto.hospitalTransferType] || "", 
+        destination: dto.hospitalTransferDestination || "" 
+      },
+      dischargeType: dischargeTypeMap[dto.dischargeType] || "",
+      dischargeTime,
+      totalDays: dto.totalTreatmentDays || 0,
+      transfers: dto.departmentTransfers?.map((t: any) => ({
+        department: t.name,
+        date: t.admissionTime ? t.admissionTime.split("T")[0] : "",
+        time: t.admissionTime ? t.admissionTime.split("T")[1]?.substring(0, 5) : "",
+        days: t.treatmentDays || 0,
+        transferType: t.transferType,
+      })) || [],
+    },
+    diagnosisInfo: {
+      transferDiagnosis: { name: dto.referralDiagnosis || "", code: dto.referralCode || "" },
+      kkbDiagnosis: { name: dto.admissionDiagnosis || "", code: dto.admissionCode || "" },
+      deptDiagnosis: { 
+        name: dto.departmentDiagnosis || "", 
+        code: dto.departmentCode || "", 
+        isSurgery: dto.hasSurgery || false, 
+        isProcedure: dto.hasProcedure || false 
+      },
+      dischargeDiagnosis: {
+        mainDisease: { name: dto.dischargeMainDiagnosis || "", code: dto.dischargeMainCode || "" },
+        comorbidities: { name: dto.dischargeSubDiagnosis || "", code: dto.dischargeSubCode || "" },
+        isAccident: dto.hasAccident || false,
+        isComplication: dto.hasComplication || false,
+      },
+    },
+    dischargeStatusInfo: {
+      treatmentResult: treatmentResultMap[dto.treatmentResult] || "",
+      pathology: pathologyResultMap[dto.pathologyResult] || "",
+      deathStatus: { 
+        description: dto.deathReason || "", 
+        cause: deathCauseMap[dto.deathCause] || "", 
+        time: deathTimeGroupMap[dto.deathTimeGroup] || "" 
+      },
+      mainCauseOfDeath: { name: dto.deathMainReason || "", code: String(dto.deathMainCode || "") },
+      isAutopsy: dto.hasAutopsy || false,
+      autopsyDiagnosis: { name: dto.diagnosisAutopsy || "", code: String(dto.diagnosisCode || "") },
+    },
+    medicalRecordContent: {
+      reason: detail.admissionReason || "",
+      dayOfIllness: detail.illnessDay ? String(detail.illnessDay) : "",
+      pathologicalProcess: detail.pathologicalProcess || "",
+      personalHistory: detail.personalHistory || "",
+      familyHistory: detail.familyHistory || "",
+      relatedCharacteristics,
+      overallExamination: detail.examGeneral || "",
+      vitalSigns: {
+        pulse: detail.pulseRate || "",
+        temperature: detail.temperature || "",
+        bloodPressure: detail.bloodPressure || "",
+        respiratoryRate: detail.respiratoryRate || "",
+        weight: detail.bodyWeight || "",
+      },
+      organs: {
+        circulatory: detail.examCardio || "",
+        respiratory: detail.examRespiratory || "",
+        digestive: detail.examGastro || "",
+        kidneyUrology: detail.examRenalUrology || "",
+        neurological: detail.examNeurological || "",
+        musculoskeletal: detail.examMusculoskeletal || "",
+        ent: detail.examENT || "",
+        maxillofacial: detail.examMaxillofacial || "",
+        eye: detail.examOphthalmology || "",
+        endocrineAndOthers: detail.examEndocrineOthers || "",
+      },
+      clinicalTests: detail.requiredClinicalTests || "",
+      summary: detail.medicalSummary || "",
+      admissionDiagnosis: { 
+        mainDisease: detail.diagnosisMain || "", 
+        comorbidities: detail.diagnosisSub || "", 
+        differential: detail.diagnosisDifferential || "" 
+      },
+      prognosis: detail.prognosis || "",
+      treatmentPlan: detail.treatmentPlan || "",
+    },
+  };
+};
+
+const mapDtoToPatient = (dto: any, currentPatient: Patient): Patient => {
+  const p = dto.patient || {};
+  
+  const dobDate = p.dateOfBirth ? new Date(p.dateOfBirth) : null;
+  const age = (dobDate && !isNaN(dobDate.getTime())) ? new Date().getFullYear() - dobDate.getFullYear() : currentPatient.age;
+  const genderText = p.gender === 1 ? "Nam" : p.gender === 2 ? "Nữ" : p.gender === 3 ? "Khác" : currentPatient.gender;
+
+  const paymentCategoryMap: { [key: number]: string } = { 1: "BHYT", 2: "Thu phí", 3: "Miễn", 4: "Khác" };
+
+  return {
+    ...currentPatient,
+    name: p.name || currentPatient.name,
+    fullName: p.name || currentPatient.fullName,
+    dateOfBirth: p.dateOfBirth || currentPatient.dateOfBirth,
+    dob: p.dateOfBirth?.split('T')[0] || currentPatient.dob,
+    age: age,
+    gender: genderText,
+    healthInsuranceNumber: p.healthInsuranceNumber || currentPatient.healthInsuranceNumber,
+    insuranceNumber: p.healthInsuranceNumber || currentPatient.insuranceNumber,
+    
+    job: dto.jobTitle || currentPatient.job,
+    jobCode: dto.jobTitleCode || currentPatient.jobCode,
+    workplace: dto.addressJob || currentPatient.workplace,
+    address: dto.address || currentPatient.address,
+    
+    insuranceExpiry: dto.healthInsuranceExpiryDate?.split('T')[0] || currentPatient.insuranceExpiry,
+    relativeInfo: dto.relativeInfo || currentPatient.relativeInfo,
+    relativePhone: dto.relativePhone || currentPatient.relativePhone,
+    subjectType: paymentCategoryMap[dto.paymentCategory] || currentPatient.subjectType,
+    
+    provinceCode: dto.provinceCode || currentPatient.provinceCode,
+    districtCode: dto.districtCode || currentPatient.districtCode,
+    provinceName: dto.provinceName || currentPatient.provinceName,
+    districtName: dto.districtName || currentPatient.districtName,
+    wardName: dto.wardName || currentPatient.wardName,
+  };
+};
 
 const buildFullAddress = (parts: {
   houseNumber?: string;
@@ -236,6 +431,8 @@ const getFlattenedSections = () => {
 export const RecordForm = ({ record, patient, mode, initialType = "internal", onSubmit, onCancel, readOnly = false }: RecordFormProps) => {
   const [formData, setFormData] = useState<Record | null>(null);
   const [editablePatient, setEditablePatient] = useState<Patient>(patient);
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const queryParams = new URLSearchParams(window.location.search);
   const initialTab = queryParams.get("tab") || "details";
@@ -350,8 +547,46 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
     ? "Chi Tiết Hồ Sơ Bệnh Án"
     : isCreate ? "Tạo Hồ Sơ Bệnh Án Mới" : "Chỉnh Sửa Hồ Sơ Bệnh Án";
 
+  const handleImportPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Vui lòng chọn file PDF");
+      return;
+    }
+
+    setIsImporting(true);
+    const toastId = toast.loading("Đang xử lý PDF...");
+
+    try {
+      const result = await api.medicalRecords.importPdf(patient.id, file);
+      
+      const updatedPatient = mapDtoToPatient(result, editablePatient);
+      const updatedRecord = mapDtoToRecord(result, updatedPatient);
+      
+      setEditablePatient(updatedPatient);
+      setFormData(updatedRecord);
+      
+      toast.success("Import thông tin từ PDF thành công", { id: toastId });
+    } catch (error: any) {
+      console.error("PDF Import error:", error);
+      toast.error(error.message || "Lỗi khi import PDF", { id: toastId });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6 h-[calc(100vh-100px)] flex flex-col">
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        accept=".pdf" 
+        onChange={handleImportPdf}
+      />
       <div className="flex-none flex items-center justify-between mb-2 border-b border-gray-200 pb-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -371,6 +606,18 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
           >
             {readOnly ? "Quay lại" : "Hủy bỏ"}
           </Button>
+          {isCreate && (
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isImporting}
+              onClick={() => fileInputRef.current?.click()}
+              className="border-red-600 text-red-600 hover:bg-red-50"
+            >
+              <FileUp size={18} className="mr-2" />
+              Import PDF
+            </Button>
+          )}
           {readOnly && (
             <Button type="button" className="bg-vlu-red hover:bg-red-800 text-white flex items-center gap-2">
               <DownloadIcon size={18} />
