@@ -14,7 +14,7 @@ public class HematologyDto
 
     // Props
     // --- Thông tin chung ---
-    // public bool IsEmergency { get; set; } // Thường = false, Cấp cứu = true
+    public bool IsEmergency { get; set; } // Thường = false, Cấp cứu = true
     public DateOnly? RequestedAt { get; set; }
     public DateOnly? CompletedAt { get; set; }
     public MedicalStatus Status { get; set; }

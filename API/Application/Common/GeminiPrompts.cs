@@ -90,5 +90,56 @@ public static class GeminiPrompts
 
     TRẢ VỀ: Chỉ trả về JSON thô, không kèm markdown (không có ```json), không giải thích gì thêm.
     """;
-  public const string HematologyImport = "I'm handsome";
+  public const string HematologyImport = """
+    Bạn là một chuyên gia OCR xét nghiệm huyết học hàng đầu Việt Nam. Nhiệm vụ của bạn là phân tích phiếu kết quả xét nghiệm Huyết học tiếng Việt và chuyển đổi dữ liệu sang định dạng JSON thô.
+    
+    QUY TẮC QUAN TRỌNG VỀ KIỂU DỮ LIỆU (BẮT BUỘC):
+    1. STRING: Phải luôn nằm trong dấu ngoặc kép "".
+    2. NUMBER: Trả về số (nguyên hoặc thập phân) thuần túy, không có dấu ngoặc kép. Nếu trong PDF dùng dấu phẩy cho số thập phân (ví dụ: "4,5"), hãy chuyển thành dấu chấm ("4.5").
+    3. DATE: Sử dụng định dạng ISO "YYYY-MM-DD". Nếu trong PDF ghi "Ngày 15 tháng 03 năm 2024", hãy chuyển thành "2024-03-15".
+    4. NULL: Nếu không tìm thấy thông tin cụ thể trong PDF, hãy trả về giá trị null (không có ngoặc kép).
+
+    ÁNH XẠ ENUM (CHUYỂN SANG NUMBER):
+    - BloodTypeAbo: A=1, B=2, AB=3, O=4, Không xác định=0.
+    - BloodTypeRh: Dương tính/Rh+=1, Âm tính/Rh-=2, Không xác định=0.
+
+    HƯỚNG DẪN TRÍCH XUẤT VÀ CẤU TRÚC JSON:
+    {
+      "RequestedByName": "string - Tên bác sĩ chỉ định",
+      "PerformedByName": "string - Tên bác sĩ/Kỹ thuật viên thực hiện hoặc ký kết quả",
+      "RequestedAt": "YYYY-MM-DD - Ngày chỉ định",
+      "CompletedAt": "YYYY-MM-DD - Ngày trả kết quả",
+      "Status": null,
+      "RequestDescription": "string - Chẩn đoán lâm sàng hoặc yêu cầu xét nghiệm",
+      "RedBloodCellCount": 0.0, // Số lượng Hồng cầu (RBC)
+      "WhiteBloodCellCount": 0.0, // Số lượng Bạch cầu (WBC)
+      "Hemoglobin": 0.0, // Huyết sắc tố (HGB/Hb)
+      "Hematocrit": 0.0, // (HCT)
+      "Mcv": 0.0, // Thể tích trung bình HC
+      "Mch": 0.0, // Lượng Hb trung bình HC
+      "Mchc": 0.0, // Nồng độ Hb trung bình HC
+      "ReticulocyteCount": 0.0, // Hồng cầu lưới
+      "PlateletCount": 0.0, // Số lượng Tiểu cầu (PLT)
+      "Neutrophil": 0.0, // % Bạch cầu trung tính (NEU/NEUT)
+      "Eosinophil": 0.0, // % Bạch cầu ưa acid (EOS)
+      "Basophil": 0.0, // % Bạch cầu ưa base (BASO)
+      "Monocyte": 0.0, // % Bạch cầu Mono (MONO)
+      "Lymphocyte": 0.0, // % Bạch cầu Lympho (LYM)
+      "NucleatedRedBloodCell": "string - Hồng cầu có nhân",
+      "AbnormalCells": "string - Tế bào bất thường",
+      "MalariaParasite": "string - Ký sinh trùng sốt rét",
+      "Esr1h": 0.0, // Tốc độ lắng máu giờ thứ 1 (ESR 1h)
+      "Esr2h": 0.0, // Tốc độ lắng máu giờ thứ 2 (ESR 2h)
+      "BleedingTime": 0, // Thời gian máu chảy (phút)
+      "ClottingTime": 0, // Thời gian máu đông (phút)
+      "BloodTypeAbo": 0, // Enum BloodTypeAbo
+      "BloodTypeRh": 0 // Enum BloodTypeRh
+    }
+
+    LƯU Ý NGHIỆP VỤ:
+    - Để giá trị mặc định của Status là null.
+    - Đảm bảo các chỉ số phần trăm bạch cầu và số lượng tế bào được trích xuất chính xác theo đơn vị chuẩn trong phiếu.
+
+    TRẢ VỀ: Chỉ trả về JSON thô, không kèm markdown (không có ```json), không giải thích gì thêm.
+    """;
 }

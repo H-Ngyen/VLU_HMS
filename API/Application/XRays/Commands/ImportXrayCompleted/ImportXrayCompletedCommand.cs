@@ -15,7 +15,7 @@ public class ImportXrayCompletedCommand : IRequest<int>
     // public string? PerformedByName { get; set; }
 
     // Props
-    public required MedicalStatus Status { get; set; }
+    // public required MedicalStatus Status { get; set; }
     public required string RequestDepartmentName { get; set; }
     public required string PerformDepartmentName { get; set; }
 

@@ -4,6 +4,6 @@ namespace Domain.Repositories;
 
 public interface IHematologyRepository
 {
-    Task CreateAsync(Hematology entity);    
+    Task<int> CreateAsync(Hematology entity);    
     Task SaveChanges();
 }

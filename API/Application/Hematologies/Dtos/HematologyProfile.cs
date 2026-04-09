@@ -1,4 +1,5 @@
 using Application.Hematologies.Commands.CreateHematology;
+using Application.Hematologies.Commands.ImportHematologyCompleted;
 using Application.Hematologies.Commands.UpdateCompleteHematology;
 using AutoMapper;
 using Domain.Entities;
@@ -20,5 +21,7 @@ public class HematologyProfile : Profile
 
         CreateMap<HematologyStatusLog, HematologyStatusLogDto>()
             .ForMember(dest => dest.UpdatedByName, opt => opt.MapFrom(src => src.UpdatedBy != null ? src.UpdatedBy.Email : null));
+        
+        CreateMap<ImportHematologyCompletedCommand, Hematology>();
     }
 }

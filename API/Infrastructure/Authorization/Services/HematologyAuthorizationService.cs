@@ -10,13 +10,13 @@ namespace Infrastructure.Authorization.Services;
 public class HematologyAuthorizationService(ILogger<HematologyAuthorizationService> logger,
     IUserContext userContext) : IHematologyAuthorizationService
 {
-    public async Task<bool> Authorize(Hematology resource, ResourceOperation resourceOperation)
+    public async Task<bool> Authorize(Hematology? resource, ResourceOperation resourceOperation)
     {
         var user = await userContext.GetCurrentUser();
-        return Authorize(user, resource, resourceOperation);
+        return Authorize(user, resource ?? null, resourceOperation);
     }
 
-    public bool Authorize(CurrentUser currentUser, Hematology resource, ResourceOperation resourceOperation, string resourceType = "Hematology")
+    public bool Authorize(CurrentUser currentUser, Hematology? resource, ResourceOperation resourceOperation, string resourceType = "Hematology")
     {
         logger.LogInformation("Authorizing user {UserEmail}, to {Operation} for resource {ResourceName}",
             currentUser.Email,
@@ -42,7 +42,7 @@ public class HematologyAuthorizationService(ILogger<HematologyAuthorizationServi
             return true;
         }
 
-        if (resourceOperation == ResourceOperation.Update && UserRoles.IsTeacher(currentUser.Role) &&
+        if (resource != null && resourceOperation == ResourceOperation.Update && UserRoles.IsTeacher(currentUser.Role) &&
             (resource.PerformedById == null || resource.PerformedById == currentUser.Id))
         {
             logger.LogInformation("Update operation - successful authorization");

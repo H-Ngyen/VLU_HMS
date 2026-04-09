@@ -11,6 +11,7 @@ public class MedicalRecordItemDto
     public required int PatientId { get; set; }
     // Props
     // Info
+    public DateTime? DischargeTime { get; set; }
     public required RecordType RecordType { get; set; }
     public string? StorageCode { get; set; }
     public DateTime? AdmissionTime { get; set; }
