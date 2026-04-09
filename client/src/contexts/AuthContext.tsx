@@ -33,21 +33,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         syncingRef.current = true;
         try {
           const token = await getAccessTokenSilently();
-          setAccessToken(token);
+          setAccessToken(token); 
           
-          // 1. Sync user with backend
-          await api.identities.sync({
-            auth0Id: user.sub || "",
-            email: user.email || "",
-            emailVerify: user.email_verified || false,
-            name: user.name || user.nickname || "User",
-            pictureUrl: user.picture || "",
+          // 1. Sync user with backend (POST /api/identities)
+          // Gửi kèm thông tin user trong body để đề phòng Backend cần
+          const result = await api.identities.sync(token, {
+            auth0Id: user.sub,
+            email: user.email,
+            emailVerify: user.email_verified,
+            name: user.name || user.nickname,
+            pictureUrl: user.picture,
             updateAt: new Date().toISOString()
           });
-
-          // 2. Fetch full user profile from DB to get the real Role
-          const allUsers = await api.identities.getAllUsers();
-          const dbUser = allUsers.find(u => u.auth0Id === user.sub);
+          
+          let dbUser: User | null = null;
+          
+          if (typeof result === 'number') {
+            dbUser = await api.identities.getUser(result, token);
+          } else {
+            const allUsers = await api.identities.getAllUsers(token);
+            dbUser = allUsers.find(u => u.auth0Id === user.sub) || null;
+          }
           
           if (dbUser) {
             setCurrentUser(dbUser);
@@ -57,11 +63,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           setIsSynced(true);
           setSyncError(null);
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const errorMessage = error instanceof Error ? error.message : "Đã xảy ra lỗi không xác định";
           console.error("Error during API setup/sync:", error);
           setAccessToken(null);
           setIsSynced(false);
-          setSyncError(error.message);
+          setSyncError(errorMessage);
         } finally {
           syncingRef.current = false;
         }

@@ -46,7 +46,7 @@ public class UserContext(IHttpContextAccessor httpContextAccessor, IUserReposito
         if (!bool.TryParse(emailVerifiedClaim, out var emailVerified))
             throw new UnauthorizedException("EmailVerified invalid format");
 
-        var name = GetRequiredClaim(ClaimTypes.Name, "Name missing in token");
+        var name = GetRequiredClaim("name", "Name missing in token");
         var picture = GetRequiredClaim("picture", "Picture missing in token");
 
         var updatedAtClaim = GetRequiredClaim("updated_at", "UpdatedAt missing in token");

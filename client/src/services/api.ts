@@ -8,10 +8,11 @@ export const setAccessToken = (token: string | null) => {
   accessToken = token;
 };
 
-const getHeaders = (headers: Record<string, string> = {}) => {
+const getHeaders = (manualToken?: string | null, headers: Record<string, string> = {}) => {
   const baseHeaders: Record<string, string> = { ...headers };
-  if (accessToken) {
-    baseHeaders['Authorization'] = `Bearer ${accessToken}`;
+  const token = manualToken || accessToken;
+  if (token) {
+    baseHeaders['Authorization'] = `Bearer ${token}`;
   }
   return baseHeaders;
 };
@@ -50,7 +51,7 @@ export const api = {
     }) => {
       const response = await fetch(`${API_BASE_URL}/patients`, {
         method: 'POST',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
 
@@ -84,7 +85,7 @@ export const api = {
     }) => {
       const response = await fetch(`${API_BASE_URL}/patients/${id}`, {
         method: 'PUT',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
 
@@ -186,7 +187,7 @@ export const api = {
     create: async (recordId: number, data: any) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays`, {
         method: 'POST',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
       if (!response.ok) throw new Error('Failed to create X-Ray');
@@ -195,7 +196,7 @@ export const api = {
     changeStatus: async (recordId: number, id: number, data: { status?: number, departmentName: string }) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays/${id}`, {
         method: 'PUT',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
       if (!response.ok) {
@@ -206,7 +207,7 @@ export const api = {
     complete: async (recordId: number, id: number, data: { resultDescription?: string, doctorAdvice?: string, completedAt?: string }) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays/${id}/complete`, {
         method: 'PUT',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
       if (!response.ok) {
@@ -220,7 +221,7 @@ export const api = {
     create: async (recordId: number, data: any) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/hematologies`, {
         method: 'POST',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
       if (!response.ok) throw new Error('Failed to create Hematology');
@@ -229,7 +230,7 @@ export const api = {
     changeStatus: async (recordId: number, id: number, data: { status?: number, departmentName: string }) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/hematologies/${id}`, {
         method: 'PUT',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
       if (!response.ok) {
@@ -240,7 +241,7 @@ export const api = {
     complete: async (recordId: number, id: number, data: any) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/hematologies/${id}/complete`, {
         method: 'PUT',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
       if (!response.ok) {
@@ -262,10 +263,7 @@ export const api = {
       const formData = new FormData();
       formData.append('File', file);
       
-      // Extract name without extension and sanitize
       const nameWithoutExtension = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-      
-      // Remove Vietnamese accents and special characters strictly
       const sanitizedName = nameWithoutExtension
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
@@ -278,7 +276,7 @@ export const api = {
       
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/attachments`, {
         method: 'POST',
-        headers: getHeaders(), // Don't set Content-Type, fetch will set it with boundary
+        headers: getHeaders(), 
         body: formData
       });
       if (!response.ok) {
@@ -297,18 +295,11 @@ export const api = {
   },
 
   identities: {
-    sync: async (data: {
-      auth0Id: string;
-      email: string;
-      emailVerify: boolean;
-      name: string;
-      pictureUrl: string;
-      updateAt: string;
-    }) => {
+    sync: async (manualToken?: string, data?: any) => {
       const response = await fetch(`${API_BASE_URL}/identities`, {
         method: 'POST',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
-        body: JSON.stringify(data)
+        headers: getHeaders(manualToken, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data || {}) 
       });
 
       if (!response.ok) {
@@ -321,15 +312,27 @@ export const api = {
         throw new Error(error?.message || 'Failed to sync user identity');
       }
 
-      if (response.status === 201) {
-        return response.json();
+      if (response.status === 201 || response.status === 200) {
+        try {
+          return await response.json();
+        } catch {
+          return null;
+        }
       }
       return null;
     },
 
-    getAllUsers: async (): Promise<User[]> => {
+    getUser: async (userId: number, manualToken?: string): Promise<User> => {
+      const response = await fetch(`${API_BASE_URL}/identities/users/${userId}`, {
+        headers: getHeaders(manualToken)
+      });
+      if (!response.ok) throw new Error('Failed to fetch user');
+      return response.json();
+    },
+
+    getAllUsers: async (manualToken?: string): Promise<User[]> => {
       const response = await fetch(`${API_BASE_URL}/identities/users`, {
-        headers: getHeaders()
+        headers: getHeaders(manualToken)
       });
       if (!response.ok) throw new Error('Failed to fetch users');
       return response.json();
@@ -338,7 +341,7 @@ export const api = {
     changeActiveStatus: async (userId: number, isActive: boolean) => {
       const response = await fetch(`${API_BASE_URL}/identities/users/${userId}/active`, {
         method: 'PUT',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify({ active: isActive })
       });
       if (!response.ok) {
@@ -356,7 +359,7 @@ export const api = {
     changeRole: async (userId: number, roleName: string) => {
       const response = await fetch(`${API_BASE_URL}/identities/users/${userId}/roles`, {
         method: 'PUT',
-        headers: getHeaders({ 'Content-Type': 'application/json' }),
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify({ role: roleName })
       });
       if (!response.ok) {
