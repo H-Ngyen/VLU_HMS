@@ -23,7 +23,7 @@ public class GetAllUserQueryHandler(ILogger<GetAllUserQueryHandler> logger,
         logger.LogInformation("User {userId} getting all user", user.Id);
         var users = await userRepository.GetAllAsync();
 
-        if (!userAuthorizationService.Authorize(user, ResourceOperation.Read))
+        if (!userAuthorizationService.Authorize(user, null, ResourceOperation.Read))
             throw new ForbidException();
 
         var usersDto = mapper.Map<IEnumerable<UserDto>>(users);

@@ -26,7 +26,7 @@ public class ChangeStatusActiveCommandHandler(ILogger<ChangeStatusActiveCommandH
         if (UserRoles.IsAdmin(user.Role.Name))
             throw new BadRequestException($"Không thể ngừng hoạt động {UserRoles.Admin}");
 
-        if(!userAuthorizationService.Authorize(userContext, ResourceOperation.Update))
+        if(!userAuthorizationService.Authorize(userContext, user, ResourceOperation.Update))
             throw new ForbidException();
             
         // if(UserRoles.IsInRoles(userRole))

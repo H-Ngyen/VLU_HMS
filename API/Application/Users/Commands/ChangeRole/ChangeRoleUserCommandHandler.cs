@@ -27,7 +27,7 @@ public class ChangeRoleUserCommandHandler(ILogger<ChangeRoleUserCommandHandler> 
         if (UserRoles.IsAdmin(user.Role.Name))
             throw new BadRequestException($"Không thể thực hiện hành động này lên {UserRoles.Admin}");
 
-        if (!userAuthorizationService.Authorize(userContext, ResourceOperation.Update))
+        if (!userAuthorizationService.Authorize(userContext, user, ResourceOperation.Update))
             throw new ForbidException();
 
         var userRole = await userRoleRepository.GetUserRoleAsync(r => r.Name == request.Role)
