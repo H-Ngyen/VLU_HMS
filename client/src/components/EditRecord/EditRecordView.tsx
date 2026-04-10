@@ -235,16 +235,7 @@ export const EditRecordView = () => {
       const updateCommand = mapRecordToUpdateCommand(updatedRecord, patientSnapshot, record.numericId);
       console.log("Updating Record with payload:", updateCommand);
       
-      const response = await fetch(`https://localhost:5001/api/medical-records/${record.numericId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updateCommand),
-      });
-
-      if (!response.ok) {
-        const txt = await response.text();
-        throw new Error(`Cập nhật thất bại: ${response.status} - ${txt}`);
-      }
+      await api.medicalRecords.update(record.numericId, updateCommand);
 
       toast.success("Cập nhật hồ sơ bệnh án thành công!");
       fetchRecordData(); // Refresh data from server to sync state

@@ -257,9 +257,7 @@ export const CreateRecordView = () => {
       createMedicalRecordPayloadPartial,
     );
 
-    // API call to create record (chưa thực hiện ở bước này)
-    // Map UI "I. Hành chính" + "II. Quản lý người bệnh" -> CreateMedicalRecordCommand
-    const API_BASE_URL = "https://localhost:5001/api";
+    // API call to create record
     const patientIdNum = Number(patientId);
 
     const isoDateAtMidnight = (dateStr?: string) => {
@@ -378,18 +376,7 @@ export const CreateRecordView = () => {
       return;
     }
 
-    fetch(`${API_BASE_URL}/medical-records/${patientIdNum}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(createCommand),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const txt = await res.text();
-          throw new Error(`Create failed: ${res.status} - ${txt}`);
-        }
-        return res.json();
-      })
+    api.medicalRecords.create(patientIdNum, createCommand)
       .then((recordIdCreated) => {
         toast.success(`Tạo hồ sơ bệnh án thành công! (ID: ${recordIdCreated})`);
         navigate("/"); // Quay về danh sách hồ sơ

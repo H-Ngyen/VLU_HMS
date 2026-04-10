@@ -165,6 +165,33 @@ export const api = {
       return response.json();
     },
 
+    create: async (patientId: number, data: any) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${patientId}`, {
+        method: 'POST',
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Failed to create medical record');
+      }
+      return response.json();
+    },
+
+    update: async (id: number, data: any) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${id}`, {
+        method: 'PUT',
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Failed to update medical record');
+      }
+      if (response.status === 204) return;
+      return response.json();
+    },
+
     importPdf: async (patientId: number, file: File) => {
       const formData = new FormData();
       formData.append('FilePdf', file);
@@ -175,8 +202,15 @@ export const api = {
         body: formData
       });
       if (!response.ok) {
-        const errorText = await response.json();
-        throw new Error(errorText.message || 'Failed to import PDF');
+        let errorMessage = `Failed to import PDF (Status: ${response.status})`;
+        const text = await response.text();
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.message || errorData.title || errorMessage;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
+        throw new Error(errorMessage);
       }
       return response.json();
     },

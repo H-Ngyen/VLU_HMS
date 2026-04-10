@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, ArrowRight, Save, Plus, FileText, User, Activity, LogOut, ClipboardList, Thermometer, Pill, ChevronDown, ChevronRight, Download as DownloadIcon, FileUp } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Plus, FileText, User, Activity, LogOut, ClipboardList, Thermometer, Pill, ChevronDown, ChevronRight, Download as DownloadIcon, FileUp, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -191,6 +191,40 @@ const mapDtoToPatient = (dto: any, currentPatient: Patient): Patient => {
 
   const paymentCategoryMap: { [key: number]: string } = { 1: "BHYT", 2: "Thu phí", 3: "Miễn", 4: "Khác" };
 
+  const fullAddress = dto.address || "";
+  const addressParts = fullAddress.split(",").map((part: string) => part.trim()).filter(Boolean);
+  
+  let provinceName = dto.provinceName || "";
+  let districtName = dto.districtName || "";
+  let wardName = dto.wardName || "";
+  let village = "";
+  let houseNumber = "";
+
+  // Nếu API trả về các trường riêng biệt, ưu tiên dùng nó. 
+  // Nếu không, ta cố gắng bóc tách từ chuỗi gộp (thường là 5 phần hoặc 4 phần)
+  const parts = [...addressParts];
+  
+  // Logic bóc tách ngược từ dưới lên: Tỉnh -> Huyện -> Xã -> Thôn -> Số nhà
+  if (!provinceName && parts.length > 0) provinceName = parts.pop() || "";
+  else if (provinceName && parts.length > 0 && parts[parts.length - 1].toLowerCase() === provinceName.toLowerCase()) parts.pop();
+
+  if (!districtName && parts.length > 0) districtName = parts.pop() || "";
+  else if (districtName && parts.length > 0 && parts[parts.length - 1].toLowerCase() === districtName.toLowerCase()) parts.pop();
+
+  if (!wardName && parts.length > 0) wardName = parts.pop() || "";
+  else if (wardName && parts.length > 0 && parts[parts.length - 1].toLowerCase() === wardName.toLowerCase()) parts.pop();
+
+  if (parts.length >= 2) {
+    houseNumber = parts[0];
+    village = parts.slice(1).join(", ");
+  } else if (parts.length === 1) {
+    if (/^\d+/.test(parts[0])) {
+      houseNumber = parts[0];
+    } else {
+      village = parts[0];
+    }
+  }
+
   return {
     ...currentPatient,
     name: p.name || currentPatient.name,
@@ -205,7 +239,7 @@ const mapDtoToPatient = (dto: any, currentPatient: Patient): Patient => {
     job: dto.jobTitle || currentPatient.job,
     jobCode: dto.jobTitleCode || currentPatient.jobCode,
     workplace: dto.addressJob || currentPatient.workplace,
-    address: dto.address || currentPatient.address,
+    address: fullAddress,
     
     insuranceExpiry: dto.healthInsuranceExpiryDate?.split('T')[0] || currentPatient.insuranceExpiry,
     relativeInfo: dto.relativeInfo || currentPatient.relativeInfo,
@@ -214,9 +248,11 @@ const mapDtoToPatient = (dto: any, currentPatient: Patient): Patient => {
     
     provinceCode: dto.provinceCode || currentPatient.provinceCode,
     districtCode: dto.districtCode || currentPatient.districtCode,
-    provinceName: dto.provinceName || currentPatient.provinceName,
-    districtName: dto.districtName || currentPatient.districtName,
-    wardName: dto.wardName || currentPatient.wardName,
+    provinceName: provinceName,
+    districtName: districtName,
+    wardName: wardName,
+    village: village,
+    houseNumber: houseNumber,
   };
 };
 
@@ -432,6 +468,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
   const [formData, setFormData] = useState<Record | null>(null);
   const [editablePatient, setEditablePatient] = useState<Patient>(patient);
   const [isImporting, setIsImporting] = useState(false);
+  const [importStatus, setImportStatus] = useState<{type: 'success' | 'error' | null, message: string}>({type: null, message: ""});
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const queryParams = new URLSearchParams(window.location.search);
@@ -552,12 +589,13 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
     if (!file) return;
 
     if (file.type !== "application/pdf") {
-      toast.error("Vui lòng chọn file PDF");
+      setImportStatus({type: 'error', message: "Vui lòng chọn file PDF"});
+      setTimeout(() => setImportStatus({type: null, message: ""}), 5000);
       return;
     }
 
     setIsImporting(true);
-    const toastId = toast.loading("Đang xử lý PDF...");
+    setImportStatus({type: null, message: ""});
 
     try {
       const result = await api.medicalRecords.importPdf(patient.id, file);
@@ -568,18 +606,53 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
       setEditablePatient(updatedPatient);
       setFormData(updatedRecord);
       
-      toast.success("Import thông tin từ PDF thành công", { id: toastId });
+      setImportStatus({type: 'success', message: "Import PDF thành công!"});
     } catch (error: any) {
       console.error("PDF Import error:", error);
-      toast.error(error.message || "Lỗi khi import PDF", { id: toastId });
+      setImportStatus({type: 'error', message: error.message || "Lỗi khi import PDF"});
     } finally {
       setIsImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
+      setTimeout(() => setImportStatus({type: null, message: ""}), 5000);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6 h-[calc(100vh-100px)] flex flex-col">
+    <form onSubmit={handleSubmit} className="space-y-6 h-[calc(100vh-100px)] flex flex-col relative">
+      {(isImporting || importStatus.type) && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-xl">
+          <div className="bg-white p-6 rounded-xl shadow-2xl border border-gray-200 flex flex-col items-center gap-4 max-w-sm w-full animate-in fade-in zoom-in duration-200">
+            <div className="relative">
+              {isImporting ? (
+                <>
+                  <div className="w-12 h-12 border-4 border-vlu-red/20 border-t-vlu-red rounded-full animate-spin"></div>
+                  <FileUp className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-vlu-red" size={20} />
+                </>
+              ) : importStatus.type === 'success' ? (
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 animate-in zoom-in duration-300">
+                   <CheckCircle size={28} />
+                </div>
+              ) : (
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center text-red-600 animate-in zoom-in duration-300">
+                   <AlertCircle size={28} />
+                </div>
+              )}
+            </div>
+            <div className="text-center">
+              <h3 className={`text-lg font-bold ${
+                importStatus.type === 'error' ? 'text-red-600' : 
+                importStatus.type === 'success' ? 'text-green-600' : 'text-gray-900'
+              }`}>
+                {isImporting ? "Đang xử lý PDF" : 
+                 importStatus.type === 'success' ? "Import Thành Công" : "Lỗi Xử Lý PDF"}
+              </h3>
+              <p className="text-sm text-gray-500 mt-1">
+                {isImporting ? "Vui lòng chờ trong giây lát, hệ thống đang tự động trích xuất thông tin hồ sơ..." : importStatus.message}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       <input 
         type="file" 
         ref={fileInputRef} 
@@ -598,7 +671,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
             {isCreate ? `Bệnh nhân: ${patient.fullName || patient.name}` : `Mã lưu trữ: ${record?.id}`}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <Button 
             type="button" 
             onClick={onCancel}
@@ -609,12 +682,11 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
           {isCreate && (
             <Button
               type="button"
-              variant="outline"
               disabled={isImporting}
               onClick={() => fileInputRef.current?.click()}
-              className="border-red-600 text-red-600 hover:bg-red-50"
+              className="bg-vlu-red hover:bg-red-800 text-white flex items-center gap-2"
             >
-              <FileUp size={18} className="mr-2" />
+              <FileUp size={18} />
               Import PDF
             </Button>
           )}

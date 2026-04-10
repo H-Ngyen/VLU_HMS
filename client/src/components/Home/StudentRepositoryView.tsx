@@ -40,9 +40,10 @@ export const StudentRepositoryView = () => {
           age: age,
           gender: genderText,
           admissionDate: item.admissionTime || "",
-          dischargeDate: "", 
+          dischargeDate: item.dischargeTime || "", 
           department: typeText === "internal" ? "Nội Khoa" : "Ngoại Khoa",
           type: typeText,
+
           documents: [],
           managementData: {} as any,
           medicalRecordContent: {} as any,
