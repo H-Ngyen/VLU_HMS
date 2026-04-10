@@ -16,11 +16,11 @@ public class HematologyProfile : Profile
 
         // Entity -> DTO
         CreateMap<Hematology, HematologyDto>()
-            .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy != null ? src.RequestedBy.Email : null))
-            .ForMember(dest => dest.PerformedByName, opt => opt.MapFrom(src => src.PerformedBy != null ? src.PerformedBy.Email : null));
+            .ForMember(dest => dest.RequestedByName, opt => opt.MapFrom(src => src.RequestedBy != null ? src.RequestedBy.Name : null))
+            .ForMember(dest => dest.PerformedByName, opt => opt.MapFrom(src => src.PerformedBy != null ? src.PerformedBy.Name : null));
 
         CreateMap<HematologyStatusLog, HematologyStatusLogDto>()
-            .ForMember(dest => dest.UpdatedByName, opt => opt.MapFrom(src => src.UpdatedBy != null ? src.UpdatedBy.Email : null));
+            .ForMember(dest => dest.UpdatedByName, opt => opt.MapFrom(src => src.UpdatedBy != null ? src.UpdatedBy.Name : null));
         
         CreateMap<ImportHematologyCompletedCommand, Hematology>();
     }
