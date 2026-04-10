@@ -582,7 +582,7 @@ export const XRayInputForm = ({
             </div>
             <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 flex items-end gap-2">
-                <Label className="shrink-0">Khoa:</Label>
+                <Label className="shrink-0">Khoa: <span className="text-red-500">*</span></Label>
                 <Input name="department" value={formData.department} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
               </div>
               <div className="w-32 flex items-end gap-2">
