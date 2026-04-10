@@ -8,5 +8,5 @@ public interface IUserAuthorizationService
 {
     Task<bool> Authorize(ResourceOperation resourceOperation);
     Task<bool> Authorize(User resource, ResourceOperation resourceOperation);
-    bool Authorize(CurrentUser user, ResourceOperation resourceOperation, string resourceType = nameof(User));
+    bool Authorize(CurrentUser user, User? resource, ResourceOperation resourceOperation, string resourceType = nameof(User));
 }

@@ -15,15 +15,15 @@ public class UserAuthorizationService(ILogger<UserAuthorizationService> logger,
     {
         var user = await userContext.GetCurrentUser()
             ?? throw new UnauthorizedException();
-        return Authorize(user, resourceOperation);
+        return Authorize(user, null, resourceOperation);
     }
     public async Task<bool> Authorize(User resource, ResourceOperation resourceOperation)
     {
         var user = await userContext.GetCurrentUser()
             ?? throw new UnauthorizedException();
-        return Authorize(user, resourceOperation);
+        return Authorize(user, resource, resourceOperation);
     }
-    public bool Authorize(CurrentUser user, ResourceOperation resourceOperation, string resourceType = nameof(User))
+    public bool Authorize(CurrentUser user, User? resource, ResourceOperation resourceOperation, string resourceType = nameof(User))
     {
         logger.LogInformation("Authorizing user {UserEmail}, to {Operation} for resource {ResourceName}",
               user.Email,
@@ -36,6 +36,17 @@ public class UserAuthorizationService(ILogger<UserAuthorizationService> logger,
             logger.LogInformation("Admin User, Create/Update/Read/Delete operation - successful authorization");
             return true;
         }
+
+        if (resource != null)
+        {
+            if (resourceOperation == ResourceOperation.Read &&
+                resource.Id == user.Id && UserRoles.IsInRoles(resource.Role.Name))
+            {
+                logger.LogInformation("Read operation - successful authorization");
+                return true;
+            }
+        }
+
         return false;
     }
 }

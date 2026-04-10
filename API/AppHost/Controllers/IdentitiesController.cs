@@ -35,7 +35,7 @@ public class IdentitiesController(IMediator mediator) : ControllerBase
         var usersDto = await mediator.Send(new GetAllUserQuery());
         return Ok(usersDto);
     }
-    
+  
     [HttpPut("users/{userId:int}/active")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
