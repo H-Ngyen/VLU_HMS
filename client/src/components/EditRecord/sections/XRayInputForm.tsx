@@ -730,9 +730,8 @@ export const XRayInputForm = ({
               {!readOnly && !initialData && !isImportMode && (
                 <Button 
                   type="button"
-                  variant="outline"
                   onClick={() => fileInputRef.current?.click()}
-                  className="flex items-center gap-2 border-vlu-red text-vlu-red hover:bg-red-50"
+                  className="flex items-center gap-2 bg-vlu-red text-white shadow-sm hover:bg-red-800"
                 >
                   <FileUp size={18} />
                   Import PDF
