@@ -264,6 +264,38 @@ export const api = {
          const errorText = await response.text();
          throw new Error(`Failed to complete X-Ray: ${errorText}`);
       }
+    },
+    importPdf: async (recordId: number, file: File) => {
+      const formData = new FormData();
+      formData.append('File', file);
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays/import-pdf`, {
+        method: 'POST',
+        headers: getHeaders(), 
+        body: formData
+      });
+      if (!response.ok) {
+        let errorMessage = `Failed to import X-Ray PDF (Status: ${response.status})`;
+        const text = await response.text();
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.message || errorData.title || errorMessage;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+      return response.json();
+    },
+    importCompleted: async (recordId: number, data: any) => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays/import-pdf/completed`, {
+        method: 'POST',
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || 'Failed to complete X-Ray import');
+      }
     }
   },
 

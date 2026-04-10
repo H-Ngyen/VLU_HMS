@@ -289,7 +289,9 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         defaultDob={formData.dob}
         defaultGender={formData.gender}
         defaultAddress={formData.address}
+        defaultDepartment={formData.department}
         initialData={editingXRayDoc?.data || viewingXRayDoc?.data}
+
         readOnly={!!viewingXRayDoc || readOnly} 
         recordId={formData.numericId}
       />

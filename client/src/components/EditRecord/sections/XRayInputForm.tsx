@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2, Circle, Loader2 } from "lucide-react";
+import { CheckCircle2, Circle, Loader2, FileUp } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
 import { api } from "@/services/api";
@@ -57,6 +57,7 @@ interface XRayInputFormProps {
   defaultDob?: string;
   defaultGender?: string;
   defaultAddress?: string;
+  defaultDepartment?: string;
   initialData?: XRayData;
   readOnly?: boolean;
   recordId?: number;
@@ -105,11 +106,15 @@ export const XRayInputForm = ({
   defaultDob = "",
   defaultGender = "",
   defaultAddress = "",
+  defaultDepartment = "Nội khoa",
   initialData,
   readOnly = false,
   recordId
 }: XRayInputFormProps) => {  const { currentUser } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isImportMode, setIsImportMode] = useState(false);
   
   const defaultState: XRayData = {
     id: undefined,
@@ -157,6 +162,7 @@ export const XRayInputForm = ({
             patientName: defaultPatientName,
             gender: defaultGender,
             address: defaultAddress,
+            department: initialData.department || defaultDepartment,
             status: initialData.status !== undefined ? initialData.status : 0,
             xRayStatusLogs: initialData.xRayStatusLogs || []
         };
@@ -180,6 +186,7 @@ export const XRayInputForm = ({
             patientName: defaultPatientName,
             gender: defaultGender,
             address: defaultAddress,
+            department: defaultDepartment,
             doctor: currentUser?.name || ""
         };
         const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
@@ -238,6 +245,50 @@ export const XRayInputForm = ({
         pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, (canvas.height * pdfWidth) / canvas.width);
         pdf.save(`XQuang_${dataToSave.patientName}.pdf`);
     } catch (error) { console.error(error); }
+  };
+
+  const handleImportPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !recordId) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Vui lòng chọn file PDF");
+      return;
+    }
+
+    setIsImporting(true);
+    const toastId = toast.loading("Đang xử lý PDF X-Quang...");
+
+    try {
+      const result = await api.xRays.importPdf(recordId, file);
+      
+      const reqDate = result.requestedAt ? new Date(result.requestedAt) : new Date();
+      const resDate = result.completedAt ? new Date(result.completedAt) : new Date();
+
+      setFormData(prev => ({
+        ...prev,
+        request: result.requestDescription || "",
+        result: result.resultDescription || "",
+        advice: result.doctorAdvice || "",
+        department: result.performDepartmentName || prev.department || defaultDepartment,
+        diagnosis: result.admissionDiagnosis || prev.diagnosis,
+        requestDateDay: reqDate.getDate().toString(),
+        requestDateMonth: (reqDate.getMonth() + 1).toString(),
+        requestDateYear: reqDate.getFullYear().toString(),
+        resultDateDay: resDate.getDate().toString(),
+        resultDateMonth: (resDate.getMonth() + 1).toString(),
+        resultDateYear: resDate.getFullYear().toString(),
+      }));
+      
+      setIsImportMode(true);
+      toast.success("Trích xuất dữ liệu X-Quang thành công", { id: toastId });
+    } catch (error: any) {
+      console.error("X-Ray PDF Import error:", error);
+      toast.error(error.message || "Lỗi khi import PDF", { id: toastId });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   useEffect(() => {
@@ -310,12 +361,33 @@ export const XRayInputForm = ({
     }
 
     try {
+        if (isImportMode && (targetAction === "SAVE" || targetAction === "NEXT")) {
+            const completedAt = `${formData.resultDateYear}-${formData.resultDateMonth.padStart(2, '0')}-${formData.resultDateDay.padStart(2, '0')}`;
+            const requestedAt = `${formData.requestDateYear}-${formData.requestDateMonth.padStart(2, '0')}-${formData.requestDateDay.padStart(2, '0')}`;
+            
+            const importPayload = {
+                medicalRecordId: recordId,
+                requestDepartmentName: formData.department || defaultDepartment,
+                performDepartmentName: departmentInput || "Khoa Chẩn đoán hình ảnh",
+                requestDescription: formData.request,
+                requestedAt: requestedAt,
+                resultDescription: formData.result,
+                doctorAdvice: formData.advice,
+                completedAt: completedAt
+            };
+            
+            await api.xRays.importCompleted(recordId, importPayload);
+            toast.success("Đã nhập hồ sơ X-Quang từ PDF thành công");
+            setTimeout(() => { window.location.search = "?tab=forms"; }, 1000);
+            return;
+        }
+
         let currentXrayId = formData.id;
         const requestedAt = getRequestDateString(formData);
         
         if (!currentXrayId) {
             const createPayload = {
-                departmentName: departmentInput,
+                departmentName: formData.department || defaultDepartment,
                 requestDescription: formData.request || "Yêu cầu chụp X-Quang",
                 requestedAt: requestedAt
             };
@@ -385,9 +457,9 @@ export const XRayInputForm = ({
     }
   };
 
-  const isRequestReadOnly = readOnly || formData.status > 0 || !!initialData;
-  const showResultSection = formData.status >= 2;
-  const isResultReadOnly = readOnly || formData.status === 3;
+  const isRequestReadOnly = readOnly || (formData.status > 0 && !isImportMode) || !!initialData;
+  const showResultSection = formData.status >= 2 || isImportMode;
+  const isResultReadOnly = readOnly || (formData.status === 3 && !isImportMode);
 
   return (
     <>
@@ -398,36 +470,67 @@ export const XRayInputForm = ({
           <DialogDescription>Xem hoặc chỉnh sửa phiếu X-Quang</DialogDescription>
         </DialogHeader>
         
-        {isGenerating ? (
+        <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept=".pdf" 
+            onChange={handleImportPdf}
+        />
+
+        {isGenerating || isImporting ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <Loader2 className="w-10 h-10 animate-spin text-vlu-red" />
-                <p className="text-lg font-medium text-gray-600">Đang chuẩn bị bản in PDF...</p>
+                <p className="text-lg font-medium text-gray-600">
+                    {isGenerating ? "Đang chuẩn bị bản in PDF..." : "Đang trích xuất dữ liệu từ PDF X-Quang..."}
+                </p>
             </div>
         ) : (
         <div className="space-y-6 py-4">
           <div className="flex items-center justify-between mb-8 px-8 relative mt-2 print:hidden">
-            <div className="absolute left-10 right-10 top-1/2 -translate-y-1/2 h-1 bg-gray-200 z-0"></div>
-            <div className="absolute left-10 top-1/2 -translate-y-1/2 h-1 bg-vlu-red z-0 transition-all duration-300" style={{ width: `calc(${(formData.status / 3) * 100}% - 40px)` }}></div>
-            {STEPS.map((step, index) => {
-              const isActive = formData.status >= index;
-              const logForStep = formData.xRayStatusLogs?.find(l => l.status === index);
-              return (
-                <div key={index} className="relative z-10 flex flex-col items-center gap-2 bg-white px-2">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${isActive ? 'bg-vlu-red border-vlu-red text-white' : 'bg-white border-gray-300 text-gray-300'}`}>
-                    {isActive ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+            {isImportMode ? (
+              <>
+                <div className="absolute left-10 right-10 top-1/2 -translate-y-1/2 h-1 bg-gray-200 z-0"></div>
+                <div className="absolute left-10 top-1/2 -translate-y-1/2 h-1 bg-vlu-red z-0 transition-all duration-300" style={{ width: `50%` }}></div>
+                <div className="relative z-10 flex flex-col items-center gap-2 bg-white px-2">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center border-2 bg-vlu-red border-vlu-red text-white">
+                    <CheckCircle2 className="w-5 h-5" />
                   </div>
-                  <div className="flex flex-col items-center">
-                      <span className={`text-xs font-medium ${isActive ? 'text-vlu-red' : 'text-gray-500'}`}>{step}</span>
-                      {logForStep && (
-                          <div className="text-[10px] text-gray-400 text-center mt-1 w-24 leading-tight">
-                              <p className="font-semibold text-gray-500 truncate">{logForStep.updatedByName}</p>
-                              <p>{new Date(logForStep.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
-                          </div>
-                      )}
-                  </div>
+                  <span className="text-xs font-medium text-vlu-red">Đã Import PDF</span>
                 </div>
-              );
-            })}
+                <div className="relative z-10 flex flex-col items-center gap-2 bg-white px-2">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center border-2 bg-white border-gray-300 text-gray-300">
+                    <Circle className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-medium text-gray-500">Chờ hoàn tất</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="absolute left-10 right-10 top-1/2 -translate-y-1/2 h-1 bg-gray-200 z-0"></div>
+                <div className="absolute left-10 top-1/2 -translate-y-1/2 h-1 bg-vlu-red z-0 transition-all duration-300" style={{ width: `calc(${(formData.status / 3) * 100}% - 40px)` }}></div>
+                {STEPS.map((step, index) => {
+                  const isActive = formData.status >= index;
+                  const logForStep = formData.xRayStatusLogs?.find(l => l.status === index);
+                  return (
+                    <div key={index} className="relative z-10 flex flex-col items-center gap-2 bg-white px-2">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-colors ${isActive ? 'bg-vlu-red border-vlu-red text-white' : 'bg-white border-gray-300 text-gray-300'}`}>
+                        {isActive ? <CheckCircle2 className="w-5 h-5" /> : <Circle className="w-5 h-5" />}
+                      </div>
+                      <div className="flex flex-col items-center">
+                          <span className={`text-xs font-medium ${isActive ? 'text-vlu-red' : 'text-gray-500'}`}>{step}</span>
+                          {logForStep && (
+                              <div className="text-[10px] text-gray-400 text-center mt-1 w-24 leading-tight">
+                                  <p className="font-semibold text-gray-500 truncate">{logForStep.updatedByName}</p>
+                                  <p>{new Date(logForStep.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                              </div>
+                          )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </>
+            )}
           </div>
 
           <div className="grid grid-cols-3 gap-4 items-start border-b pb-4">
@@ -622,20 +725,41 @@ export const XRayInputForm = ({
         </div>
 
         <DialogFooter className="mt-6 border-t pt-4">
-          <div className="flex justify-end w-full items-center">
+          <div className="flex justify-between w-full items-center">
+            <div>
+              {!readOnly && !initialData && !isImportMode && (
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 border-vlu-red text-vlu-red hover:bg-red-50"
+                >
+                  <FileUp size={18} />
+                  Import PDF
+                </Button>
+              )}
+            </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={onClose}>Đóng</Button>
               {!readOnly && (
                 <>
-                  {formData.status === 0 && (
-                    initialData ? (
-                      <Button onClick={() => handleActionClick("FAST_TRACK")} className="bg-orange-500 text-white shadow-sm">Tiếp Nhận & Thực Hiện Ngay (Chuyển TT2)</Button>
-                    ) : (
-                      <Button onClick={() => handleActionClick("SAVE")} className="bg-vlu-red text-white shadow-sm">Lưu Chỉ Định (Tạo Yêu Cầu)</Button>
-                    )
+                  {isImportMode ? (
+                    <Button onClick={() => handleActionClick("SAVE")} className="bg-vlu-red text-white shadow-sm">
+                        Lưu & Hoàn Tất Import
+                    </Button>
+                  ) : (
+                    <>
+                      {formData.status === 0 && (
+                        initialData ? (
+                          <Button onClick={() => handleActionClick("FAST_TRACK")} className="bg-orange-500 text-white shadow-sm">Tiếp Nhận & Thực Hiện Ngay (Chuyển TT2)</Button>
+                        ) : (
+                          <Button onClick={() => handleActionClick("SAVE")} className="bg-vlu-red text-white shadow-sm">Lưu Chỉ Định (Tạo Yêu Cầu)</Button>
+                        )
+                      )}
+                      {formData.status === 1 && <Button onClick={() => handleActionClick("NEXT")} className="bg-orange-500 text-white shadow-sm">Bắt Đầu Chụp (Chuyển TT2)</Button>}
+                      {formData.status === 2 && <Button onClick={() => handleActionClick("NEXT")} className="bg-vlu-red text-white shadow-sm">Hoàn Thành & Ký Số</Button>}
+                    </>
                   )}
-                  {formData.status === 1 && <Button onClick={() => handleActionClick("NEXT")} className="bg-orange-500 text-white shadow-sm">Bắt Đầu Chụp (Chuyển TT2)</Button>}
-                  {formData.status === 2 && <Button onClick={() => handleActionClick("NEXT")} className="bg-vlu-red text-white shadow-sm">Hoàn Thành & Ký Số</Button>}
                 </>
               )}
             </div>
