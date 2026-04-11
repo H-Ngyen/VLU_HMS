@@ -20,10 +20,10 @@ public class GetByIdUserQueryHandler(ILogger<GetByIdUserQueryHandler> logger,
         logger.LogInformation("Getting user {userId}", request.Id);
         var user = await userRepository.FindOneAsync(u => u.Id == request.Id)
             ?? throw new NotFoundException(nameof(User), $"{request.Id}");
-            
-        if(!await userAuthorizationService.Authorize(ResourceOperation.Read))
+
+        if (!await userAuthorizationService.Authorize(user, ResourceOperation.Read))
             throw new ForbidException();
-        
+
         var userDto = mapper.Map<UserDto>(user);
         return userDto;
     }
