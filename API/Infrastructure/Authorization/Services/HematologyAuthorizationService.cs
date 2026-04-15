@@ -2,6 +2,7 @@ using Application.Users;
 using Domain.Constants;
 using Domain.Entities;
 using Domain.Enums;
+using Domain.Exceptions;
 using Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +13,8 @@ public class HematologyAuthorizationService(ILogger<HematologyAuthorizationServi
 {
     public async Task<bool> Authorize(Hematology? resource, ResourceOperation resourceOperation)
     {
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser()
+            ?? throw new UnauthorizedException();
         return Authorize(user, resource ?? null, resourceOperation);
     }
 

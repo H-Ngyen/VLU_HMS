@@ -19,7 +19,8 @@ public class UpdateCompleteXrayCommandHandler(ILogger<UpdateCompleteXrayCommandH
 {
     public async Task Handle(UpdateCompleteXrayCommand request, CancellationToken cancellationToken)
     {
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser()
+            ?? throw new UnauthorizedException();
         var userId = user.Id;
 
         logger.LogInformation("User {userId} completing for xray {XrayId} of medicalRecord {MedicalRecord}",

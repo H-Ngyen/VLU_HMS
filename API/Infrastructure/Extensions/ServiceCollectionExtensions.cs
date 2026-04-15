@@ -76,6 +76,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IMedicalRecordAuthorizationService, MedicalRecordAuthorizationService>();
         services.AddScoped<IXrayAuthorizationService, XrayAuthorizationService>();
         services.AddScoped<IHematologyAuthorizationService, HematologyAuthorizationService>();
+        services.AddScoped<IDepartmentRepository, DepartmentRepository>();
+        services.AddScoped<IDepartmentAuthorizationService, DepartmentAuthorizationService>();
 
         // add seeders scoped
         services.AddScoped<ISeeder, Seeder>();

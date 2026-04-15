@@ -20,6 +20,9 @@ internal class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(
 
     internal DbSet<XRayStatusLog> XRayStatusLogs { get; set; }
     internal DbSet<HematologyStatusLog> HematologyStatusLogs { get; set; }
+
+    internal DbSet<Department> Departments { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

@@ -20,7 +20,7 @@ public class ImportHematologyCompletedCommandHandler(ILogger<ImportHematologyCom
 {
     public async Task<int> Handle(ImportHematologyCompletedCommand request, CancellationToken cancellationToken)
     {
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser() ?? throw new UnauthorizedException();
         logger.LogInformation("User {userId} completing hematology from import pdf for medical record {MedicalRecordId}",
             user.Id,
             request.MedicalRecordId);

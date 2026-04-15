@@ -16,7 +16,7 @@ public class ImportHematologyCommandHandler(ILogger<ImportHematologyCommandHandl
 {
     public async Task<HematologyDto> Handle(ImportHematologyCommand request, CancellationToken cancellationToken)
     {
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser() ?? throw new UnauthorizedException();
         logger.LogInformation("Extracting pdf to hematology for medical record {MedicalRecordId}", request.MedicalRecordId);
 
         if (!hematologyAuthorizationService.Authorize(user, null, ResourceOperation.Create))

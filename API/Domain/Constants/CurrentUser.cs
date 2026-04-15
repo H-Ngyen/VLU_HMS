@@ -5,7 +5,8 @@ public record CurrentUser(int Id,
     string Email,
     bool EmailVerified,
     string Name,
-    string Role)
+    string Role,
+    int? DepartmentId)
 {
     public bool IsInRole(string role) => Role.Contains(role);
 }

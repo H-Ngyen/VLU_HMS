@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Application.Common;
 using Application.Users;
 using Application.XRays.Dtos;
@@ -16,7 +17,7 @@ public class ImportXrayCommandHandler(ILogger<ImportXrayCommandHandler> logger,
 {
     public async Task<XRayDto> Handle(ImportXrayCommand request, CancellationToken cancellationToken)
     {
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser() ?? throw new UnauthorizedException();
         logger.LogInformation("Extracting pdf to xray for medical record {MedicalRecordId}", request.MedicalRecordId);
 
         if (!xrayAuthorizationService.Authorize(user, null, ResourceOperation.Create))

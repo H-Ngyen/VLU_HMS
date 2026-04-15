@@ -18,7 +18,8 @@ public class ChangeStatusHematologyCommandHandler(ILogger<ChangeStatusHematology
 {
     public async Task Handle(ChangeStatusHematologyCommand request, CancellationToken cancellationToken)
     {
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser()
+            ?? throw new UnauthorizedException();
         var userId = user.Id;
 
         logger.LogInformation("User {UserId} changing status for Hematology {HematologyId} of medicalRecord {medicalRecordId}",

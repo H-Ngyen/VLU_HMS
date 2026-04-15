@@ -20,7 +20,7 @@ public class ImportXrayCompletedCommandHandler(ILogger<ImportXrayCompletedComman
 {
     public async Task<int> Handle(ImportXrayCompletedCommand request, CancellationToken cancellationToken)
     {
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser() ?? throw new UnauthorizedException();
         logger.LogInformation("User {userId} completing xray from import pdf for medical record {MedicalRecordId}",
             user.Id,
             request.MedicalRecordId);

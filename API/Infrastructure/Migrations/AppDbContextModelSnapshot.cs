@@ -22,6 +22,34 @@ namespace Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Domain.Entities.Department", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("HeadUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("HeadUserId")
+                        .IsUnique()
+                        .HasFilter("[HeadUserId] IS NOT NULL");
+
+                    b.ToTable("Departments");
+                });
+
             modelBuilder.Entity("Domain.Entities.DepartmentTransfer", b =>
                 {
                     b.Property<int>("Id")
@@ -640,6 +668,9 @@ namespace Infrastructure.Migrations
                     b.Property<DateTime>("CreateAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -670,6 +701,8 @@ namespace Infrastructure.Migrations
 
                     b.HasIndex("Auth0Id")
                         .IsUnique();
+
+                    b.HasIndex("DepartmentId");
 
                     b.HasIndex("Email")
                         .IsUnique();
@@ -763,6 +796,16 @@ namespace Infrastructure.Migrations
                     b.HasIndex("XRayId", "CreatedAt");
 
                     b.ToTable("XRayStatusLogs", (string)null);
+                });
+
+            modelBuilder.Entity("Domain.Entities.Department", b =>
+                {
+                    b.HasOne("Domain.Entities.User", "HeadUser")
+                        .WithOne()
+                        .HasForeignKey("Domain.Entities.Department", "HeadUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("HeadUser");
                 });
 
             modelBuilder.Entity("Domain.Entities.DepartmentTransfer", b =>
@@ -894,11 +937,18 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Domain.Entities.User", b =>
                 {
+                    b.HasOne("Domain.Entities.Department", "Department")
+                        .WithMany("Users")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("Domain.Entities.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Department");
 
                     b.Navigation("Role");
                 });
@@ -946,6 +996,11 @@ namespace Infrastructure.Migrations
                     b.Navigation("UpdatedBy");
 
                     b.Navigation("XRay");
+                });
+
+            modelBuilder.Entity("Domain.Entities.Department", b =>
+                {
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("Domain.Entities.Hematology", b =>

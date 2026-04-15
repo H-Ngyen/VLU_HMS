@@ -18,7 +18,7 @@ public class ChangeStatusXrayCommandHandler(ILogger<ChangeStatusXrayCommandHandl
 {
     public async Task Handle(ChangeStatusXrayCommand request, CancellationToken cancellationToken)
     {
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser() ?? throw new UnauthorizedException();
         var userId = user.Id;
 
         logger.LogInformation("User {UserId} changing status for Xray {XrayId} of medicalRecord {medicalRecordId}",

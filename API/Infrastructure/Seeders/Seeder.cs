@@ -42,8 +42,24 @@ internal class Seeder(AppDbContext dbContext, IDateTimeProvider dateTimeProvider
                 dbContext.Users.AddRange(users);
                 await dbContext.SaveChangesAsync();
             }
+            if (!dbContext.Departments.Any())
+            {
+                var departments = GetDepartment();
+                dbContext.Departments.AddRange(departments);
+                await dbContext.SaveChangesAsync();
+            }
         }
     }
+
+    private IEnumerable<Department> GetDepartment()
+    {
+        IEnumerable<Department> departments = [
+            new() { Name = "Khoa xét nghiệm", CreatedAt = dateTimeProvider.Now},
+            new() { Name = "Khoa chẩn đoán hình ảnh", CreatedAt = dateTimeProvider.Now}
+        ];
+        return departments;
+    }
+
     private IEnumerable<User> GetUserAdmin(int adminId)
     {
         List<User> users = [

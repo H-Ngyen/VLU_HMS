@@ -20,7 +20,7 @@ public class CreateHematologyCommandHandler(ILogger<CreateHematologyCommandHandl
 {
     public async Task Handle(CreateHematologyCommand request, CancellationToken cancellationToken)
     {
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser() ?? throw new UnauthorizedException();
         var userId = user.Id;
 
         logger.LogInformation("User {userId} creating new hematology for medicalRecord {MedicalRecordId}",

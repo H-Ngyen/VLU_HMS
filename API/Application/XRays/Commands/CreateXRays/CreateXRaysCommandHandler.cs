@@ -21,7 +21,7 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
     public async Task Handle(CreateXRaysCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Creating the new xray with record id: {recordId}", request.MedicalRecordId);
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser() ?? throw new UnauthorizedException();
         var creatorId = user.Id;
 
         var medicalRecord = await medicalRecords.ExistAsync(request.MedicalRecordId);

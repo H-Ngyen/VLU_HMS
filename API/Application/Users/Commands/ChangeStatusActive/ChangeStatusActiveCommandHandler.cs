@@ -16,7 +16,7 @@ public class ChangeStatusActiveCommandHandler(ILogger<ChangeStatusActiveCommandH
 {
     public async Task Handle(ChangeStatusActiveCommand request, CancellationToken cancellationToken)
     {
-        var userContext = await _userContext.GetCurrentUser();
+        var userContext = await _userContext.GetCurrentUser() ?? throw new UnauthorizedException();
             
         logger.LogInformation("User {UserId} changing status active of user {Auth0Id}", userContext.Id , request.Id);
 

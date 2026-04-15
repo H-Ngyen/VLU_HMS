@@ -17,7 +17,7 @@ public class ChangeRoleUserCommandHandler(ILogger<ChangeRoleUserCommandHandler> 
 {
     public async Task Handle(ChangeRoleUserCommand request, CancellationToken cancellationToken)
     {
-        var userContext = await _userContext.GetCurrentUser();
+        var userContext = await _userContext.GetCurrentUser() ?? throw new UnauthorizedException();
         
         logger.LogInformation("User {UserId} changing user role {@request}", userContext.Id, request);
 

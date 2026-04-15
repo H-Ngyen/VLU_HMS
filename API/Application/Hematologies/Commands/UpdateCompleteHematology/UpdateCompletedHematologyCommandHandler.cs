@@ -19,7 +19,7 @@ public class UpdateCompletedHematologyCommandHandler(ILogger<UpdateCompletedHema
 {
     public async Task Handle(UpdateCompletedHematologyCommand request, CancellationToken cancellationToken)
     {
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser() ?? throw new UnauthorizedException();
         var userId = user.Id;
 
         logger.LogInformation("User {userId} completing for hematology {HematologyId} of medicalRecord {MedicalRecord}",

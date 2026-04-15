@@ -22,7 +22,9 @@ public class CreateMedicalRecordCommandHandler(ILogger<CreateMedicalRecordComman
     {
         logger.LogInformation("Creating new medical record");
         
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser()
+            ?? throw new UnauthorizedException();
+            
         var creator = user.Id;
 
         if(!medicalRecordAuthorizationService.Authorize(user, ResourceOperation.Create))

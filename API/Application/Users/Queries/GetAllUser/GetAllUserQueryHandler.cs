@@ -18,7 +18,7 @@ public class GetAllUserQueryHandler(ILogger<GetAllUserQueryHandler> logger,
 {
     public async Task<IEnumerable<UserDto>?> Handle(GetAllUserQuery request, CancellationToken cancellationToken)
     {
-        var user = await userContext.GetCurrentUser();
+        var user = await userContext.GetCurrentUser() ?? throw new UnauthorizedException();
          
         logger.LogInformation("User {userId} getting all user", user.Id);
         var users = await userRepository.GetAllAsync();

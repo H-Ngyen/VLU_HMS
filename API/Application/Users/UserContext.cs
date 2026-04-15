@@ -8,13 +8,13 @@ namespace Application.Users;
 
 public interface IUserContext
 {
-    Task<CurrentUser> GetCurrentUser();
+    Task<CurrentUser?> GetCurrentUser();
     UserTokenData GetPayloadTokenUser();
 }
 
 public class UserContext(IHttpContextAccessor httpContextAccessor, IUserRepository userRepository) : IUserContext
 {
-    public async Task<CurrentUser> GetCurrentUser()
+    public async Task<CurrentUser?> GetCurrentUser()
     {
         var payload = GetPayloadTokenUser();
         var user = await userRepository.FindOneAsync(u => u.Auth0Id == payload.Auth0Id)
@@ -24,7 +24,9 @@ public class UserContext(IHttpContextAccessor httpContextAccessor, IUserReposito
 
         var id = user.Id;
 
-        return new CurrentUser(id, payload.Auth0Id, payload.Email, payload.EmailVerified, payload.Name, role);
+        var departmentId = user.DepartmentId;
+
+        return new CurrentUser(id, payload.Auth0Id, payload.Email, payload.EmailVerified, payload.Name, role, departmentId);
     }
 
     public UserTokenData GetPayloadTokenUser()
