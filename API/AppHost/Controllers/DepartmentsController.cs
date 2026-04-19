@@ -26,6 +26,7 @@ public class DepartmentsController(IMediator mediator) : ControllerBase
         var id = await mediator.Send(command);
         return Created("", id);
     }
+
     [HttpGet]
     [ProducesResponseType(StatusCodes.Status200OK)]
     // [ProducesResponseType(StatusCodes.Status400BadRequest)]

@@ -9,9 +9,9 @@ public class CreateHematologyCommandValidator : AbstractValidator<CreateHematolo
     {
         var today = DateOnly.FromDateTime(dateTimeProvider.Now);
         
-        RuleFor(dto => dto.DepartmentName)
-            .NotEmpty().WithMessage("Tên khoa/phòng không được để trống.")
-            .MaximumLength(255).WithMessage("Tên khoa/phòng không được vượt quá 255 ký tự.");
+        // RuleFor(dto => dto.DepartmentName)
+        //     .NotEmpty().WithMessage("Tên khoa/phòng không được để trống.")
+        //     .MaximumLength(255).WithMessage("Tên khoa/phòng không được vượt quá 255 ký tự.");
 
         RuleFor(dto => dto.RequestDescription)
             .NotEmpty().WithMessage("Nội dung yêu cầu không được để trống.")

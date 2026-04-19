@@ -1,5 +1,6 @@
 using Application.Hematologies.Commands.ChangeStatusHematology;
 using Application.Hematologies.Commands.CreateHematology;
+using Application.Hematologies.Commands.DeleteHematology;
 using Application.Hematologies.Commands.ImportHematology;
 using Application.Hematologies.Commands.ImportHematologyCompleted;
 using Application.Hematologies.Commands.UpdateCompleteHematology;
@@ -38,6 +39,16 @@ public class HematologyController(IMediator mediator) : ControllerBase
         return NoContent();
     }
     
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> Delete(int id)
+    {
+        await mediator.Send(new DeleteHematologyCommand(id));
+        return NoContent();
+    }
+
     [HttpPut("{id:int}/complete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]

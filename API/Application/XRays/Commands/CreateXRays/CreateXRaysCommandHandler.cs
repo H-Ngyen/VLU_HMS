@@ -1,5 +1,7 @@
+using Application.Notifications.Commands.PublishNotification;
 using Application.Users;
 using AutoMapper;
+using Domain.Constants;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Exceptions;
@@ -14,9 +16,11 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
     IUserContext userContext,
     IMedicalRecordsRepository medicalRecords,
     IXrayAuthorizationService xrayAuthorizationService,
+    IDepartmentRepository departmentRepository,
     IMapper mapper,
     IXRayRepository xRayRepository,
-    IDateTimeProvider dateTimeProvider) : IRequestHandler<CreateXRaysCommand>
+    IDateTimeProvider dateTimeProvider,
+    IMediator mediator) : IRequestHandler<CreateXRaysCommand>
 {
     public async Task Handle(CreateXRaysCommand request, CancellationToken cancellationToken)
     {
@@ -28,13 +32,18 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
         if (!medicalRecord)
             throw new BadRequestException(nameof(MedicalRecord), $"{request.MedicalRecordId}");
 
+        var departments = await departmentRepository.GetAllAsync() 
+            ?? throw new InvalidOperationException($"Hệ thống chưa có khoa nào");
+        var currentUserDepartment = departments!.FirstOrDefault(d => d.Id == user.DepartmentId) 
+            ?? throw new BadRequestException($"Bạn chưa thuộc về quyền quản lý của bất kỳ khoa nào");
+
         var xray = mapper.Map<XRay>(request);
         xray.Status = MedicalStatus.Inital;
         xray.RequestedById = creatorId;
         xray.XRayStatusLogs.Add(new XRayStatusLog
         {
             Status = xray.Status,
-            DepartmentName = request.DepartmentName,
+            DepartmentName = currentUserDepartment.Name,
             UpdatedById = creatorId,
             CreatedAt = dateTimeProvider.Now
         });
@@ -43,5 +52,20 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
             throw new ForbidException();
 
         await xRayRepository.CreateAsync(xray);
+        await PublishNotification(xray.Id, request, departments);
+    }
+    private async Task PublishNotification(int xrayId, CreateXRaysCommand request, IEnumerable<Department> departments)
+    {
+        var listUserId = departments
+            .Where(d => request.ListDepartmentId.Contains(d.Id) && d.HeadUserId != null)
+            .Select(d => d.HeadUserId!.Value)
+            .ToList();
+
+        var isSuccess = await mediator.Send(new PublishNotificationCommand(xrayId)
+        {
+            ClinicalType = ClinicalsType.Xray,
+            NotificattionType = NotificationType.XrayInitial,
+            ListUserId = listUserId
+        });
     }
 }

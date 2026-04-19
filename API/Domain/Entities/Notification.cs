@@ -6,16 +6,23 @@ public class Notification
 {
     // primary key
     public int Id { get; set; }
-    // foreign key 
-    public int UserId { get; set; }
+
     // prop
-    public required string Title { get; set; }
-    public required string Message { get; set; }
+    // in-app notification
+    public required string AppTitle { get; set; }
+    public required string AppContent { get; set; }
+
+    // email notification
+    public required string EmailTitle { get; set; }
+    public required string EmailContent { get; set; }
+
     public required NotificationType Type { get; set; }
-    public required int ReferenceId { get; set; }
-    public bool IsRead { get; set; }
+    public int ResourceId { get; set; }
+
     public required DateTime CreatedAt { get; set; }
-    public ICollection<User> Users { get; set; } = [];
+
+    // navigation
+    public ICollection<UserNotification> UserNotifications { get; set; } = [];
 
     public static string? NotificationTypeMapperToString(NotificationType type)
     {

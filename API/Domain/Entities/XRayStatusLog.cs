@@ -12,7 +12,7 @@ public class XRayStatusLog
 
     // Props
     public MedicalStatus Status { get; set; }
-    public required string DepartmentName { get; set; }
+    public string? DepartmentName { get; set; }
     public DateTime CreatedAt { get; set; }
 
     // Navigation 

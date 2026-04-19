@@ -1,5 +1,7 @@
+using Application.Notifications.Commands.PublishNotification;
 using Application.Users;
 using AutoMapper;
+using Domain.Constants;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Exceptions;
@@ -16,7 +18,9 @@ public class CreateHematologyCommandHandler(ILogger<CreateHematologyCommandHandl
     IMapper mapper,
     IDateTimeProvider dateTimeProvider,
     IMedicalRecordsRepository recordsRepository,
-    IHematologyRepository hematologyRepository) : IRequestHandler<CreateHematologyCommand>
+    IHematologyRepository hematologyRepository,
+    IDepartmentRepository departmentRepository,
+    IMediator mediator) : IRequestHandler<CreateHematologyCommand>
 {
     public async Task Handle(CreateHematologyCommand request, CancellationToken cancellationToken)
     {
@@ -30,20 +34,46 @@ public class CreateHematologyCommandHandler(ILogger<CreateHematologyCommandHandl
         var medicalRecord = await recordsRepository.GetByIdAsync(request.MedicalRecordId)
             ?? throw new NotFoundException(nameof(MedicalRecord), $"{request.MedicalRecordId}");
 
-        var hematology = mapper.Map<Hematology>(request);
-        hematology.Status = MedicalStatus.Inital;
-        hematology.RequestedById = userId;
-        hematology.HematologyStatusLogs.Add(new HematologyStatusLog
-        {
-            Status = hematology.Status,
-            DepartmentName = request.DepartmentName,
-            CreatedAt = dateTimeProvider.Now,
-            UpdatedById = userId
-        });
+        var departments = await departmentRepository.GetAllAsync() ?? throw new NotFoundException($"Chưa có khoa nào được tạo");
+
+        var hematology = CreateNewHematology(request, user, departments);
 
         if (!hematologyAuthorizationService.Authorize(user, hematology, ResourceOperation.Create))
             throw new ForbidException();
 
-        await hematologyRepository.CreateAsync(hematology);
+        var id = await hematologyRepository.CreateAsync(hematology);
+
+        await PublishNotification(id, request, departments);
+    }
+
+    private async Task PublishNotification(int hematologyId, CreateHematologyCommand request, IEnumerable<Department> departments)
+    {
+        var listUserId = departments
+            .Where(d => request.ListDepartmentId.Contains(d.Id) && d.HeadUserId != null)
+            .Select(d => d.HeadUserId!.Value)
+            .ToList();
+
+        var isSuccess = await mediator.Send(new PublishNotificationCommand(hematologyId)
+        {
+            ClinicalType = ClinicalsType.Hematology,
+            NotificattionType = NotificationType.HematologyInitial,
+            ListUserId = listUserId
+        });
+    }
+
+    private Hematology CreateNewHematology(CreateHematologyCommand command, CurrentUser currentUser, IEnumerable<Department> department)
+    {
+        var requestUserDepartment = department.FirstOrDefault(d => d.Id == currentUser.DepartmentId);
+        var hematology = mapper.Map<Hematology>(command);
+        hematology.Status = MedicalStatus.Inital;
+        hematology.RequestedById = currentUser.Id;
+        hematology.HematologyStatusLogs.Add(new HematologyStatusLog
+        {
+            Status = hematology.Status,
+            DepartmentName = requestUserDepartment?.Name,
+            CreatedAt = dateTimeProvider.Now,
+            UpdatedById = currentUser.Id
+        });
+        return hematology;
     }
 }

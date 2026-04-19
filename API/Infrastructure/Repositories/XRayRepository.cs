@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Domain.Entities;
 using Domain.Repositories;
 using Infrastructure.Persistence;
@@ -14,8 +15,21 @@ internal class XRayRepository(AppDbContext context) : BaseRepository<XRay>(conte
         return entity.Id;
     }
 
+    public async Task DeleteAsync(XRay entity)
+    {
+        _dbContext.XRays.Remove(entity);
+        await SaveChanges();
+    }
+
+    public async Task<XRay?> FindOneAsync(Expression<Func<XRay, bool>> predicate)
+        => await TrackingQuery
+            .Include(x => x.XRayStatusLogs)
+            .FirstOrDefaultAsync(predicate);
+
     public async Task<XRay?> GetByIdAsync(int id)
-        => await TrackingQuery.FirstOrDefaultAsync(x => x.Id == id);
+        => await TrackingQuery
+            .Include(x => x.XRayStatusLogs)
+            .FirstOrDefaultAsync(x => x.Id == id);
 
     public async Task SaveChanges() => await _dbContext.SaveChangesAsync();
 

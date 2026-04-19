@@ -22,6 +22,8 @@ internal class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(
     internal DbSet<HematologyStatusLog> HematologyStatusLogs { get; set; }
 
     internal DbSet<Department> Departments { get; set; }
+    internal DbSet<Notification> Notification { get; set; }
+    internal DbSet<UserNotification> UserNotifications { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -2,9 +2,13 @@ namespace Domain.Entities;
 
 public class User
 {
+    //PK
     public int Id { get; set; }
+    //FK
     public required int RoleId { get; set; }
     public int? DepartmentId { get; set; }
+
+    //Prop
     public required string Auth0Id { get; set; }
     public required string Email { get; set; }
     public bool EmailVerify { get; set; }
@@ -21,4 +25,5 @@ public class User
     // Navigation Properties
     public Role Role { get; set; } = null!;
     public Department? Department { get; set; }
+    public ICollection<UserNotification> UserNotifications { get; set; } = [];
 }

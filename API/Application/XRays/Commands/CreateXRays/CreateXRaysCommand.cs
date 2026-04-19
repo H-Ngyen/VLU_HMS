@@ -8,9 +8,10 @@ public class CreateXRaysCommand : IRequest
     // Liên kết với Hồ sơ bệnh án
     public int MedicalRecordId { get; set; }
     // public required int RequestedById { get; set; }
-    public required string DepartmentName { get; set; }
+    // public required string DepartmentName { get; set; }
     // Props
     // --- Phần Yêu cầu (Request) ---
     public required string RequestDescription { get; set; }
     public required DateOnly RequestedAt { get; set; }
+    public required IEnumerable<int> ListDepartmentId { get; set; }
 }

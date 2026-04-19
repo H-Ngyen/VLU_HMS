@@ -18,11 +18,18 @@ public class ErrorHandlingMiddleware(ILogger<ErrorHandlingMiddleware> logger) : 
 
             logger.LogWarning("{Message}", ex.Message);
         }
+        catch (InvalidOperationException ex)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsync("System configuration error");
+
+            logger.LogCritical(ex, ex.Message);
+        }
         catch (Exception ex)
         {
             context.Response.StatusCode = 500;
             await context.Response.WriteAsync("Internal server error");
-        
+
             logger.LogError(ex, ex.Message);
         }
     }

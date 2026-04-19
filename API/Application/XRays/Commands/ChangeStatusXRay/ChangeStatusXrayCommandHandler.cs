@@ -1,4 +1,6 @@
+using Application.Notifications.Commands.PublishNotification;
 using Application.Users;
+using Domain.Constants;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Exceptions;
@@ -14,7 +16,9 @@ public class ChangeStatusXrayCommandHandler(ILogger<ChangeStatusXrayCommandHandl
     IXRayRepository xRayRepository,
     IUserContext userContext,
     IXrayAuthorizationService xrayAuthorizationService,
-    IDateTimeProvider dateTimeProvider) : IRequestHandler<ChangeStatusXrayCommand>
+    IDepartmentRepository departmentRepository,
+    IDateTimeProvider dateTimeProvider,
+    IMediator mediator) : IRequestHandler<ChangeStatusXrayCommand>
 {
     public async Task Handle(ChangeStatusXrayCommand request, CancellationToken cancellationToken)
     {
@@ -31,6 +35,9 @@ public class ChangeStatusXrayCommandHandler(ILogger<ChangeStatusXrayCommandHandl
 
         var xray = medicalRecord.XRays.FirstOrDefault(x => x.Id == request.Id)
             ?? throw new NotFoundException(nameof(XRay), $"{request.Id}");
+
+        var currentUserDepartment = await departmentRepository.FindOneAsync(d => d.Id == user.DepartmentId)
+            ?? throw new BadRequestException($"Người dùng {user.Name} chưa thuộc về khoa nào");
 
         if (xray.MedicalRecordId != request.MedicalRecordId)
             throw new BadRequestException($"Phiếu chụp x-quang {request.Id} không thuộc hồ sơ bệnh án {request.MedicalRecordId}.");
@@ -52,11 +59,32 @@ public class ChangeStatusXrayCommandHandler(ILogger<ChangeStatusXrayCommandHandl
         xray.XRayStatusLogs.Add(new XRayStatusLog
         {
             Status = request.Status,
-            DepartmentName = request.DepartmentName,
+            DepartmentName = currentUserDepartment.Name,
             UpdatedById = userId,
             CreatedAt = dateTimeProvider.Now
         });
         await xRayRepository.SaveChanges();
+        await PublishNotification(xray);
+    }
+
+    private async Task PublishNotification(XRay xRay)
+    {
+        var userId = xRay.RequestedById;
+        var isSuccess = await mediator.Send(new PublishNotificationCommand(xRay.Id)
+        {
+            NotificattionType = MedicalStatusToNotificationType(xRay.Status),
+            ClinicalType = ClinicalsType.Xray,
+            ListUserId = new[] { userId }
+        });
+    }
+    private NotificationType MedicalStatusToNotificationType(MedicalStatus medicalStatus)
+    {
+        return medicalStatus switch
+        {
+            MedicalStatus.Received => NotificationType.XrayReceived,
+            MedicalStatus.Processing => NotificationType.XrayProcessing,
+            _ => NotificationType.XrayCompleted
+        };
     }
 
     private static bool IsValidTransition(MedicalStatus current, MedicalStatus next)

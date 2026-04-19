@@ -1,5 +1,6 @@
 using Application.XRays.Commands.ChangeStatusXray;
 using Application.XRays.Commands.CreateXRays;
+using Application.XRays.Commands.DeleteXray;
 using Application.XRays.Commands.ImportXray;
 using Application.XRays.Commands.ImportXrayCompleted;
 using Application.XRays.Commands.UpdateCompleteXray;
@@ -36,6 +37,17 @@ public class XRaysController(IMediator mediator) : ControllerBase
         command.MedicalRecordId = recordId;
         command.Id = id;
         await mediator.Send(command);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    // [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> DeleteXray(int id)
+    {
+        await mediator.Send(new DeleteXrayCommand(id));
         return NoContent();
     }
 

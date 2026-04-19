@@ -48,6 +48,14 @@ public class DepartmentAuthorizationService(ILogger<DepartmentAuthorizationServi
             }
         }
 
+        if (resourceOperation == ResourceOperation.Read
+            && UserRoles.IsInRoles(user.Role))
+        {
+            logger.LogInformation("Read operation, action {Action}- successful authorization", DepartmentAction.Default);
+            return true;
+        }
+
+
         return false;
     }
 }

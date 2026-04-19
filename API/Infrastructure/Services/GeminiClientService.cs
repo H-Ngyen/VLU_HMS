@@ -7,9 +7,9 @@ namespace Infrastructure.Services;
 
 public class GeminiClientService(HttpClient httpClient, IConfiguration config) : IGeminiClientService
 {
-    private readonly string _apiKey = config["Gemini:ApiKey"]!;
-    private readonly string _model = config["Gemini:Model"] ?? "gemini-2.5-flash";
-    private readonly string _action = config["Gemini:Action"] ?? "generateContent";
+    private readonly string _apiKey = config["Gemini:ApiKey"] ?? throw new InvalidOperationException("Gemini:ApiKey is not configured");
+    private readonly string _model = config["Gemini:Model"] ?? throw new InvalidOperationException("Gemini:Model is not configured");
+    private readonly string _action = config["Gemini:Action"] ?? throw new InvalidOperationException("Gemini:Action is not configured");
     private string ApiUrl => $"https://generativelanguage.googleapis.com/v1/models/{_model}:{_action}?key={_apiKey}";
 
     public async Task<string> GenerateContentAsync(object requestBody)

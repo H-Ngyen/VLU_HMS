@@ -1,6 +1,6 @@
 namespace Domain.Enums;
 
-public enum NotificationType
+public enum NotificationType 
 {
     //xray
     XrayInitial,

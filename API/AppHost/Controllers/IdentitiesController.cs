@@ -23,9 +23,7 @@ public class IdentitiesController(IMediator mediator) : ControllerBase
     public async Task<ActionResult<int>> CreateCurrentUser(CreateCurrentUserCommand command)
     {
         var (id, isNew) = await mediator.Send(command);
-        if (!isNew)
-            return Ok();
-        return Created("", id);
+        return isNew ? Created("", id) : Ok(id);
     }
 
     [HttpGet("users")]

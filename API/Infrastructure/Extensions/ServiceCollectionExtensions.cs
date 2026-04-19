@@ -40,7 +40,7 @@ public static class ServiceCollectionExtensions
 
         // SETUP GEMINI - SEMANTIC KERNEL
         var geminiSettings = config.GetSection("Gemini").Get<GeminiSettings>()
-    ?? throw new Exception("Gemini settings are missing in appsettings.json");
+            ?? throw new Exception("Gemini settings are missing in appsettings.json");
 
         // KIỂM TRA NHANH:
         Console.WriteLine($"[DEBUG] Gemini Model: '{geminiSettings.Model}'");
@@ -71,14 +71,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IXRayRepository, XRayRepository>();
         services.AddScoped<IHematologyRepository, HematologyRepository>();
         services.AddScoped<IUserRoleRepository, UserRolesRepository>();
-        services.AddScoped<IUserAuthorizationService, UserAuthorizationService>();
-        services.AddScoped<IPatientAuthorizationService, PatientAuthorizationService>();
-        services.AddScoped<IMedicalRecordAuthorizationService, MedicalRecordAuthorizationService>();
-        services.AddScoped<IXrayAuthorizationService, XrayAuthorizationService>();
-        services.AddScoped<IHematologyAuthorizationService, HematologyAuthorizationService>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
-        services.AddScoped<IDepartmentAuthorizationService, DepartmentAuthorizationService>();
-
+        services.AddScoped<INotificationRepository, NotificationRepository>();
         // add seeders scoped
         services.AddScoped<ISeeder, Seeder>();
 
@@ -88,5 +82,16 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IGenerateIdService, GenerateIdService>();
         services.AddScoped<IPdfProcessorService, PdfProcessorService>();
         services.AddHttpClient<IGeminiClientService, GeminiClientService>();
+        services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
+        // services.AddHostedService<BackgroundWorker>();
+        services.AddScoped<IEmailService, EmailService>();
+
+        // add authorization
+        services.AddScoped<IUserAuthorizationService, UserAuthorizationService>();
+        services.AddScoped<IPatientAuthorizationService, PatientAuthorizationService>();
+        services.AddScoped<IMedicalRecordAuthorizationService, MedicalRecordAuthorizationService>();
+        services.AddScoped<IXrayAuthorizationService, XrayAuthorizationService>();
+        services.AddScoped<IHematologyAuthorizationService, HematologyAuthorizationService>();
+        services.AddScoped<IDepartmentAuthorizationService, DepartmentAuthorizationService>();
     }
 }
