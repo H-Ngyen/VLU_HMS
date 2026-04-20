@@ -11,12 +11,13 @@ const navs = [
   { href: "/", label: "Bệnh án" },
   { href: "/patients", label: "Bệnh nhân" },
   { href: "/account", label: "Tài khoản" },
+  { href: "/departments", label: "Khoa" },
 ];
 
 export function Header() {
   const { pathname } = useLocation();
   const { user, logout: auth0Logout } = useAuth0();
-  const { isAdmin } = useAuth();
+  const { isAdmin, isTeacher } = useAuth();
 
   const handleLogout = () => {
     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
@@ -24,6 +25,7 @@ export function Header() {
 
   const filteredNavs = navs.filter(nav => {
     if (nav.href === "/account") return isAdmin;
+    if (nav.href === "/departments") return isAdmin || isTeacher;
     return true;
   });
 

@@ -68,6 +68,11 @@ export const AccountTableRow = ({ user, onRefresh }: AccountTableRowProps) => {
         </div>
       </TableCell>
       <TableCell>
+        <span className="text-sm text-gray-600">
+          {user.departmentName || <span className="text-gray-400 italic">Chưa gán khoa</span>}
+        </span>
+      </TableCell>
+      <TableCell>
         {isEditing ? (
           <Select value={selectedRole} onValueChange={setSelectedRole}>
             <SelectTrigger className="w-[140px] h-8">

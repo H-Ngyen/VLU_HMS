@@ -8,55 +8,57 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { User as UserType } from "@/types";
-import { AccountTableRow } from "./AccountTableRow";
+import type { Department } from "@/types";
+import { DepartmentTableRow } from "./DepartmentTableRow";
 
-interface AccountTableProps {
-  users: UserType[];
+interface DepartmentTableProps {
+  departments: Department[];
   onRefresh: () => void;
 }
 
-export const AccountTable = ({ users, onRefresh }: AccountTableProps) => {
+export const DepartmentTable = ({ departments, onRefresh }: DepartmentTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [prevUsersLength, setPrevUsersLength] = useState(users.length);
   const itemsPerPage = 10;
 
-  if (users.length !== prevUsersLength) {
-    setPrevUsersLength(users.length);
-    setCurrentPage(1);
-  }
-
-  const totalPages = Math.ceil(users.length / itemsPerPage);
+  const totalPages = Math.ceil(departments.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentUsers = users.slice(startIndex, endIndex);
+  const currentDepartments = departments.slice(startIndex, endIndex);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
       <Table>
         <TableHeader>
           <TableRow className="bg-gray-50 hover:bg-gray-50">
-            <TableHead className="font-semibold text-gray-700">Người dùng</TableHead>
-            <TableHead className="font-semibold text-gray-700">Khoa</TableHead>
-            <TableHead className="font-semibold text-gray-700">Vai trò</TableHead>
-            <TableHead className="font-semibold text-gray-700">Trạng thái</TableHead>
+            <TableHead className="font-semibold text-gray-700">Tên Khoa</TableHead>
+            <TableHead className="font-semibold text-gray-700">Trưởng Khoa</TableHead>
+            <TableHead className="font-semibold text-gray-700">Nhân viên</TableHead>
             <TableHead className="text-right font-semibold text-gray-700">Thao tác</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {currentUsers.map((user) => (
-            <AccountTableRow
-              key={user.id}
-              user={user}
-              onRefresh={onRefresh}
-            />
-          ))}
+          {currentDepartments.length > 0 ? (
+            currentDepartments.map((dept) => (
+              <DepartmentTableRow
+                key={dept.id}
+                department={dept}
+                onRefresh={onRefresh}
+              />
+            ))
+          ) : (
+            <TableRow>
+              <TableCell colSpan={4} className="h-24 text-center text-gray-500">
+                Không tìm thấy khoa nào.
+              </TableCell>
+            </TableRow>
+          )}
         </TableBody>
       </Table>
-      {users.length > 0 && (
+      
+      {departments.length > 0 && (
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between">
           <div className="text-xs text-gray-500">
-            Hiển thị <span className="font-medium">{startIndex + 1}</span> đến <span className="font-medium">{Math.min(endIndex, users.length)}</span> trên tổng số <span className="font-medium">{users.length}</span> bản ghi
+            Hiển thị <span className="font-medium">{startIndex + 1}</span> đến <span className="font-medium">{Math.min(endIndex, departments.length)}</span> trên tổng số <span className="font-medium">{departments.length}</span> bản ghi
           </div>
           <div className="flex items-center space-x-2">
             <Button 
@@ -73,7 +75,7 @@ export const AccountTable = ({ users, onRefresh }: AccountTableProps) => {
               variant="outline" 
               size="icon" 
               className="h-8 w-8"
-              disabled={currentPage === totalPages}
+              disabled={currentPage === totalPages || totalPages === 0}
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
             >
               <ChevronRight className="size-4" />
@@ -84,3 +86,6 @@ export const AccountTable = ({ users, onRefresh }: AccountTableProps) => {
     </div>
   );
 };
+
+// Add TableCell import fix
+import { TableCell } from "@/components/ui/table";

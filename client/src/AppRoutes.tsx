@@ -8,12 +8,13 @@ import { PatientManagementView } from "./components/Patient/Management/PatientMa
 import { EditPatientForm } from "./components/Patient/Edit/EditPatientForm";
 import { AddPatientForm } from "./components/Patient/Add/AddPatientForm";
 import { AccountManagementView } from "./components/Account/AccountManagementView";
+import { DepartmentManagementView } from "./components/Department/DepartmentManagementView";
 import LoginPage from "./pages/LoginPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./contexts/AuthContext";
 
 function AppRoutes() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isTeacher } = useAuth();
 
   return (
       <Routes>
@@ -28,6 +29,7 @@ function AppRoutes() {
           <Route path="/patient/add" element={<AddPatientForm />} />
           <Route path="/patient/edit/:id" element={<EditPatientForm />} />
           <Route path="/account" element={isAdmin ? <AccountManagementView /> : <Navigate to="/" replace />} />
+          <Route path="/departments" element={isAdmin || isTeacher ? <DepartmentManagementView /> : <Navigate to="/" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

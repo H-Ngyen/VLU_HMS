@@ -395,10 +395,13 @@ export const api = {
       }
 
       if (response.status === 201 || response.status === 200) {
+        const text = await response.text();
         try {
-          return await response.json();
+          return JSON.parse(text);
         } catch {
-          return null;
+          // Nếu không phải JSON (có thể là ID số thuần túy), trả về trực tiếp
+          const id = parseInt(text);
+          return isNaN(id) ? text : id;
         }
       }
       return null;
@@ -454,6 +457,61 @@ export const api = {
         }
         throw new Error(error?.message || error?.title || 'Failed to change user role');
       }
+    }
+  },
+
+  departments: {
+    getAll: async (): Promise<Department[]> => {
+      const response = await fetch(`${API_BASE_URL}/departments`, {
+        headers: getHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to fetch departments');
+      return response.json();
+    },
+    create: async (name: string): Promise<number> => {
+      const response = await fetch(`${API_BASE_URL}/departments`, {
+        method: 'POST',
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ name }),
+      });
+      if (!response.ok) throw new Error('Failed to create department');
+      return response.json();
+    },
+    update: async (id: number, name: string): Promise<void> => {
+      const response = await fetch(`${API_BASE_URL}/departments/${id}`, {
+        method: 'PUT',
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ name }),
+      });
+      if (!response.ok) throw new Error('Failed to update department');
+    },
+    delete: async (id: number): Promise<void> => {
+      const response = await fetch(`${API_BASE_URL}/departments/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to delete department');
+    },
+    assignUser: async (departmentId: number, userId: number): Promise<void> => {
+      const response = await fetch(`${API_BASE_URL}/departments/${departmentId}/users/${userId}`, {
+        method: 'PUT',
+        headers: getHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to assign user to department');
+    },
+    assignHead: async (departmentId: number, userId: number): Promise<void> => {
+      const response = await fetch(`${API_BASE_URL}/departments/${departmentId}/users/${userId}/head`, {
+        method: 'PUT',
+        headers: getHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to assign head to department');
+    },
+    removeUser: async (departmentId: number, userId: number): Promise<void> => {
+      const response = await fetch(`${API_BASE_URL}/departments/${departmentId}/users/${userId}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to remove user from department');
     }
   }
 };

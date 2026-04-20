@@ -203,5 +203,16 @@ export interface User {
   name: string;
   active: boolean;
   roleName: string;
+  departmentId?: number;
+  departmentName?: string;
   createAt: string;
+}
+
+export interface Department {
+  id: number;
+  name: string;
+  headUserId?: number;
+  headUser?: User;
+  users?: User[];
+  createdAt: string;
 }

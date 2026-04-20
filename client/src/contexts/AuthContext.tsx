@@ -36,7 +36,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setAccessToken(token); 
           
           // 1. Sync user with backend (POST /api/identities)
-          // Gửi kèm thông tin user trong body để đề phòng Backend cần
           const result = await api.identities.sync(token, {
             auth0Id: user.sub,
             email: user.email,
@@ -48,11 +47,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           
           let dbUser: User | null = null;
           
+          // Lấy ID người dùng (xử lý nhiều định dạng trả về từ Backend)
+          let userId: number | null = null;
           if (typeof result === 'number') {
-            dbUser = await api.identities.getUser(result, token);
-          } else {
-            const allUsers = await api.identities.getAllUsers(token);
-            dbUser = allUsers.find(u => u.auth0Id === user.sub) || null;
+            userId = result;
+          } else if (result && typeof result === 'object') {
+            userId = result.id || (result.data && result.data.id);
+          } else if (typeof result === 'string') {
+            userId = parseInt(result);
+          }
+          
+          if (userId && !isNaN(userId)) {
+            // Đợi 2 giây để Backend ổn định dữ liệu
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            try {
+              dbUser = await api.identities.getUser(userId, token);
+            } catch (e: any) {
+              console.warn("Lấy thông tin bị lỗi, đang thử xử lý lại...");
+              // Chờ thêm một chút rồi thử lại lần cuối
+              await new Promise(resolve => setTimeout(resolve, 3000));
+              try {
+                dbUser = await api.identities.getUser(userId, token);
+              } catch (retryError) {
+                console.error("Retry failed:", retryError);
+                throw new Error("Tài khoản đã được tạo nhưng hệ thống cần thời gian để đồng bộ. Vui lòng F5 hoặc đăng nhập lại sau 1 phút.");
+              }
+            }
           }
           
           if (dbUser) {
