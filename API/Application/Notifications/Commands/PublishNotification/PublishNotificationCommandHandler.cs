@@ -1,10 +1,13 @@
 using Application.Common;
+using Application.Notifications.Dtos;
+using AutoMapper;
 using Domain.Constants;
 using Domain.Entities;
 using Domain.Enums;
 using Domain.Interfaces;
 using Domain.Repositories;
 using MediatR;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Notifications.Commands.PublishNotification;
@@ -16,19 +19,33 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
     IXRayRepository xRayRepository,
     IUserRepository userRepository,
     IEmailService emailService,
-    IDateTimeProvider datetimeProvider) : IRequestHandler<PublishNotificationCommand, bool>
+    IDateTimeProvider datetimeProvider,
+    IMapper mapper,
+    IHubContext<NotificationHub> hubContext) : IRequestHandler<PublishNotificationCommand, bool>
 {
     public async Task<bool> Handle(PublishNotificationCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Publishing new notification");
 
         var users = await userRepository.GetAllAsync();
-        var listUser = users!.Where(u => request.ListUserId.Contains(u.Id));
+        var listUser = users!.Where(u => request.ListUserId.Contains(u.Id)).ToList();
 
         var medicalRecordId = await GetMedicalRecordId(request.ResourceId, request.ClinicalType);
         var newNotification = await CreateNewNotification(request.ResourceId, medicalRecordId, request.NotificattionType, listUser);
 
         await notificationRepository.CreateAsync(newNotification);
+
+        foreach (var user in listUser)
+        {
+            var userNotification = newNotification.UserNotifications.FirstOrDefault(un => un.UserId == user.Id);
+            if (userNotification != null)
+            {
+                var dto = mapper.Map<UserNotificationDto>(userNotification);
+                await hubContext.Clients
+                    .User(user.Auth0Id.ToString())
+                    .SendAsync("notification_received", dto, cancellationToken);
+            }
+        }
         return true;
     }
 

@@ -1,6 +1,9 @@
+using System.Collections.Immutable;
+using System.Linq.Expressions;
 using Domain.Entities;
 using Domain.Repositories;
 using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Repositories;
 

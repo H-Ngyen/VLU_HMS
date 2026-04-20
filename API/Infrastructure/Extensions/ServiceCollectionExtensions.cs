@@ -60,7 +60,26 @@ public static class ServiceCollectionExtensions
         {
             options.Authority = config["Auth0:Authority"];
             options.Audience = config["Auth0:Audience"];
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+
+                    // If the request is for our hub...
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) &&
+                        (path.StartsWithSegments("/hubs/notifications")))
+                    {
+                        // Read the token out of the query string
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         });
+
 
         // add repositories scoped
         services.AddScoped<IPatientsRepository, PatientsRepository>();
@@ -73,6 +92,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRoleRepository, UserRolesRepository>();
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
+        services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
+
         // add seeders scoped
         services.AddScoped<ISeeder, Seeder>();
 
@@ -93,5 +114,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IXrayAuthorizationService, XrayAuthorizationService>();
         services.AddScoped<IHematologyAuthorizationService, HematologyAuthorizationService>();
         services.AddScoped<IDepartmentAuthorizationService, DepartmentAuthorizationService>();
+        services.AddScoped<IUserNotificationAuthorizationService, UserNotificationAuthorizationService>();
     }
 }

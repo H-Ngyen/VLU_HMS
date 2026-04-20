@@ -1,6 +1,7 @@
 using AppHost.Extensions;
 using AppHost.Middlewares;
 using Application.Extensions;
+using Application.Notifications;
 using Infrastructure.Extensions;
 using Infrastructure.Seeders;
 using Serilog;
@@ -44,6 +45,8 @@ app.UseCors("AllowReactApp");
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.MapControllers();
 
