@@ -296,6 +296,13 @@ export const api = {
         const text = await response.text();
         throw new Error(text || 'Failed to complete X-Ray import');
       }
+    },
+    delete: async (recordId: number, id: number): Promise<void> => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to delete X-Ray');
     }
   },
 
@@ -330,6 +337,13 @@ export const api = {
          const errorText = await response.text();
          throw new Error(`Failed to complete Hematology: ${errorText}`);
       }
+    },
+    delete: async (recordId: number, id: number): Promise<void> => {
+      const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/hematologies/${id}`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to delete Hematology');
     }
   },
 

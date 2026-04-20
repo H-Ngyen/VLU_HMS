@@ -31,19 +31,41 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
   const [viewingHematologyDoc, setViewingHematologyDoc] = useState<Document | null>(null);
 
 
-  const handleDelete = (docId: string) => {
+  const handleDelete = async (docId: string) => {
     if (readOnly) return;
     if (!window.confirm("Bạn có chắc chắn muốn xóa phiếu này?")) return;
 
     if (docId.startsWith("XRAY_") || docId.startsWith("HEMA_")) {
-       // Explain to BA/Dev
-       import("sonner").then(m => {
-           m.toast.error(
-             "Do Nguyễn Ngô Hoàng Nguyên lười nên chức năng này comming soon",
-             { duration: 6000 }
-           );
-       });
-       return;
+      const isXRay = docId.startsWith("XRAY_");
+      const id = parseInt(docId.split("_")[1]);
+      const recordId = formData.numericId;
+
+      if (!recordId || isNaN(id)) {
+        import("sonner").then(m => m.toast.error("Không thể xác định mã bệnh án hoặc phiếu"));
+        return;
+      }
+
+      try {
+        if (isXRay) {
+          await api.xRays.delete(recordId, id);
+        } else {
+          await api.hematologies.delete(recordId, id);
+        }
+        
+        import("sonner").then(m => m.toast.success("Xóa phiếu thành công"));
+        
+        setFormData((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            documents: prev.documents.filter((d) => d.id !== docId),
+          };
+        });
+      } catch (error: any) {
+        console.error("Lỗi khi xóa phiếu:", error);
+        import("sonner").then(m => m.toast.error(error.message || "Lỗi khi xóa phiếu"));
+      }
+      return;
     }
 
     setFormData((prev) => {
