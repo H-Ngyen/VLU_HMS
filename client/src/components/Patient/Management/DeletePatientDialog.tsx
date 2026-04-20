@@ -51,7 +51,9 @@ export const DeletePatientDialog = ({
             <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
               <AlertTriangle className="h-5 w-5 text-red-600" />
             </div>
-            <DialogTitle className="text-xl">Xác nhận xóa bệnh nhân</DialogTitle>
+            <div className="flex flex-col gap-1">
+              <DialogTitle>Xác nhận xóa bệnh nhân</DialogTitle>
+            </div>
           </div>
           <DialogDescription className="pt-4 text-base">
             Bạn có chắc chắn muốn xóa bệnh nhân{" "}

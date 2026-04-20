@@ -101,32 +101,9 @@ export const DepartmentManagementView = () => {
 
       <DepartmentFormDialog 
         open={isDialogOpen} 
-        onOpenChange={(open) => {
-          // Không cho phép đóng Dialog tạo khoa nếu đang chờ gán Trưởng khoa
-          if (!isAssignHeadOpen) {
-            setIsDialogOpen(open);
-          }
-        }} 
+        onOpenChange={setIsDialogOpen} 
         onSuccess={handleCreateSuccess}
       />
-
-      {newDepartmentId && (
-        <AssignUserDialog 
-          open={isAssignHeadOpen} 
-          onOpenChange={(open) => {
-            // Không cho phép tắt Dialog gán trưởng khoa bằng cách click ra ngoài
-            // Bắt buộc phải chọn trưởng khoa (hoặc xử lý nút Hủy cụ thể)
-            if (!open) {
-              toast.warning("Bạn chưa gán Trưởng khoa. Có thể gán sau trong Menu thao tác.");
-              setIsAssignHeadOpen(false);
-              setIsDialogOpen(false);
-            }
-          }} 
-          onSuccess={handleAssignHeadSuccess}
-          departmentId={newDepartmentId}
-          mode="head"
-        />
-      )}
     </div>
   );
 };
