@@ -240,8 +240,18 @@ export const api = {
         headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error('Failed to create X-Ray');
-      return response.text(); // Return ID if available
+      if (!response.ok) {
+        const text = await response.text();
+        let errorMessage = 'Failed to create X-Ray';
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.message || errorData.title || text;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+      return response.text(); 
     },
     changeStatus: async (recordId: number, id: number, data: { status?: number, departmentName: string }) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays/${id}`, {
@@ -313,8 +323,18 @@ export const api = {
         headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify(data)
       });
-      if (!response.ok) throw new Error('Failed to create Hematology');
-      return response.text(); // Return ID if available
+      if (!response.ok) {
+        const text = await response.text();
+        let errorMessage = 'Failed to create Hematology';
+        try {
+          const errorData = JSON.parse(text);
+          errorMessage = errorData.message || errorData.title || text;
+        } catch {
+          errorMessage = text || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
+      return response.text(); 
     },
     changeStatus: async (recordId: number, id: number, data: { status?: number, departmentName: string }) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/hematologies/${id}`, {
@@ -489,7 +509,12 @@ export const api = {
         body: JSON.stringify({ name }),
       });
       if (!response.ok) throw new Error('Failed to create department');
-      return response.json();
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return parseInt(text);
+      }
     },
     update: async (id: number, name: string): Promise<void> => {
       const response = await fetch(`${API_BASE_URL}/departments/${id}`, {

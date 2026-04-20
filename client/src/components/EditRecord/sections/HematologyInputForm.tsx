@@ -4,12 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CheckCircle2, Circle, Loader2 } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { cn } from "@/lib/utils";
+import { Check, ChevronsUpDown, CheckCircle2, Circle, Loader2 } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
 import { api } from "@/services/api";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import type { Department } from "@/types";
 
 interface HematologyStatusLog {
   status: number;
@@ -228,8 +243,25 @@ export const HematologyInputForm = ({
 
   const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
   const [departmentInput, setDepartmentInput] = useState("");
+  const [openConfirmCombobox, setOpenConfirmCombobox] = useState(false);
   const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "PDF" | "FAST_TRACK" | null>(null);
   const [isGenerating, setIsGenerating] = useState(!!(isOpen && initialData && readOnly));
+
+  const [departmentsList, setDepartmentsList] = useState<Department[]>([]);
+
+  useEffect(() => {
+    if (isDeptDialogOpen) {
+      const fetchDepts = async () => {
+        try {
+          const data = await api.departments.getAll();
+          setDepartmentsList(data);
+        } catch (error) {
+          console.error("Failed to fetch departments", error);
+        }
+      };
+      fetchDepts();
+    }
+  }, [isDeptDialogOpen]);
 
   const generateAndOpenPDF = async (dataToSave: HematologyData) => {
     if (!printRef.current) return;
@@ -425,8 +457,12 @@ export const HematologyInputForm = ({
         const requestedAt = getRequestDateString(formData);
         
         if (!currentHematologyId) {
+            // Find department ID from name
+            const selectedDept = departmentsList.find(d => d.name === departmentInput);
+            const deptIds = selectedDept ? [selectedDept.id] : [];
+
             const createPayload = {
-                departmentName: departmentInput,
+                listDepartmentId: deptIds,
                 requestDescription: formData.diagnosis || "Yêu cầu xét nghiệm Huyết học",
                 requestedAt: requestedAt
             };
@@ -1042,7 +1078,7 @@ export const HematologyInputForm = ({
         <DialogHeader>
           <DialogTitle>Xác nhận đơn vị thực hiện</DialogTitle>
           <DialogDescription>
-            Vui lòng nhập tên khoa/phòng sẽ thực hiện chỉ định này.
+            Vui lòng chọn khoa/phòng sẽ thực hiện chỉ định này.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -1050,18 +1086,55 @@ export const HematologyInputForm = ({
             <Label htmlFor="dept" className="text-right">
               Khoa/Phòng
             </Label>
-            <Input
-              id="dept"
-              value={departmentInput}
-              onChange={(e) => setDepartmentInput(e.target.value)}
-              placeholder="Ví dụ: Khoa Xét nghiệm Huyết học"
-              className="col-span-3"
-            />
+            <div className="col-span-3">
+              <Popover open={openConfirmCombobox} onOpenChange={setOpenConfirmCombobox}>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="dept"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openConfirmCombobox}
+                    className="w-full justify-between font-normal"
+                  >
+                    {departmentInput || "Chọn khoa thực hiện..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[300px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Tìm khoa..." />
+                    <CommandList>
+                      <CommandEmpty>Không tìm thấy khoa phù hợp.</CommandEmpty>
+                      <CommandGroup>
+                        {departmentsList.map((d) => (
+                          <CommandItem
+                            key={d.id}
+                            value={d.name}
+                            onSelect={(currentValue) => {
+                              setDepartmentInput(currentValue);
+                              setOpenConfirmCombobox(false);
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                departmentInput === d.name ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {d.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsDeptDialogOpen(false)}>Hủy</Button>
-          <Button type="button" onClick={handleConfirmDepartment} className="bg-vlu-red text-white hover:bg-vlu-red/90" disabled={!departmentInput.trim()}>
+          <Button type="button" onClick={handleConfirmDepartment} className="bg-vlu-red text-white hover:bg-vlu-red/90" disabled={!departmentInput || departmentInput === "none"}>
             Xác nhận
           </Button>
         </DialogFooter>

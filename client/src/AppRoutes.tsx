@@ -26,10 +26,8 @@ function AppRoutes() {
           <Route path="/record/:id" element={<RecordDetailView />} />
           <Route path="/record/edit/:id" element={<EditRecordView />} />
           <Route path="/record/create/:patientId" element={<CreateRecordView />} />
-          <Route path="/medicalRecord/:recordId/xray/:id" element={<ClinicalRecordPage type="xray" />} />
-          <Route path="/medicalRecord/:recordId/hematology/:id" element={<ClinicalRecordPage type="hematology" />} />
-          <Route path="/api/medicalRecord/:recordId/xray/:id" element={<ClinicalRecordPage type="xray" />} />
-          <Route path="/api/medicalRecord/:recordId/hematology/:id" element={<ClinicalRecordPage type="hematology" />} />
+          <Route path="/record/edit/:recordId/xray/:id" element={<ClinicalRecordPage type="xray" />} />
+          <Route path="/record/edit/:recordId/hematology/:id" element={<ClinicalRecordPage type="hematology" />} />
           <Route path="/patients" element={<PatientManagementView />} />
           <Route path="/patient/add" element={<AddPatientForm />} />
           <Route path="/patient/edit/:id" element={<EditPatientForm />} />
