@@ -20,12 +20,117 @@ export const ClinicalRecordPage = ({ type }: { type: "xray" | "hematology" }) =>
       if (!recordId) return;
       try {
         setLoading(true);
-        const data = await api.records.getById(parseInt(recordId));
-        setRecord(data);
+        let numericId: number;
+
+        // 1. Resolve storageCode or ID
+        if (/^\d+$/.test(recordId)) {
+          numericId = parseInt(recordId);
+        } else {
+          const searchResult = await api.medicalRecords.getAll({ searchPhrase: recordId, pageSize: 5 });
+          const recordItem = searchResult.items?.find((item: any) => item.storageCode === recordId);
+          if (!recordItem) {
+            toast.error("Không tìm thấy hồ sơ với mã lưu trữ này");
+            return;
+          }
+          numericId = recordItem.id;
+        }
+
+        // 2. Fetch full detail
+        const dto = await api.medicalRecords.getById(numericId);
+        
+        // 3. Map DTO to Record interface with documents
+        const mappedRecord: Record = {
+          id: dto.storageCode || dto.id.toString(),
+          numericId: dto.id,
+          patientName: dto.patient?.name || "",
+          dob: dto.patient?.dateOfBirth?.split('T')[0] || "",
+          age: dto.patient?.dateOfBirth ? new Date().getFullYear() - new Date(dto.patient.dateOfBirth).getFullYear() : 0,
+          gender: dto.patient?.gender === 1 ? "Nam" : "Nữ",
+          address: dto.address || "",
+          department: dto.recordType === 1 ? "Nội Khoa" : "Ngoại Khoa",
+          insuranceNumber: dto.patient?.healthInsuranceNumber || "",
+          documents: [
+            ...(dto.xRays || []).map((x: any) => ({
+              id: `XRAY_${x.id}`,
+              data: {
+                id: x.id,
+                status: x.status || 0,
+                healthDept: x.healthDept || "",
+                hospital: x.hospital || "",
+                xrayNumber: x.xrayNumber || "",
+                times: x.times || "",
+                department: x.departmentName || "",
+                room: x.room || "",
+                bed: x.bed || "",
+                diagnosis: x.diagnosis || "",
+                request: x.requestDescription || "",
+                result: x.resultDescription || "",
+                advice: x.doctorAdvice || "",
+                doctor: x.requestedByName || "",
+                specialist: x.performedByName || "",
+                xRayStatusLogs: x.xRayStatusLogs || [],
+                requestDateDay: x.requestedAt ? new Date(x.requestedAt).getDate().toString() : "",
+                requestDateMonth: x.requestedAt ? (new Date(x.requestedAt).getMonth() + 1).toString() : "",
+                requestDateYear: x.requestedAt ? new Date(x.requestedAt).getFullYear().toString() : "",
+                resultDateDay: x.completedAt ? new Date(x.completedAt).getDate().toString() : "",
+                resultDateMonth: x.completedAt ? (new Date(x.completedAt).getMonth() + 1).toString() : "",
+                resultDateYear: x.completedAt ? new Date(x.completedAt).getFullYear().toString() : "",
+              }
+            })),
+            ...(dto.hematologies || []).map((h: any) => ({
+              id: `HEMA_${h.id}`,
+              data: {
+                id: h.id,
+                status: h.status || 0,
+                healthDept: h.healthDept || "",
+                hospital: h.hospital || "",
+                testNumber: h.testNumber || "",
+                isEmergency: h.isEmergency || false,
+                department: h.departmentName || "",
+                room: h.room || "",
+                bed: h.bed || "",
+                diagnosis: h.requestDescription || "",
+                doctor: h.requestedByName || "",
+                technician: h.performedByName || "",
+                hematologyStatusLogs: h.hematologyStatusLogs || [],
+                rbc: h.redBloodCellCount?.toString() || "",
+                wbc: h.whiteBloodCellCount?.toString() || "",
+                hgb: h.hemoglobin?.toString() || "",
+                hct: h.hematocrit?.toString() || "",
+                mcv: h.mcv?.toString() || "",
+                mch: h.mch?.toString() || "",
+                mchc: h.mchc?.toString() || "",
+                reticulocytes: h.reticulocyteCount?.toString() || "",
+                plt: h.plateletCount?.toString() || "",
+                neutrophils: h.neutrophil?.toString() || "",
+                eosinophils: h.eosinophil || "",
+                basophils: h.basophil || "",
+                monocytes: h.monocyte || "",
+                lymphocytes: h.lymphocyte || "",
+                nrbc: h.nucleatedRedBloodCell || "",
+                abnormalCells: h.abnormalCells || "",
+                malaria: h.malariaParasite || "",
+                esr1: h.esr1h?.toString() || "",
+                esr2: h.esr2h?.toString() || "",
+                bleedingTime: h.bleedingTime?.toString() || "",
+                clottingTime: h.clottingTime?.toString() || "",
+                bloodGroupABO: h.bloodTypeAbo === 1 ? "A" : h.bloodTypeAbo === 2 ? "B" : h.bloodTypeAbo === 3 ? "AB" : h.bloodTypeAbo === 4 ? "O" : "",
+                bloodGroupRh: h.bloodTypeRh === 1 ? "+" : h.bloodTypeRh === 2 ? "-" : "",
+                requestDateDay: h.requestedAt ? new Date(h.requestedAt).getDate().toString() : "",
+                requestDateMonth: h.requestedAt ? (new Date(h.requestedAt).getMonth() + 1).toString() : "",
+                requestDateYear: h.requestedAt ? new Date(h.requestedAt).getFullYear().toString() : "",
+                resultDateDay: h.completedAt ? new Date(h.completedAt).getDate().toString() : "",
+                resultDateMonth: h.completedAt ? (new Date(h.completedAt).getMonth() + 1).toString() : "",
+                resultDateYear: h.completedAt ? new Date(h.completedAt).getFullYear().toString() : "",
+              }
+            }))
+          ]
+        } as any;
+
+        setRecord(mappedRecord);
       } catch (error) {
         console.error("Failed to fetch medical record", error);
         toast.error("Không thể tải thông tin bệnh án.");
-        navigate("/");
       } finally {
         setLoading(false);
       }
@@ -34,7 +139,7 @@ export const ClinicalRecordPage = ({ type }: { type: "xray" | "hematology" }) =>
   }, [recordId, navigate]);
 
   const handleClose = () => {
-    navigate(`/record/${recordId}`);
+    navigate(`/record/edit/${recordId}?tab=forms`);
   };
 
   if (loading) {
@@ -81,8 +186,8 @@ export const ClinicalRecordPage = ({ type }: { type: "xray" | "hematology" }) =>
           defaultGender={record.gender}
           defaultAddress={record.address}
           defaultDepartment={record.department}
-          readOnly={true} // Defaults to readOnly when viewing from notification, they can use edit button in record view if they have permission
-          recordId={parseInt(recordId!)}
+          readOnly={false}
+          recordId={record.numericId}
         />
       )}
       
@@ -97,8 +202,8 @@ export const ClinicalRecordPage = ({ type }: { type: "xray" | "hematology" }) =>
           defaultGender={record.gender}
           defaultAddress={record.address}
           defaultDepartment={record.department}
-          readOnly={true}
-          recordId={parseInt(recordId!)}
+          readOnly={false}
+          recordId={record.numericId}
         />
       )}
     </div>

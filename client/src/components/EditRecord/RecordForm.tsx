@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Save, Plus, FileText, User, Activity, LogOut, ClipboardList, Thermometer, Pill, ChevronDown, ChevronRight, Download as DownloadIcon, FileUp, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Record, Patient, RelatedCharacteristics } from "@/types";
 import { api } from "@/services/api";
-import { toast } from "sonner";
 
 import { AdministrativeSection } from "./sections/AdministrativeSection";
 import { PatientManagementSection } from "./sections/PatientManagementSection";
@@ -471,9 +471,15 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
   const [importStatus, setImportStatus] = useState<{type: 'success' | 'error' | null, message: string}>({type: null, message: ""});
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const queryParams = new URLSearchParams(window.location.search);
-  const initialTab = queryParams.get("tab") || "details";
-  const [activeTab, setActiveTab] = useState(initialTab); // 'details' | 'forms' | 'documents'
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get("tab") || "details";
+  
+  const handleTabChange = (value: string) => {
+    setSearchParams(prev => {
+      prev.set("tab", value);
+      return prev;
+    }, { replace: true });
+  };
   
   // Initialize with the first section
   const [activeSection, setActiveSection] = useState("administrative");
@@ -561,7 +567,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
       // In create mode, do not navigate to "forms/documents" yet.
       // The user should finish the "mục 1..A" in the details tab first.
       if (!isCreate) {
-        setActiveTab("forms"); // Navigate to Phiếu cận lâm sàng first
+        handleTabChange("forms"); // Navigate to Phiếu cận lâm sàng first
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
@@ -705,7 +711,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex-1 flex flex-col overflow-hidden">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full flex-1 flex flex-col overflow-hidden">
         <div className="flex-none flex justify-start mb-6">
             <TabsList className="flex items-center justify-center bg-gray-900 p-1 rounded-xl border border-gray-800 shadow-lg h-auto">
               <TabsTrigger 
@@ -862,10 +868,10 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
              </div>
                 
              <div className="flex-none mt-2 flex justify-between items-center pt-4 border-t border-gray-200 pb-6 pr-4">
-                <Button type="button" variant="outline" onClick={() => { setActiveTab("details"); setActiveSection("treatment"); }}>
+                <Button type="button" variant="outline" onClick={() => { handleTabChange("details"); setActiveSection("treatment"); }}>
                     <ArrowLeft size={16} className="mr-2" /> Quay lại
                 </Button>
-                <Button type="button" onClick={() => setActiveTab("documents")} className="bg-vlu-red hover:bg-red-800 text-white">
+                <Button type="button" onClick={() => handleTabChange("documents")} className="bg-vlu-red hover:bg-red-800 text-white">
                     Tài Liệu Đính Kèm
                     <ArrowRight size={16} className="ml-2" />
                 </Button>
@@ -877,7 +883,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                 <DocumentSection formData={formData} setFormData={setFormData} readOnly={readOnly} />
                 
                 <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
-                    <Button type="button" variant="outline" onClick={() => setActiveTab("forms")}>
+                    <Button type="button" variant="outline" onClick={() => handleTabChange("forms")}>
                       <ArrowLeft size={16} className="mr-2" /> Quay lại
                     </Button>
                     {!readOnly && (
