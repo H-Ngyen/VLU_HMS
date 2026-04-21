@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/services/api";
 import { ViewRecordForm } from "../ViewRecord/RecordForm";
 import { Button } from "@/components/ui/button";
-import type { Record as MedicalRecord, Patient, RelatedCharacteristics } from "@/types";
+import type { Record as MedicalRecord, Patient, RelatedCharacteristics, Document as MedicalDocument } from "@/types";
 import { toast } from "sonner";
 
 // --- API DTO TYPES ---
@@ -369,7 +369,7 @@ const mapDtoToRecord = (dto: MedicalRecordDto): MedicalRecord => {
     }
   });
 
-  const documents: Document[] = [];
+  const documents: MedicalDocument[] = [];
   if (dto.xRays && Array.isArray(dto.xRays)) {
     dto.xRays.forEach((x: XRayDto) => {
       const reqDate = x.requestedAt ? new Date(x.requestedAt) : null;

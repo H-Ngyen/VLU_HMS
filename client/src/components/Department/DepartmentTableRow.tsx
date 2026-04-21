@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Department, User } from "@/types";
+import type { Department } from "@/types";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { 

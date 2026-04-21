@@ -12,6 +12,7 @@ import { XRayInputForm } from "./XRayInputForm";
 import { HematologyInputForm } from "./HematologyInputForm";
 import { api } from "@/services/api";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface PhieuYSectionProps {
   formData: MedicalRecord;
@@ -44,7 +45,7 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
       const recordId = formData.numericId;
 
       if (!recordId || isNaN(id)) {
-        import("sonner").then(m => m.toast.error("Không thể xác định mã bệnh án hoặc phiếu"));
+        toast.error("Không thể xác định mã bệnh án hoặc phiếu");
         return;
       }
 
@@ -55,7 +56,7 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
           await api.hematologies.delete(recordId, id);
         }
         
-        import("sonner").then(m => m.toast.success("Xóa phiếu thành công"));
+        toast.success("Xóa phiếu thành công");
         
         setFormData((prev) => {
           if (!prev) return null;
@@ -66,7 +67,7 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         });
       } catch (error: any) {
         console.error("Lỗi khi xóa phiếu:", error);
-        import("sonner").then(m => m.toast.error(error.message || "Lỗi khi xóa phiếu"));
+        toast.error(error.message || "Lỗi khi xóa phiếu");
       }
       return;
     }

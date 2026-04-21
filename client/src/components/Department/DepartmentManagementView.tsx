@@ -4,7 +4,6 @@ import { DepartmentTable } from "./DepartmentTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DepartmentFormDialog } from "./DepartmentFormDialog";
-import { AssignUserDialog } from "./AssignUserDialog";
 import type { Department } from "@/types";
 import { api } from "@/services/api";
 import { toast } from "sonner";
@@ -16,8 +15,6 @@ export const DepartmentManagementView = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isAssignHeadOpen, setIsAssignHeadOpen] = useState(false);
-  const [newDepartmentId, setNewDepartmentId] = useState<number | null>(null);
 
   const fetchDepartments = async () => {
     setLoading(true);
@@ -32,19 +29,9 @@ export const DepartmentManagementView = () => {
     }
   };
 
-  const handleCreateSuccess = (newId?: number) => {
+  const handleCreateSuccess = () => {
     fetchDepartments();
     setIsDialogOpen(false); // Luôn đóng Dialog Tạo Khoa
-    if (newId) {
-      setNewDepartmentId(newId);
-      setTimeout(() => setIsAssignHeadOpen(true), 150); // Mở Dialog Gán Trưởng Khoa sau một độ trễ nhỏ để UI mượt hơn
-    }
-  };
-
-  const handleAssignHeadSuccess = () => {
-    fetchDepartments();
-    setNewDepartmentId(null);
-    setIsAssignHeadOpen(false);
   };
 
   useEffect(() => {

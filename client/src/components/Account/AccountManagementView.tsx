@@ -23,7 +23,7 @@ export const AccountManagementView = () => {
       // 2. Enrich users with department information
       const enrichedUsers = usersData.map(user => {
         const dept = departmentsData.find(d => 
-          d.users?.some(u => u.id === user.id) || d.headUserId === user.id
+          d.users?.some((u: User) => u.id === user.id) || d.headUserId === user.id
         );
         return {
           ...user,

@@ -1,6 +1,6 @@
 const API_BASE_URL = 'https://localhost:5001/api';
 
-import type { Patient, User } from '@/types';
+import type { Patient, User, Department } from '@/types';
 
 let accessToken: string | null = null;
 

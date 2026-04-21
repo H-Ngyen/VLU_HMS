@@ -130,7 +130,9 @@ export const ViewMembersDialog = ({
                           <TableCell className="text-center text-gray-500 font-medium">
                             {isHead ? (
                               <div className="flex items-center justify-center">
-                                <ShieldCheck size={16} className="text-red-500" title="Trưởng khoa" />
+                                <span title="Trưởng khoa">
+                                  <ShieldCheck size={16} className="text-red-500" />
+                                </span>
                               </div>
                             ) : (
                               index + 1

@@ -81,14 +81,6 @@ export const DocumentSection = ({ formData, readOnly = false }: DocumentSectionP
     }
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   return (
     <section className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
       <div className="flex justify-between items-end mb-3">

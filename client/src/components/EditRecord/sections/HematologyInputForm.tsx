@@ -87,6 +87,7 @@ interface HematologyInputFormProps {
   defaultDob?: string;
   defaultGender?: string;
   defaultAddress?: string;
+  defaultDepartment?: string;
   defaultInsuranceNumber?: string;
   initialData?: HematologyData;
   readOnly?: boolean;
@@ -136,6 +137,7 @@ export const HematologyInputForm = ({
   defaultDob = "",
   defaultGender = "",
   defaultAddress = "",
+  defaultDepartment = "",
   defaultInsuranceNumber = "",
   initialData,
   readOnly = false,
@@ -205,6 +207,7 @@ export const HematologyInputForm = ({
             gender: defaultGender,
             address: defaultAddress,
             insuranceNumber: defaultInsuranceNumber,
+            department: initialData.department || defaultDepartment || "",
             status: initialData.status !== undefined ? initialData.status : 0,
             hematologyStatusLogs: initialData.hematologyStatusLogs || []
         };
@@ -234,6 +237,7 @@ export const HematologyInputForm = ({
             gender: defaultGender,
             address: defaultAddress,
             insuranceNumber: defaultInsuranceNumber,
+            department: defaultDepartment || "",
             doctor: currentUser?.name || ""
         };
         const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
@@ -359,10 +363,6 @@ export const HematologyInputForm = ({
         }
         return newData;
     });
-  };
-
-  const handleCheckChange = (name: string, checked: boolean) => {
-    setFormData(prev => ({ ...prev, [name]: checked }));
   };
 
   const handleCheckboxChange = (checked: boolean) => {
