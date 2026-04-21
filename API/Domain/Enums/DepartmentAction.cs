@@ -5,5 +5,6 @@ public enum DepartmentAction
     Default,
     UpdateInfo,
     AssignUser,
+    UnassignUser,
     AssignHeadUser
 }

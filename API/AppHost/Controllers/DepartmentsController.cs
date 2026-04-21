@@ -2,6 +2,8 @@ using Application.Departments.Commands.AssignHeadUserDepartment;
 using Application.Departments.Commands.AssignUserToDepartment;
 using Application.Departments.Commands.CreateDepartment;
 using Application.Departments.Commands.DeleteDepartment;
+using Application.Departments.Commands.UnassignHeadUserDepartment;
+using Application.Departments.Commands.UnassignUserToDepartment;
 using Application.Departments.Commands.UpdateDepartment;
 using Application.Departments.Dtos;
 using Application.Departments.Queries.GetAllDepartments;
@@ -71,6 +73,29 @@ public class DepartmentsController(IMediator mediator) : ControllerBase
         await mediator.Send(new AssignUserToDepartmentCommand(departmentId, userId));
         return NoContent();
     }
+
+    [HttpDelete("{departmentId:int}/users/{userId:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> UnassignUserToDepartment(int departmentId, int userId)
+    {
+        await mediator.Send(new UnassignUserToDepartmentCommand(departmentId, userId));
+        return NoContent();
+    }
+
+    [HttpDelete("{departmentId:int}/users/{userId:int}/head")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> UnassignHeadUserToDepartment(int departmentId, int userId)
+    {
+        await mediator.Send(new UnassignHeadUserDepartmentCommand(departmentId, userId));
+        return NoContent();
+    }
+
 
     [HttpPut("{departmentId:int}/users/{userId:int}/head")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
