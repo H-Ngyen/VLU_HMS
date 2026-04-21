@@ -46,6 +46,15 @@ public class DepartmentAuthorizationService(ILogger<DepartmentAuthorizationServi
                 logger.LogInformation("Update operation, action {Action}- successful authorization", DepartmentAction.AssignUser);
                 return true;
             }
+
+            if (resourceOperation == ResourceOperation.Update
+                && UserRoles.IsTeacher(user.Role)
+                && resource.HeadUserId == user.Id
+                && action == DepartmentAction.UnassignUser)
+            {
+                logger.LogInformation("Update operation, action {Action}- successful authorization", DepartmentAction.UnassignUser);
+                return true;
+            }
         }
 
         if (resourceOperation == ResourceOperation.Read

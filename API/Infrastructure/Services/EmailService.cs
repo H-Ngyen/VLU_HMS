@@ -3,6 +3,10 @@ using System.Net.Mail;
 using Domain.Interfaces;
 using Microsoft.Extensions.Configuration;
 
+// using MailKit.Net.Smtp;
+// using MailKit.Security;
+// using MimeKit;
+
 namespace Infrastructure.Services;
 
 internal class EmailService(IConfiguration config) : IEmailService
@@ -40,4 +44,41 @@ internal class EmailService(IConfiguration config) : IEmailService
         }
 
     }
+
+    // public async Task<bool> SendAsync(string subject, string content, string toEmail)
+    // {
+    //     try
+    //     {
+    //         var email = new MimeMessage();
+
+    //         email.From.Add(MailboxAddress.Parse(_fromEmail));
+    //         email.To.Add(MailboxAddress.Parse(toEmail));
+    //         email.Subject = subject;
+
+    //         email.Body = new BodyBuilder
+    //         {
+    //             HtmlBody = content
+    //         }.ToMessageBody();
+
+    //         using var smtp = new SmtpClient();
+
+    //         await smtp.ConnectAsync(
+    //             _smtpHost,
+    //             _smtpPort,
+    //             SecureSocketOptions.StartTls);
+
+    //         await smtp.AuthenticateAsync(
+    //             _fromEmail,
+    //             _fromEmailPassword);
+
+    //         await smtp.SendAsync(email);
+    //         await smtp.DisconnectAsync(true);
+
+    //         return true;
+    //     }
+    //     catch
+    //     {
+    //         return false;
+    //     }
+    // }
 }
