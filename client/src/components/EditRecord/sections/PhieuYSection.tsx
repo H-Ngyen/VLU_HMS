@@ -10,6 +10,8 @@ import { FileText, Eye, Edit2, Trash2 } from "lucide-react";
 import type { Record as MedicalRecord, Document } from "@/types";
 import { XRayInputForm } from "./XRayInputForm";
 import { HematologyInputForm } from "./HematologyInputForm";
+import { api } from "@/services/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PhieuYSectionProps {
   formData: MedicalRecord;
@@ -18,6 +20,7 @@ interface PhieuYSectionProps {
 }
 
 export const PhieuYSection = ({ formData, setFormData, readOnly = false }: PhieuYSectionProps) => {
+  const { isAdmin } = useAuth();
   const [activeFormType, setActiveFormType] = useState<string | null>(null);
   
   // XRay State
@@ -278,9 +281,11 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
                                             <Button type="button" size="icon-sm" variant="ghost" onClick={() => handleEdit(doc)} className="text-orange-600 bg-orange-50 hover:bg-orange-100">
                                                 <Edit2 size={16} />
                                             </Button>
-                                            <Button type="button" size="icon-sm" variant="ghost" onClick={() => handleDelete(doc.id)} className="text-red-600 bg-red-50 hover:bg-red-100">
-                                                <Trash2 size={16} />
-                                            </Button>
+                                            {isAdmin && (
+                                                <Button type="button" size="icon-sm" variant="ghost" onClick={() => handleDelete(doc.id)} className="text-red-600 bg-red-50 hover:bg-red-100">
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            )}
                                         </>
                                     )}
                                 </td>
