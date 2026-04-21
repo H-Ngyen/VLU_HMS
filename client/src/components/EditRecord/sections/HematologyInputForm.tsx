@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -678,9 +679,15 @@ export const HematologyInputForm = ({
                 <Input name="bed" value={formData.bed} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
               </div>
             </div>
-            <div className="flex items-end gap-2">
+            <div className="flex flex-col gap-2">
               <Label className="shrink-0">Chẩn đoán: <span className="text-red-500">*</span></Label>
-              <Input name="diagnosis" value={formData.diagnosis} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
+              <Textarea 
+                name="diagnosis" 
+                value={formData.diagnosis} 
+                onChange={handleChange} 
+                className="w-full min-h-[60px] border border-gray-300 rounded-sm p-2 focus-visible:ring-0 break-all" 
+                disabled={isRequestReadOnly} 
+              />
             </div>
             <div className="flex justify-end pt-4 italic text-xs">
                   <div className="text-center w-1/3">
@@ -725,7 +732,7 @@ export const HematologyInputForm = ({
                         ].map(item => (
                             <div key={item.name} className="grid grid-cols-3 gap-2 items-center">
                                 <div className="col-span-2 flex items-start gap-2">
-                                    <div className="size-2 rounded-full bg-black mt-1.5 shrink-0" />
+
                                     <div><p className="font-medium">{item.label} {item.r && <span className="text-red-500">*</span>}</p><p className="text-[10px] text-gray-500 italic">{item.sub}</p></div>
                                 </div>
                                 <Input name={item.name} value={(formData as any)[item.name]} onChange={handleChange} className="h-7 text-center font-bold" disabled={isResultReadOnly} />
@@ -738,7 +745,7 @@ export const HematologyInputForm = ({
                     <div className="border border-gray-300 rounded p-4 space-y-3 bg-white text-xs">
                         <div className="grid grid-cols-3 gap-2 items-center">
                             <div className="col-span-2 flex items-start gap-2">
-                                <div className="size-2 rounded-full bg-black mt-1.5 shrink-0" />
+
                                 <div><p className="font-medium">Số lượng BC <span className="text-red-500">*</span></p><p className="text-[10px] text-gray-500 italic">(4-10 x 10^9/l)</p></div>
                             </div>
                             <Input name="wbc" value={formData.wbc} onChange={handleChange} className="h-7 text-center font-bold" disabled={isResultReadOnly} />
@@ -752,7 +759,7 @@ export const HematologyInputForm = ({
                         {[ { label: "Số lượng tiểu cầu", sub: "(150-400 x10^9/l)", name: "plt", check: "check_plt" }, { label: "KSV sốt rét", sub: "", name: "malaria", check: "check_malaria" } ].map(item => (
                             <div key={item.name} className="grid grid-cols-3 gap-2 items-center">
                                 <div className="col-span-2 flex items-start gap-2">
-                                    <div className="size-2 rounded-full bg-black mt-1.5 shrink-0" />
+
                                     <div><p className="font-medium">{item.label}</p>{item.sub && <p className="text-[10px] text-gray-500 italic">{item.sub}</p>}</div>
                                 </div>
                                 <Input name={item.name} value={(formData as any)[item.name]} onChange={handleChange} className="h-7 text-center font-bold" disabled={isResultReadOnly} />
@@ -764,13 +771,13 @@ export const HematologyInputForm = ({
                     <div className="border border-gray-300 rounded p-4 space-y-2 bg-white">
                         <h4 className="font-bold underline">2. Đông máu:</h4>
                         {[ {l:"Máu chảy:", n:"bleedingTime", c:"check_bleedingTime"}, {l:"Máu đông:", n:"clottingTime", c:"check_clottingTime"} ].map(i => (
-                            <div key={i.n} className="flex items-center gap-2"><div className="size-2 rounded-full bg-black shrink-0" /><span>{i.l}</span><Input name={i.n} value={(formData as any)[i.n]} onChange={handleChange} className="w-16 h-6 text-center font-bold" disabled={isResultReadOnly} /><span>phút</span></div>
+                            <div key={i.n} className="flex items-center gap-2"><span>{i.l}</span><Input name={i.n} value={(formData as any)[i.n]} onChange={handleChange} className="w-16 h-6 text-center font-bold" disabled={isResultReadOnly} /><span>phút</span></div>
                         ))}
                     </div>
                     <div className="border border-gray-300 rounded p-4 space-y-2 bg-white">
                         <h4 className="font-bold underline">3. Nhóm máu:</h4>
                         {[ {l:"Hệ ABO:", n:"bloodGroupABO", c:"check_bloodGroupABO", p:"A, B, AB, O", r:true}, {l:"Hệ Rh:", n:"bloodGroupRh", c:"check_bloodGroupRh", p:"+ / -", r:true} ].map(i => (
-                            <div key={i.n} className="flex items-center gap-2"><div className="size-2 rounded-full bg-black shrink-0" /><span>{i.l} {i.r && <span className="text-red-500">*</span>}</span><Input name={i.n} value={(formData as any)[i.n]} onChange={handleChange} className="w-20 h-6 text-center font-bold" disabled={isResultReadOnly} placeholder={i.p} /></div>
+                            <div key={i.n} className="flex items-center gap-2"><span>{i.l} {i.r && <span className="text-red-500">*</span>}</span><Input name={i.n} value={(formData as any)[i.n]} onChange={handleChange} className="w-20 h-6 text-center font-bold" disabled={isResultReadOnly} placeholder={i.p} /></div>
                         ))}
                     </div>
                 </div>
@@ -862,7 +869,7 @@ export const HematologyInputForm = ({
                         <div style={{ width: '25%' }}>Buồng: {formData.room}</div>
                         <div style={{ width: '25%', textAlign: 'right' }}>Giường: {formData.bed}</div>
                     </div>
-                    <div>- Chẩn đoán: {formData.diagnosis}</div>
+                    <div style={{ wordBreak: 'break-all' }}>- Chẩn đoán: {formData.diagnosis}</div>
                 </div>
 
                 {/* Content Body - Table Layout for PDF */}
@@ -940,7 +947,7 @@ export const HematologyInputForm = ({
                                 <td style={{ border: '1px solid black', padding: '4px', verticalAlign: 'middle' }}>
                                     {row.l1 && (
                                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                            
                                             <div style={{ display: 'inline-block' }}>
                                                 <span style={{ verticalAlign: 'middle' }}>{row.l1.l}</span>
                                                 {row.l1.s && <div style={{ fontSize: '9pt', fontStyle: 'italic', color: '#444' }}>{row.l1.s}</div>}
@@ -960,7 +967,7 @@ export const HematologyInputForm = ({
                                                 <div style={{ fontStyle: 'italic' }}>{row.l2.l}</div>
                                             ) : row.l2.type === 'esr' ? (
                                                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                    <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                                    
                                                     <div style={{ display: 'inline-block' }}>
                                                         <span style={{ verticalAlign: 'middle' }}>{row.l2.l}</span>
                                                         <div style={{ fontSize: '9pt', fontStyle: 'italic' }}>giờ 1 (&lt; 15 mm)</div>
@@ -969,7 +976,6 @@ export const HematologyInputForm = ({
                                                 </div>
                                             ) : (
                                                 <div style={{ display: 'flex', alignItems: 'center', paddingLeft: row.l2.indent ? '20px' : '0' }}>
-                                                    {!row.l2.indent && <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>}
                                                     <span style={{ verticalAlign: 'middle' }}>{row.l2.l}</span>
                                                 </div>
                                             )}
@@ -1000,11 +1006,11 @@ export const HematologyInputForm = ({
                                 <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>2. Đông máu:</div>
                                 <div style={{ paddingLeft: '5px' }}>
                                     <div style={{ marginBottom: '5px' }}>
-                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                        
                                         <span style={{ verticalAlign: 'middle' }}>Thời gian máu chảy: ...........{formData.bleedingTime}......... phút ............</span>
                                     </div>
                                     <div>
-                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                        
                                         <span style={{ verticalAlign: 'middle' }}>Thời gian máu đông: ...........{formData.clottingTime}......... phút ............</span>
                                     </div>
                                 </div>
@@ -1013,11 +1019,11 @@ export const HematologyInputForm = ({
                                 <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>3. Nhóm máu:</div>
                                 <div style={{ paddingLeft: '5px' }}>
                                     <div style={{ marginBottom: '5px' }}>
-                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                        
                                         <span style={{ verticalAlign: 'middle', marginRight: '5px' }}>Hệ ABO: <b>{formData.bloodGroupABO}</b></span>
                                     </div>
                                     <div>
-                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                        
                                         <span style={{ verticalAlign: 'middle', marginRight: '5px' }}>Hệ Rh: <b>{formData.bloodGroupRh}</b></span>
                                     </div>
                                 </div>
@@ -1032,13 +1038,13 @@ export const HematologyInputForm = ({
                         <div>Ngày {formData.requestDateDay} tháng {formData.requestDateMonth} năm {formData.requestDateYear}</div>
                         <div style={{ fontWeight: 'bold', textTransform: 'uppercase', marginTop: '5px' }}>Bác sĩ điều trị</div>
                         <div style={{ height: '25mm' }}></div>
-                        <div>Họ tên: <b>{formData.doctor}</b></div>
+                        <div style={{ fontWeight: 'bold' }}>{formData.doctor}</div>
                     </div>
                     <div style={{ textAlign: 'center', width: '45%' }}>
                         <div>Ngày {formData.resultDateDay} tháng {formData.resultDateMonth} năm {formData.resultDateYear}</div>
                         <div style={{ fontWeight: 'bold', textTransform: 'uppercase', marginTop: '5px' }}>Trưởng khoa xét nghiệm</div>
                         <div style={{ height: '25mm' }}></div>
-                        <div>Họ tên: <b>{formData.technician}</b></div>
+                        <div style={{ fontWeight: 'bold' }}>{formData.technician}</div>
                     </div>
                 </div>
 

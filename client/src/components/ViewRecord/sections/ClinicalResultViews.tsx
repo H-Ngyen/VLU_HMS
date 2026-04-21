@@ -49,7 +49,7 @@ export const XRayResultView = ({ data }: XRayResultViewProps) => {
 
             <div className="mb-6 border border-black">
                  <div className="bg-white border-b border-black p-2 font-bold text-left text-black">Yêu cầu chiếu/ chụp</div>
-                 <div className="p-2 min-h-[30mm] whitespace-pre-wrap text-black">{data.request}</div>
+                 <div className="p-2 min-h-[30mm] whitespace-pre-wrap break-all text-black">{data.request}</div>
             </div>
 
             <div className="flex justify-end mb-8">
@@ -65,13 +65,13 @@ export const XRayResultView = ({ data }: XRayResultViewProps) => {
               <>
                 <div className="mb-6 border border-black">
                     <div className="bg-white border-b border-black p-2 font-bold text-left text-black">Kết quả chiếu/ chụp</div>
-                    <div className="p-2 min-h-[40mm] whitespace-pre-wrap text-black font-bold">{data.result}</div>
+                    <div className="p-2 min-h-[40mm] whitespace-pre-wrap break-all text-black font-bold">{data.result}</div>
                 </div>
 
                 <div className="flex justify-between items-start">
                     <div className="w-1/2 pr-4">
                         <p className="font-bold underline mb-2">Lời dặn của BS chuyên khoa:</p>
-                        <p className="whitespace-pre-wrap m-0 italic">{data.advice}</p>
+                        <p className="whitespace-pre-wrap break-all m-0 italic">{data.advice}</p>
                     </div>
                     <div className="text-center w-1/3">
                         <p className="italic m-0">Ngày {data.resultDateDay} tháng {data.resultDateMonth} năm {data.resultDateYear}</p>
@@ -148,7 +148,7 @@ export const HematologyResultView = ({ data }: HematologyResultViewProps) => {
                         <div style={{ width: '25%' }}>Buồng: {data.room}</div>
                         <div style={{ width: '25%', textAlign: 'right' }}>Giường: {data.bed}</div>
                     </div>
-                    <div>- Chẩn đoán: {data.diagnosis}</div>
+                    <div style={{ wordBreak: 'break-all' }}>- Chẩn đoán: {data.diagnosis}</div>
                 </div>
 
                 {/* Content Body - Table Layout for PDF */}
@@ -226,7 +226,7 @@ export const HematologyResultView = ({ data }: HematologyResultViewProps) => {
                                 <td style={{ border: '1px solid black', padding: '4px', verticalAlign: 'middle' }}>
                                     {row.l1 && (
                                         <div style={{ display: 'flex', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                            
                                             <div style={{ display: 'inline-block' }}>
                                                 <span style={{ verticalAlign: 'middle' }}>{row.l1.l}</span>
                                                 {row.l1.s && <div style={{ fontSize: '9pt', fontStyle: 'italic', color: '#444' }}>{row.l1.s}</div>}
@@ -246,7 +246,7 @@ export const HematologyResultView = ({ data }: HematologyResultViewProps) => {
                                                 <div style={{ fontStyle: 'italic' }}>{row.l2.l}</div>
                                             ) : row.l2.type === 'esr' ? (
                                                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                                                    <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                                    
                                                     <div style={{ display: 'inline-block' }}>
                                                         <span style={{ verticalAlign: 'middle' }}>{row.l2.l}</span>
                                                         <div style={{ fontSize: '9pt', fontStyle: 'italic' }}>giờ 1 (&lt; 15 mm)</div>
@@ -255,7 +255,6 @@ export const HematologyResultView = ({ data }: HematologyResultViewProps) => {
                                                 </div>
                                             ) : (
                                                 <div style={{ display: 'flex', alignItems: 'center', paddingLeft: row.l2.indent ? '20px' : '0' }}>
-                                                    {!row.l2.indent && <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>}
                                                     <span style={{ verticalAlign: 'middle' }}>{row.l2.l}</span>
                                                 </div>
                                             )}
@@ -286,11 +285,11 @@ export const HematologyResultView = ({ data }: HematologyResultViewProps) => {
                                 <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>2. Đông máu:</div>
                                 <div style={{ paddingLeft: '5px' }}>
                                     <div style={{ marginBottom: '5px' }}>
-                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                        
                                         <span style={{ verticalAlign: 'middle' }}>Thời gian máu chảy: ...........{data.bleedingTime}......... phút ............</span>
                                     </div>
                                     <div>
-                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                        
                                         <span style={{ verticalAlign: 'middle' }}>Thời gian máu đông: ...........{data.clottingTime}......... phút ............</span>
                                     </div>
                                 </div>
@@ -299,11 +298,11 @@ export const HematologyResultView = ({ data }: HematologyResultViewProps) => {
                                 <div style={{ fontWeight: 'bold', marginBottom: '5px' }}>3. Nhóm máu:</div>
                                 <div style={{ paddingLeft: '5px' }}>
                                     <div style={{ marginBottom: '5px' }}>
-                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                        
                                         <span style={{ verticalAlign: 'middle', marginRight: '5px' }}>Hệ ABO: <b>{data.bloodGroupABO}</b></span>
                                     </div>
                                     <div>
-                                        <span style={{ fontSize: '12pt', marginRight: '5px' }}>●</span>
+                                        
                                         <span style={{ verticalAlign: 'middle', marginRight: '5px' }}>Hệ Rh: <b>{data.bloodGroupRh}</b></span>
                                     </div>
                                 </div>
@@ -318,13 +317,13 @@ export const HematologyResultView = ({ data }: HematologyResultViewProps) => {
                         <div>Ngày {data.requestDateDay} tháng {data.requestDateMonth} năm {data.requestDateYear}</div>
                         <div style={{ fontWeight: 'bold', textTransform: 'uppercase', marginTop: '5px' }}>Bác sĩ điều trị</div>
                         <div style={{ height: '25mm' }}></div>
-                        <div>Họ tên: <b>{data.doctor}</b></div>
+                        <div style={{ fontWeight: 'bold' }}>{data.doctor}</div>
                     </div>
                     <div style={{ textAlign: 'center', width: '45%' }}>
                         <div>Ngày {data.resultDateDay} tháng {data.resultDateMonth} năm {data.resultDateYear}</div>
                         <div style={{ fontWeight: 'bold', textTransform: 'uppercase', marginTop: '5px' }}>Trưởng khoa xét nghiệm</div>
                         <div style={{ height: '25mm' }}></div>
-                        <div>Họ tên: <b>{data.technician}</b></div>
+                        <div style={{ fontWeight: 'bold' }}>{data.technician}</div>
                     </div>
                 </div>
             </div>

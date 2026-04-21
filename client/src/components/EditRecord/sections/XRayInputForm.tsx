@@ -725,7 +725,7 @@ export const XRayInputForm = ({
 
             <div className="mb-6 border border-black">
                  <div className="bg-white border-b border-black p-2 font-bold text-left text-black">Yêu cầu chiếu/ chụp</div>
-                 <div className="p-2 min-h-[30mm] whitespace-pre-wrap text-black">{formData.request}</div>
+                 <div className="p-2 min-h-[30mm] whitespace-pre-wrap break-all text-black">{formData.request}</div>
             </div>
 
             <div className="flex justify-end mb-8">
@@ -741,13 +741,13 @@ export const XRayInputForm = ({
               <>
                 <div className="mb-6 border border-black">
                     <div className="bg-white border-b border-black p-2 font-bold text-left text-black">Kết quả chiếu/ chụp</div>
-                    <div className="p-2 min-h-[40mm] whitespace-pre-wrap text-black font-bold">{formData.result}</div>
+                    <div className="p-2 min-h-[40mm] whitespace-pre-wrap break-all text-black font-bold">{formData.result}</div>
                 </div>
 
                 <div className="flex justify-between items-start">
                     <div className="w-1/2 pr-4">
                         <p className="font-bold underline mb-2">Lời dặn của BS chuyên khoa:</p>
-                        <p className="whitespace-pre-wrap m-0 italic">{formData.advice}</p>
+                        <p className="whitespace-pre-wrap break-all m-0 italic">{formData.advice}</p>
                     </div>
                     <div className="text-center w-1/3">
                         <p className="italic m-0">Ngày {formData.resultDateDay} tháng {formData.resultDateMonth} năm {formData.resultDateYear}</p>
