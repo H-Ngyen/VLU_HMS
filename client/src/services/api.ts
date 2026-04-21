@@ -552,5 +552,22 @@ export const api = {
       });
       if (!response.ok) throw new Error('Failed to remove user from department');
     }
+  },
+
+  notifications: {
+    getAll: async () => {
+      const response = await fetch(`${API_BASE_URL}/notifications`, {
+        headers: getHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch notifications');
+      return response.json();
+    },
+    markAsRead: async (userNotificationId: number) => {
+      const response = await fetch(`${API_BASE_URL}/notifications/${userNotificationId}/read`, {
+        method: 'PUT',
+        headers: getHeaders(null, { 'Content-Type': 'application/json' })
+      });
+      if (!response.ok) throw new Error('Failed to mark notification as read');
+    }
   }
 };

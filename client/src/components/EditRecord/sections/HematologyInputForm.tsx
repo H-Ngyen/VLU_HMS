@@ -732,7 +732,6 @@ export const HematologyInputForm = ({
                         ].map(item => (
                             <div key={item.name} className="grid grid-cols-3 gap-2 items-center">
                                 <div className="col-span-2 flex items-start gap-2">
-
                                     <div><p className="font-medium">{item.label} {item.r && <span className="text-red-500">*</span>}</p><p className="text-[10px] text-gray-500 italic">{item.sub}</p></div>
                                 </div>
                                 <Input name={item.name} value={(formData as any)[item.name]} onChange={handleChange} className="h-7 text-center font-bold" disabled={isResultReadOnly} />
@@ -745,7 +744,6 @@ export const HematologyInputForm = ({
                     <div className="border border-gray-300 rounded p-4 space-y-3 bg-white text-xs">
                         <div className="grid grid-cols-3 gap-2 items-center">
                             <div className="col-span-2 flex items-start gap-2">
-
                                 <div><p className="font-medium">Số lượng BC <span className="text-red-500">*</span></p><p className="text-[10px] text-gray-500 italic">(4-10 x 10^9/l)</p></div>
                             </div>
                             <Input name="wbc" value={formData.wbc} onChange={handleChange} className="h-7 text-center font-bold" disabled={isResultReadOnly} />
@@ -759,7 +757,6 @@ export const HematologyInputForm = ({
                         {[ { label: "Số lượng tiểu cầu", sub: "(150-400 x10^9/l)", name: "plt", check: "check_plt" }, { label: "KSV sốt rét", sub: "", name: "malaria", check: "check_malaria" } ].map(item => (
                             <div key={item.name} className="grid grid-cols-3 gap-2 items-center">
                                 <div className="col-span-2 flex items-start gap-2">
-
                                     <div><p className="font-medium">{item.label}</p>{item.sub && <p className="text-[10px] text-gray-500 italic">{item.sub}</p>}</div>
                                 </div>
                                 <Input name={item.name} value={(formData as any)[item.name]} onChange={handleChange} className="h-7 text-center font-bold" disabled={isResultReadOnly} />

@@ -6,6 +6,7 @@ import { LogOut } from "lucide-react";
 import { DropdownMenuHeader } from "./DropdownMenuHeader";
 import { useAuth0 } from "@auth0/auth0-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { NotificationCenter } from "./NotificationCenter";
 
 const navs = [
   { href: "/", label: "Bệnh án" },
@@ -56,6 +57,7 @@ export function Header() {
         </nav>
 
         <div className="flex flex-1 items-center justify-end space-x-4">
+          <NotificationCenter />
           <DropdownMenuHeader user={displayUser} />
           
           <Button 

@@ -216,3 +216,21 @@ export interface Department {
   users?: User[];
   createdAt: string;
 }
+
+export interface Notification {
+  id: number;
+  appTitle?: string;
+  appContent?: string;
+  type?: number;
+  createdAt?: string;
+  createdBy?: string;
+}
+
+export interface UserNotification {
+  id: number;
+  notificationId: number;
+  userId: number;
+  isRead: boolean;
+  readAt?: string;
+  notification: Notification;
+}

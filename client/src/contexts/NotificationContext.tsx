@@ -1,0 +1,179 @@
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import * as signalR from "@microsoft/signalr";
+import { useAuth0 } from "@auth0/auth0-react";
+import { useAuth } from "./AuthContext";
+import { api } from "@/services/api";
+import type { UserNotification } from "@/types";
+import { toast } from "sonner";
+
+interface NotificationContextType {
+  notifications: UserNotification[];
+  unreadCount: number;
+  loading: boolean;
+  markAsRead: (id: number) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
+  fetchNotifications: () => Promise<void>;
+}
+
+const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
+
+export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+  const { isSynced } = useAuth();
+  const [notifications, setNotifications] = useState<UserNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [connection, setConnection] = useState<signalR.HubConnection | null>(null);
+
+  const fetchNotifications = useCallback(async () => {
+    if (!isAuthenticated || !isSynced) return;
+    try {
+      setLoading(true);
+      console.log("NotificationContext: Fetching initial notifications...");
+      const data = await api.notifications.getAll();
+      console.log("NotificationContext: Fetched notifications:", data);
+      if (Array.isArray(data)) {
+        setNotifications(data);
+        setUnreadCount(data.filter((n: any) => !n.isRead).length);
+      }
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [isAuthenticated, isSynced]);
+
+  const markAsRead = async (id: number) => {
+    try {
+      await api.notifications.markAsRead(id);
+      setNotifications(prev => 
+        prev.map(n => n.id === id ? { ...n, isRead: true, readAt: new Date().toISOString() } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    } catch (error: any) {
+      console.warn(`NotificationContext: Could not mark ${id} as read (Backend 403/Error). This is likely a permission sync issue on the server.`);
+      // Optionally still update local UI to stop showing the badge for this session
+      setNotifications(prev => 
+        prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+      );
+    }
+  };
+
+  const markAllAsRead = async () => {
+    const unreadOnes = notifications.filter(n => !n.isRead);
+    try {
+      await Promise.all(unreadOnes.map(n => api.notifications.markAsRead(n.id)));
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true, readAt: new Date().toISOString() })));
+      setUnreadCount(0);
+    } catch (error) {
+      console.error("Failed to mark all as read:", error);
+    }
+  };
+
+  useEffect(() => {
+    let activeConnection: signalR.HubConnection | null = null;
+
+    const connectSignalR = async () => {
+      if (isAuthenticated && isSynced) {
+        fetchNotifications();
+
+        try {
+          const token = await getAccessTokenSilently();
+          console.log("NotificationContext: Connecting to SignalR Hub...");
+          
+          activeConnection = new signalR.HubConnectionBuilder()
+            .withUrl("https://localhost:5001/hubs/notifications", {
+              accessTokenFactory: () => token
+            })
+            .withAutomaticReconnect()
+            .build();
+
+          const handleNewNotification = (notification: any) => {
+            console.log("NotificationContext: Received realtime notification:", notification);
+            setNotifications(prev => {
+              // Tránh trùng lặp nếu thông báo đã tồn tại
+              if (prev.some(n => n.id === notification.id)) return prev;
+              return [notification, ...prev];
+            });
+            setUnreadCount(prev => prev + 1);
+            
+            // Hiển thị Toast với dữ liệu từ Backend (appTitle/appContent)
+            const title = notification.notification?.appTitle || "Thông báo mới";
+            const content = notification.notification?.appContent || "";
+            
+            toast.info(title, {
+              description: content,
+              action: {
+                label: "Xem",
+                onClick: () => {
+                    if (content.includes("/record/edit/")) {
+                        const match = content.match(/\/record\/edit\/[^\s]+/);
+                        if (match) window.location.href = match[0];
+                    }
+                }
+              }
+            });
+          };
+
+          // Lắng nghe cả 2 trường hợp tên sự kiện có thể có
+          activeConnection.on("notification_received", handleNewNotification);
+          activeConnection.on("ReceiveNotification", handleNewNotification);
+
+          await activeConnection.start();
+          console.log("NotificationContext: SignalR Connected successfully");
+          setConnection(activeConnection);
+        } catch (err) {
+          console.error("NotificationContext: SignalR Connection Error:", err);
+        }
+      } else {
+        if (!isAuthenticated) {
+            setNotifications([]);
+            setUnreadCount(0);
+        }
+        if (connection) {
+          console.log("NotificationContext: Stopping SignalR connection...");
+          connection.stop();
+          setConnection(null);
+        }
+      }
+    };
+
+    connectSignalR();
+
+    // Cơ chế Polling (Fallback): Tự động fetch lại mỗi 10 giây để đảm bảo cập nhật
+    const pollInterval = setInterval(() => {
+        if (isAuthenticated && isSynced) {
+            console.log("NotificationContext: Polling for new notifications...");
+            fetchNotifications();
+        }
+    }, 10000); // 10 giây
+
+    return () => {
+      if (activeConnection) {
+        activeConnection.stop();
+      }
+      clearInterval(pollInterval);
+    };
+  }, [isAuthenticated, isSynced, getAccessTokenSilently, fetchNotifications]);
+
+  return (
+    <NotificationContext.Provider value={{ 
+      notifications, 
+      unreadCount, 
+      loading, 
+      markAsRead, 
+      markAllAsRead,
+      fetchNotifications 
+    }}>
+      {children}
+    </NotificationContext.Provider>
+  );
+};
+
+export const useNotifications = () => {
+  const context = useContext(NotificationContext);
+  if (context === undefined) {
+    throw new Error("useNotifications must be used within a NotificationProvider");
+  }
+  return context;
+};
