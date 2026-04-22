@@ -55,6 +55,9 @@ public static class ServiceCollectionExtensions
         services.AddSignalR(options =>
         {
             options.EnableDetailedErrors = true;
+        }).AddJsonProtocol(options =>
+        {
+            options.PayloadSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
         });
 
         // Add Authentication Services

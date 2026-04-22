@@ -20,6 +20,6 @@ public class NotificationDto
     public string ResourceUrl { get; set; } = null!;
     public required DateTime CreatedAt { get; set; }
 
-    // navigation
-    public ICollection<UserNotificationDto> UserNotifications { get; set; } = [];
+    // // navigation
+    // public ICollection<UserNotificationDto> UserNotifications { get; set; } = [];
 }
