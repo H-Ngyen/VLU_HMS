@@ -24,11 +24,13 @@ internal class XRayRepository(AppDbContext context) : BaseRepository<XRay>(conte
     public async Task<XRay?> FindOneAsync(Expression<Func<XRay, bool>> predicate)
         => await TrackingQuery
             .Include(x => x.XRayStatusLogs)
+            .Include(x => x.MedicalRecord)
             .FirstOrDefaultAsync(predicate);
 
     public async Task<XRay?> GetByIdAsync(int id)
         => await TrackingQuery
             .Include(x => x.XRayStatusLogs)
+            .Include(x => x.MedicalRecord)
             .FirstOrDefaultAsync(x => x.Id == id);
 
     public async Task SaveChanges() => await _dbContext.SaveChangesAsync();

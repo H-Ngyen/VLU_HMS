@@ -17,7 +17,7 @@ public class NotificationDto
 
     public required NotificationType Type { get; set; }
     public int ResourceId { get; set; }
-
+    public string ResourceUrl { get; set; } = null!;
     public required DateTime CreatedAt { get; set; }
 
     // navigation

@@ -14,7 +14,7 @@ namespace Application.XRays.Commands.CreateXRays;
 
 public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger,
     IUserContext userContext,
-    IMedicalRecordsRepository medicalRecords,
+    IMedicalRecordsRepository medicalRecordsRepository,
     IXrayAuthorizationService xrayAuthorizationService,
     IDepartmentRepository departmentRepository,
     IMapper mapper,
@@ -28,7 +28,7 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
         var user = await userContext.GetCurrentUser() ?? throw new UnauthorizedException();
         var creatorId = user.Id;
 
-        var medicalRecord = await medicalRecords.ExistAsync(request.MedicalRecordId);
+        var medicalRecord = await medicalRecordsRepository.ExistAsync(request.MedicalRecordId);
         if (!medicalRecord)
             throw new BadRequestException(nameof(MedicalRecord), $"{request.MedicalRecordId}");
 

@@ -24,6 +24,7 @@ internal class HematologyRepository(AppDbContext dbContext) : BaseRepository<Hem
     public async Task<Hematology?> FindOneAsync(Expression<Func<Hematology, bool>> predicate)
         => await TrackingQuery
             .Include(h => h.HematologyStatusLogs)
+            .Include(x => x.MedicalRecord)
             .FirstOrDefaultAsync(predicate);
 
     public async Task SaveChanges() => await _dbContext.SaveChangesAsync();

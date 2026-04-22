@@ -239,12 +239,12 @@ public class NotificationTemplates(IConfiguration config)
     #endregion
 
     #region Helper
-    private string GenerateHematologyLink(int hematologyId, string storageCode)
+    public string GenerateHematologyLink(int hematologyId, string storageCode)
     {
         return $"{CLIENT_BASE_URL}/record/edit/{storageCode}/hematology/{hematologyId}";
     }
 
-    private string GenerateXrayLink(int xrayId, string storageCode)
+    public string GenerateXrayLink(int xrayId, string storageCode)
     {
         return $"{CLIENT_BASE_URL}/record/edit/{storageCode}/xray/{xrayId}";
     }

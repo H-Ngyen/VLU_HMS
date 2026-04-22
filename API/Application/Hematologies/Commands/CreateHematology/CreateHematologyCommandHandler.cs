@@ -31,8 +31,9 @@ public class CreateHematologyCommandHandler(ILogger<CreateHematologyCommandHandl
             userId,
             request.MedicalRecordId);
 
-        var medicalRecord = await recordsRepository.GetByIdAsync(request.MedicalRecordId)
-            ?? throw new NotFoundException(nameof(MedicalRecord), $"{request.MedicalRecordId}");
+        var medicalRecord = await recordsRepository.ExistAsync(request.MedicalRecordId);
+        if (!medicalRecord)
+            throw new BadRequestException(nameof(MedicalRecord), $"{request.MedicalRecordId}");
 
         var departments = await departmentRepository.GetAllAsync() ?? throw new NotFoundException($"Chưa có khoa nào được tạo");
 
