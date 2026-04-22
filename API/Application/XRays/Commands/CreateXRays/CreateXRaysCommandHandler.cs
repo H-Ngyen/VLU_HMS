@@ -51,8 +51,8 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
         if (!xrayAuthorizationService.Authorize(user, xray, ResourceOperation.Create))
             throw new ForbidException();
 
-        await xRayRepository.CreateAsync(xray);
-        await PublishNotification(xray.Id, request, departments);
+        var id = await xRayRepository.CreateAsync(xray);
+        await PublishNotification(id, request, departments);
     }
     private async Task PublishNotification(int xrayId, CreateXRaysCommand request, IEnumerable<Department> departments)
     {
