@@ -31,6 +31,8 @@ internal class NotificationConfiguration : IEntityTypeConfiguration<Notification
 
         builder.Property(x => x.ResourceId);
 
+        builder.Property(x => x.ResourceUrl).IsRequired().HasMaxLength(100);
+
         builder.Property(x => x.CreatedAt)
             .IsRequired();
 

@@ -18,6 +18,7 @@ public class Notification
 
     public required NotificationType Type { get; set; }
     public int ResourceId { get; set; }
+    public required string ResourceUrl { get; set; }
 
     public required DateTime CreatedAt { get; set; }
 

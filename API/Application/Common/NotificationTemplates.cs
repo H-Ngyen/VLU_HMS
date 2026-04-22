@@ -16,6 +16,7 @@ public class NotificationTemplates(IConfiguration config)
     public string AppContent { get; init; } = "";
     public string EmailTitle { get; init; } = "";
     public string EmailContent { get; init; } = "";
+    public string ResourceUrl { get; set; } = "";
     private readonly string CLIENT_BASE_URL = config["Client:BaseUrl"] ?? throw new InvalidOperationException("Client:BaseUrl is not configured");
     public NotificationTemplates Build(NotificationType notificationType, NotificationTemplateContext ctx)
     {
@@ -64,7 +65,7 @@ public class NotificationTemplates(IConfiguration config)
             <p>Trân trọng,</p>
             <p>Hệ thống Quản lý hồ sơ bệnh án</p>";
 
-        return Create(appTitle, appContent, emailTitle, emailContent);
+        return Create(appTitle, appContent, emailTitle, emailContent, url);
     }
 
     private NotificationTemplates BuildHematologyReceived(NotificationTemplateContext ctx)
@@ -88,7 +89,7 @@ public class NotificationTemplates(IConfiguration config)
             <p>Trân trọng,</p>
             <p>Hệ thống Quản lý Bệnh viện (HMS)</p>";
 
-        return Create(appTitle, appContent, emailTitle, emailContent);
+        return Create(appTitle, appContent, emailTitle, emailContent, url);
     }
 
     private NotificationTemplates BuildHematologyProcessing(NotificationTemplateContext ctx)
@@ -112,7 +113,7 @@ public class NotificationTemplates(IConfiguration config)
             <p>Trân trọng,</p>
             <p>Hệ thống Quản lý Bệnh viện (HMS)</p>";
 
-        return Create(appTitle, appContent, emailTitle, emailContent);
+        return Create(appTitle, appContent, emailTitle, emailContent, url);
     }
 
     private NotificationTemplates BuildHematologyCompleted(NotificationTemplateContext ctx)
@@ -136,7 +137,7 @@ public class NotificationTemplates(IConfiguration config)
             <p>Trân trọng,</p>
             <p>Hệ thống Quản lý Bệnh viện (HMS)</p>";
 
-        return Create(appTitle, appContent, emailTitle, emailContent);
+        return Create(appTitle, appContent, emailTitle, emailContent, url);
     }
     #endregion
 
@@ -162,7 +163,7 @@ public class NotificationTemplates(IConfiguration config)
             <p>Trân trọng,</p>
             <p>Hệ thống Quản lý Bệnh viện (HMS)</p>";
 
-        return Create(appTitle, appContent, emailTitle, emailContent);
+        return Create(appTitle, appContent, emailTitle, emailContent, url);
     }
 
     private NotificationTemplates BuildXrayReceived(NotificationTemplateContext ctx)
@@ -186,7 +187,7 @@ public class NotificationTemplates(IConfiguration config)
             <p>Trân trọng,</p>
             <p>Hệ thống Quản lý Bệnh viện (HMS)</p>";
 
-        return Create(appTitle, appContent, emailTitle, emailContent);
+        return Create(appTitle, appContent, emailTitle, emailContent, url);
     }
 
     private NotificationTemplates BuildXrayProcessing(NotificationTemplateContext ctx)
@@ -210,7 +211,7 @@ public class NotificationTemplates(IConfiguration config)
             <p>Trân trọng,</p>
             <p>Hệ thống Quản lý Bệnh viện (HMS)</p>";
 
-        return Create(appTitle, appContent, emailTitle, emailContent);
+        return Create(appTitle, appContent, emailTitle, emailContent, url);
     }
 
     private NotificationTemplates BuildXrayCompleted(NotificationTemplateContext ctx)
@@ -234,7 +235,7 @@ public class NotificationTemplates(IConfiguration config)
             <p>Trân trọng,</p>
             <p>Hệ thống Quản lý Bệnh viện (HMS)</p>";
 
-        return Create(appTitle, appContent, emailTitle, emailContent);
+        return Create(appTitle, appContent, emailTitle, emailContent, url);
     }
     #endregion
 
@@ -249,14 +250,15 @@ public class NotificationTemplates(IConfiguration config)
         return $"{CLIENT_BASE_URL}/record/edit/{storageCode}/xray/{xrayId}";
     }
 
-    private NotificationTemplates Create(string appTitle, string appContent, string emailTitle, string emailContent)
+    private NotificationTemplates Create(string appTitle, string appContent, string emailTitle, string emailContent, string resourceUrl)
     {
         return new NotificationTemplates(config)
         {
             AppTitle = appTitle,
             AppContent = appContent,
             EmailTitle = emailTitle,
-            EmailContent = emailContent
+            EmailContent = emailContent,
+            ResourceUrl = resourceUrl
         };
     }
     #endregion

@@ -82,6 +82,7 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
             EmailTitle = content.EmailTitle,
             EmailContent = content.EmailContent,
             ResourceId = resourceId,
+            ResourceUrl = content.ResourceUrl,
             Type = type,
             CreatedAt = datetimeProvider.Now
         };
