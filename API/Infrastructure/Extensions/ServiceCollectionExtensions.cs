@@ -51,6 +51,12 @@ public static class ServiceCollectionExtensions
                     modelId: string.IsNullOrWhiteSpace(geminiSettings.Model) ? "gemini-1.5-pro" : geminiSettings.Model,
                     apiKey: geminiSettings.ApiKey!);
 
+        // Add SignalR
+        services.AddSignalR(options =>
+        {
+            options.EnableDetailedErrors = true;
+        });
+
         // Add Authentication Services
         services.AddAuthentication(options =>
         {
@@ -70,7 +76,7 @@ public static class ServiceCollectionExtensions
                     // If the request is for our hub...
                     var path = context.HttpContext.Request.Path;
                     if (!string.IsNullOrEmpty(accessToken) &&
-                        (path.StartsWithSegments("/hubs/notifications")))
+                        path.Value!.StartsWith("/hubs/notifications", StringComparison.OrdinalIgnoreCase))
                     {
                         // Read the token out of the query string
                         context.Token = accessToken;
