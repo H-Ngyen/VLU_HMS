@@ -18,8 +18,14 @@ import { vi } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 
 export const NotificationCenter: React.FC = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications } = useNotifications();
   const navigate = useNavigate();
+
+  const handleOpenChange = (open: boolean) => {
+      if (open) {
+          fetchNotifications();
+      }
+  };
 
   const getIcon = (type: number) => {
     switch (type) {
@@ -48,7 +54,7 @@ export const NotificationCenter: React.FC = () => {
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={handleOpenChange}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell className="h-5 w-5" />

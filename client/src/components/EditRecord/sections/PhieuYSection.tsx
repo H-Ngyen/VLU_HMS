@@ -272,7 +272,16 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
                                         )}
                                     </div>
                                 </td>
-                                <td className="px-4 py-3 text-gray-500">{doc.date}</td>
+                                <td className="px-4 py-3 text-gray-500">
+                                    {(() => {
+                                        if (!doc.date) return "";
+                                        const parts = doc.date.split('-');
+                                        if (parts.length === 3) {
+                                            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                        }
+                                        return doc.date;
+                                    })()}
+                                </td>
                                 <td className="px-4 py-3 text-right flex justify-end gap-2">
                                     <Button type="button" size="icon-sm" variant="ghost" onClick={() => handleView(doc)} className="text-blue-600 bg-blue-50 hover:bg-blue-100">
                                         <Eye size={16} />
@@ -319,7 +328,26 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         defaultAddress={formData.address}
         defaultDepartment={formData.department}
         initialData={editingXRayDoc?.data || viewingXRayDoc?.data}
-
+        onSaved={(updatedData) => {
+            setFormData(prev => {
+                if (!prev) return prev;
+                const newDocs = [...prev.documents];
+                const docIndex = newDocs.findIndex(d => d.id === `XRAY_${updatedData.id}`);
+                if (docIndex >= 0) {
+                    newDocs[docIndex] = { ...newDocs[docIndex], data: updatedData };
+                } else {
+                    newDocs.unshift({
+                        id: `XRAY_${updatedData.id}`,
+                        name: "Phiếu X-Quang",
+                        type: "X-Quang",
+                        fileName: "X-Quang.pdf",
+                        date: new Date().toISOString().split('T')[0],
+                        data: updatedData
+                    });
+                }
+                return { ...prev, documents: newDocs };
+            });
+        }}
         readOnly={!!viewingXRayDoc || readOnly} 
         recordId={formData.numericId}
       />
@@ -339,6 +367,26 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         defaultAddress={formData.address}
         defaultInsuranceNumber={formData.insuranceNumber}
         initialData={editingHematologyDoc?.data || viewingHematologyDoc?.data}
+        onSaved={(updatedData) => {
+            setFormData(prev => {
+                if (!prev) return prev;
+                const newDocs = [...prev.documents];
+                const docIndex = newDocs.findIndex(d => d.id === `HEMA_${updatedData.id}`);
+                if (docIndex >= 0) {
+                    newDocs[docIndex] = { ...newDocs[docIndex], data: updatedData };
+                } else {
+                    newDocs.unshift({
+                        id: `HEMA_${updatedData.id}`,
+                        name: "Phiếu Huyết học",
+                        type: "XN-HuyetHoc",
+                        fileName: "HuyetHoc.pdf",
+                        date: new Date().toISOString().split('T')[0],
+                        data: updatedData
+                    });
+                }
+                return { ...prev, documents: newDocs };
+            });
+        }}
         readOnly={!!viewingHematologyDoc || readOnly} 
         recordId={formData.numericId}
       />

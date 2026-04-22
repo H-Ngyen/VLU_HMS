@@ -29,9 +29,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!isAuthenticated || !isSynced) return;
     try {
       setLoading(true);
-      console.log("NotificationContext: Fetching initial notifications...");
       const data = await api.notifications.getAll();
-      console.log("NotificationContext: Fetched notifications:", data);
       if (Array.isArray(data)) {
         setNotifications(data);
         setUnreadCount(data.filter((n: any) => !n.isRead).length);
@@ -75,8 +73,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const connectSignalR = async () => {
       if (isAuthenticated && isSynced) {
-        fetchNotifications();
-
+        fetchNotifications(); // Fetch once on initial load (F5)
         try {
           const token = await getAccessTokenSilently();
           console.log("NotificationContext: Connecting to SignalR Hub...");
@@ -91,13 +88,11 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           const handleNewNotification = (notification: any) => {
             console.log("NotificationContext: Received realtime notification:", notification);
             setNotifications(prev => {
-              // Tránh trùng lặp nếu thông báo đã tồn tại
               if (prev.some(n => n.id === notification.id)) return prev;
               return [notification, ...prev];
             });
             setUnreadCount(prev => prev + 1);
             
-            // Hiển thị Toast với dữ liệu từ Backend (appTitle/appContent)
             const title = notification.notification?.appTitle || "Thông báo mới";
             const content = notification.notification?.appContent || "";
             
@@ -115,7 +110,6 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             });
           };
 
-          // Lắng nghe cả 2 trường hợp tên sự kiện có thể có
           activeConnection.on("notification_received", handleNewNotification);
           activeConnection.on("ReceiveNotification", handleNewNotification);
 
@@ -140,19 +134,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     connectSignalR();
 
-    // Cơ chế Polling (Fallback): Tự động fetch lại mỗi 10 giây để đảm bảo cập nhật
-    const pollInterval = setInterval(() => {
-        if (isAuthenticated && isSynced) {
-            console.log("NotificationContext: Polling for new notifications...");
-            fetchNotifications();
-        }
-    }, 10000); // 10 giây
-
     return () => {
       if (activeConnection) {
         activeConnection.stop();
       }
-      clearInterval(pollInterval);
     };
   }, [isAuthenticated, isSynced, getAccessTokenSilently, fetchNotifications]);
 

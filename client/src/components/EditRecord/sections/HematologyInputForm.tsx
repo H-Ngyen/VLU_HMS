@@ -92,6 +92,7 @@ interface HematologyInputFormProps {
   initialData?: HematologyData;
   readOnly?: boolean;
   recordId?: number;
+  onSaved?: (data: HematologyData) => void;
 }
 
 const parseDate = (dateStr?: string) => {
@@ -141,7 +142,8 @@ export const HematologyInputForm = ({
   defaultInsuranceNumber = "",
   initialData,
   readOnly = false,
-  recordId
+  recordId,
+  onSaved
 }: HematologyInputFormProps) => {  const { currentUser } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
   
@@ -249,7 +251,8 @@ export const HematologyInputForm = ({
   const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
   const [departmentInput, setDepartmentInput] = useState("");
   const [openConfirmCombobox, setOpenConfirmCombobox] = useState(false);
-  const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "PDF" | "FAST_TRACK" | null>(null);
+  const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "FAST_TRACK">("SAVE");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(!!(isOpen && initialData && readOnly));
 
   const [departmentsList, setDepartmentsList] = useState<Department[]>([]);
@@ -442,24 +445,31 @@ export const HematologyInputForm = ({
       handleGeneratePDF(formData);
       return;
     }
-    setDepartmentInput("");
-    setIsDeptDialogOpen(true);
+    
+    // Only show department selection dialog for completely new requests
+    if (!formData.id) {
+      setDepartmentInput("");
+      setIsDeptDialogOpen(true);
+    } else {
+      // For existing requests, proceed directly using the existing department
+      handleConfirmDepartmentDirect(action, formData.department || "");
+    }
   };
 
-  const handleConfirmDepartment = async () => {
-    setIsDeptDialogOpen(false);
+  const handleConfirmDepartmentDirect = async (action: "SAVE" | "NEXT" | "FAST_TRACK", deptName: string) => {
     if (!recordId) {
         toast.error("Vui lòng lưu hồ sơ bệnh án trước.");
         return;
     }
 
+    setIsSubmitting(true);
     try {
         let currentHematologyId = formData.id;
         const requestedAt = getRequestDateString(formData);
         
         if (!currentHematologyId) {
             // Find department ID from name
-            const selectedDept = departmentsList.find(d => d.name === departmentInput);
+            const selectedDept = departmentsList.find(d => d.name === deptName);
             const deptIds = selectedDept ? [selectedDept.id] : [];
 
             const createPayload = {
@@ -477,11 +487,11 @@ export const HematologyInputForm = ({
         let newStatus = formData.status;
         const newLogs: HematologyStatusLog[] = [];
 
-        if (targetAction === "NEXT") {
+        if (action === "NEXT") {
             newStatus = Math.min(formData.status + 1, 3);
             if (newStatus === 1 || newStatus === 2) {
                  if (currentHematologyId) {
-                     await api.hematologies.changeStatus(recordId, currentHematologyId, { status: newStatus, departmentName: departmentInput });
+                     await api.hematologies.changeStatus(recordId, currentHematologyId, { status: newStatus, departmentName: deptName });
                  }
             } else if (newStatus === 3) {
                  if (currentHematologyId) {
@@ -520,17 +530,17 @@ export const HematologyInputForm = ({
                      };
 
                      await api.hematologies.complete(recordId, currentHematologyId, completePayload);
-                     await api.hematologies.changeStatus(recordId, currentHematologyId, { status: 3, departmentName: departmentInput });
+                     await api.hematologies.changeStatus(recordId, currentHematologyId, { status: 3, departmentName: deptName });
                  }
             }
-            newLogs.push({ status: newStatus, departmentName: departmentInput, updatedByName: currentUser?.name || "Người dùng", createdAt: new Date().toISOString() });
-        } else if (targetAction === "FAST_TRACK") {
+            newLogs.push({ status: newStatus, departmentName: deptName, updatedByName: currentUser?.name || "Người dùng", createdAt: new Date().toISOString() });
+        } else if (action === "FAST_TRACK") {
             if (currentHematologyId) {
-                await api.hematologies.changeStatus(recordId, currentHematologyId, { status: 1, departmentName: departmentInput });
-                await api.hematologies.changeStatus(recordId, currentHematologyId, { status: 2, departmentName: departmentInput });
+                await api.hematologies.changeStatus(recordId, currentHematologyId, { status: 1, departmentName: deptName });
+                await api.hematologies.changeStatus(recordId, currentHematologyId, { status: 2, departmentName: deptName });
                 newStatus = 2;
-                newLogs.push({ status: 1, departmentName: departmentInput, updatedByName: currentUser?.name || "Người dùng", createdAt: new Date().toISOString() });
-                newLogs.push({ status: 2, departmentName: departmentInput, updatedByName: currentUser?.name || "Người dùng", createdAt: new Date().toISOString() });
+                newLogs.push({ status: 1, departmentName: deptName, updatedByName: currentUser?.name || "Người dùng", createdAt: new Date().toISOString() });
+                newLogs.push({ status: 2, departmentName: deptName, updatedByName: currentUser?.name || "Người dùng", createdAt: new Date().toISOString() });
             }
         }
 
@@ -550,15 +560,27 @@ export const HematologyInputForm = ({
                     updated.resultDateYear = new Date().getFullYear().toString();
                 }
             }
+            if (onSaved) setTimeout(() => onSaved(updated), 0);
             return updated;
         });
         toast.success(`Cập nhật thành công`);
-        setTimeout(() => { window.location.search = "?tab=forms"; }, 1000);
+        
+        // Refresh the page if it's a completely new request being created
+        if (!currentHematologyId) {
+            setTimeout(() => { window.location.search = "?tab=forms"; }, 1000);
+        }
     } catch (error: unknown) {
         console.error(error);
         const message = error instanceof Error ? error.message : "Lỗi đồng bộ server.";
         toast.error(message);
+    } finally {
+        setIsSubmitting(false);
     }
+  };
+
+  const handleConfirmDepartment = async () => {
+    setIsDeptDialogOpen(false);
+    await handleConfirmDepartmentDirect(targetAction as any, departmentInput);
   };
 
   const isRequestReadOnly = readOnly || formData.status > 0 || !!initialData;
@@ -1064,9 +1086,31 @@ export const HematologyInputForm = ({
               <Button variant="outline" onClick={onClose}>Đóng</Button>
               {!readOnly && (
                 <>
-                  {formData.status === 0 && (initialData ? <Button onClick={() => handleActionClick("FAST_TRACK")} className="bg-orange-500 text-white shadow-sm">Tiếp Nhận & Thực Hiện Ngay (Chuyển TT2)</Button> : <Button onClick={() => handleActionClick("SAVE")} className="bg-vlu-red text-white shadow-sm">Lưu Chỉ Định (Tạo Yêu Cầu)</Button>)}
-                  {formData.status === 1 && <Button onClick={() => handleActionClick("NEXT")} className="bg-orange-500 text-white shadow-sm">Bắt Đầu Chạy (Chuyển TT2)</Button>}
-                  {formData.status === 2 && <Button onClick={() => handleActionClick("NEXT")} className="bg-vlu-red text-white shadow-sm">Hoàn Thành Kết Quả</Button>}
+                  {formData.status === 0 && (
+                    initialData ? (
+                      <Button disabled={isSubmitting} onClick={() => handleActionClick("FAST_TRACK")} className="bg-orange-500 text-white shadow-sm">
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Tiếp Nhận & Thực Hiện Ngay (Chuyển TT2)
+                      </Button>
+                    ) : (
+                      <Button disabled={isSubmitting} onClick={() => handleActionClick("SAVE")} className="bg-vlu-red text-white shadow-sm">
+                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Lưu Chỉ Định (Tạo Yêu Cầu)
+                      </Button>
+                    )
+                  )}
+                  {formData.status === 1 && (
+                    <Button disabled={isSubmitting} onClick={() => handleActionClick("NEXT")} className="bg-orange-500 text-white shadow-sm">
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Bắt Đầu Chạy (Chuyển TT2)
+                    </Button>
+                  )}
+                  {formData.status === 2 && (
+                    <Button disabled={isSubmitting} onClick={() => handleActionClick("NEXT")} className="bg-vlu-red text-white shadow-sm">
+                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Hoàn Thành Kết Quả
+                    </Button>
+                  )}
                 </>
               )}
             </div>
@@ -1136,8 +1180,9 @@ export const HematologyInputForm = ({
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setIsDeptDialogOpen(false)}>Hủy</Button>
-          <Button type="button" onClick={handleConfirmDepartment} className="bg-vlu-red text-white hover:bg-vlu-red/90" disabled={!departmentInput || departmentInput === "none"}>
+          <Button variant="outline" onClick={() => setIsDeptDialogOpen(false)} disabled={isSubmitting}>Hủy</Button>
+          <Button type="button" onClick={handleConfirmDepartment} className="bg-vlu-red text-white hover:bg-vlu-red/90" disabled={!departmentInput || departmentInput === "none" || isSubmitting}>
+            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Xác nhận
           </Button>
         </DialogFooter>

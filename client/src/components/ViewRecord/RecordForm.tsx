@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Record, Patient } from "@/types";
 import { api } from "@/services/api";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas-pro";
+import { toast } from "sonner";
 
 import { AdministrativeSection } from "../EditRecord/sections/AdministrativeSection";
 import { PatientManagementSection } from "../EditRecord/sections/PatientManagementSection";
@@ -13,6 +16,7 @@ import { MedicalHistorySection } from "../EditRecord/sections/MedicalHistorySect
 import { ExaminationSection } from "../EditRecord/sections/ExaminationSection";
 import { TreatmentSection } from "../EditRecord/sections/TreatmentSection";
 import { XRayResultView, HematologyResultView, AttachmentResultView } from "./sections/ClinicalResultViews";
+import { MedicalRecordPDFTemplate } from "./sections/MedicalRecordPDFTemplate";
 
 interface AttachmentDto {
   id: number;
@@ -113,6 +117,50 @@ export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProp
   const [attachments, setAttachments] = useState<AttachmentDto[]>([]);
   const [loadingAttachments, setLoadingAttachments] = useState(false);
 
+  const printRef = useRef<HTMLDivElement>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  const handleGeneratePDF = async () => {
+    if (!printRef.current) return;
+    try {
+        setIsGenerating(true);
+        toast.info("Đang tạo file PDF, vui lòng đợi...");
+        const canvas = await html2canvas(printRef.current, {
+            scale: 1.5,
+            useCORS: true,
+            backgroundColor: '#ffffff'
+        });
+        const imgData = canvas.toDataURL("image/jpeg", 0.8);
+        const pdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+        
+        let heightLeft = pdfHeight;
+        let position = 0;
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, pdfHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+            position = heightLeft - pdfHeight;
+            pdf.addPage();
+            pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, pdfHeight);
+            heightLeft -= pageHeight;
+        }
+
+        const blob = pdf.output("blob");
+        const url = URL.createObjectURL(blob);
+        window.open(url, "_blank");
+        toast.success("Tạo PDF thành công!");
+    } catch (error) {
+        console.error("Lỗi khi tạo PDF:", error);
+        toast.error("Không thể xuất file PDF. Thử lại sau.");
+    } finally {
+        setIsGenerating(false);
+    }
+  };
+
   useEffect(() => {
     const fetchAttachments = async () => {
       if (!record.numericId) return;
@@ -200,8 +248,13 @@ export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProp
           >
             Quay lại
           </Button>
-          <Button type="button" className="bg-vlu-red hover:bg-red-800 text-white flex items-center gap-2">
-            <DownloadIcon size={18} />
+          <Button 
+            type="button" 
+            onClick={handleGeneratePDF}
+            disabled={isGenerating}
+            className="bg-vlu-red hover:bg-red-800 text-white flex items-center gap-2"
+          >
+            {isGenerating ? <Loader2 size={18} className="animate-spin" /> : <DownloadIcon size={18} />}
             Xuất PDF
           </Button>
         </div>
@@ -279,6 +332,13 @@ export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProp
               </Button>
             );
           })}
+        </div>
+
+        {/* Hidden PDF Template */}
+        <div style={{ position: "fixed", left: "-10000px", top: 0 }}>
+          <div ref={printRef}>
+            <MedicalRecordPDFTemplate record={formData} patient={editablePatient} />
+          </div>
         </div>
 
         {/* Main Content Area */}
