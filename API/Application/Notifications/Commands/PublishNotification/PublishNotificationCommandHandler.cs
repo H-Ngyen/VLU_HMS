@@ -8,6 +8,7 @@ using Domain.Interfaces;
 using Domain.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Notifications.Commands.PublishNotification;
@@ -21,7 +22,8 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
     IEmailService emailService,
     IDateTimeProvider datetimeProvider,
     IMapper mapper,
-    IHubContext<NotificationHub> hubContext) : IRequestHandler<PublishNotificationCommand, bool>
+    IHubContext<NotificationHub> hubContext,
+    IConfiguration config) : IRequestHandler<PublishNotificationCommand, bool>
 {
     public async Task<bool> Handle(PublishNotificationCommand request, CancellationToken cancellationToken)
     {
@@ -30,8 +32,8 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
         var users = await userRepository.GetAllAsync();
         var listUser = users!.Where(u => request.ListUserId.Contains(u.Id)).ToList();
 
-        var medicalRecordId = await GetMedicalRecordId(request.ResourceId, request.ClinicalType);
-        var newNotification = await CreateNewNotification(request.ResourceId, medicalRecordId, request.NotificattionType, listUser);
+        var storageCode = await GetMedicalRecordId(request.ResourceId, request.ClinicalType);
+        var newNotification = await CreateNewNotification(request.ResourceId, storageCode, request.NotificattionType, listUser);
 
         await notificationRepository.CreateAsync(newNotification);
 
@@ -49,27 +51,27 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
         return true;
     }
 
-    private async Task<int> GetMedicalRecordId(int resourceId, ClinicalsType clinicalsType)
+    private async Task<string> GetMedicalRecordId(int resourceId, ClinicalsType clinicalsType)
     {
         if (clinicalsType == ClinicalsType.Hematology)
         {
             var hematology = await hematologyRepository.FindOneAsync(h => h.Id == resourceId);
-            return hematology!.MedicalRecordId;
+            return hematology!.MedicalRecord.StorageCode!;
         }
         else
         {
             var xray = await xRayRepository.FindOneAsync(x => x.Id == resourceId);
-            return xray!.MedicalRecordId;
+            return xray!.MedicalRecord.StorageCode!;
         }
     }
 
-    private async Task<Notification> CreateNewNotification(int resourceId, int medicalRecordId, NotificationType type, IEnumerable<User> users)
+    private async Task<Notification> CreateNewNotification(int resourceId, string storageCode, NotificationType type, IEnumerable<User> users)
     {
-        var notificationTemplate = new NotificationTemplates();
+        var notificationTemplate = new NotificationTemplates(config);
         var context = new NotificationTemplateContext
         {
             ResourceId = resourceId,
-            MedicalRecordId = medicalRecordId
+            StorageCode = storageCode
         };
         var content = notificationTemplate.Build(type, context);
 

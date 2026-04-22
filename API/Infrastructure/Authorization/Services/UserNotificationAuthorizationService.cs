@@ -38,6 +38,12 @@ public class UserNotificationAuthorizationService(ILogger<UserNotificationAuthor
                 logger.LogInformation("Read operation - successful authorization");
                 return true;
             }
+
+            if (resourceOperation == ResourceOperation.Update && resource.UserId == user.Id)
+            {
+                logger.LogInformation("Update operation - successful authorization");
+                return true;
+            }
         }
 
         return false;
