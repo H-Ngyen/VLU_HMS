@@ -222,6 +222,7 @@ export interface Notification {
   appTitle?: string;
   appContent?: string;
   type?: number;
+  resourceUrl?: string;
   createdAt?: string;
   createdBy?: string;
 }

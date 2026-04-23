@@ -95,19 +95,32 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
             
             const title = notification.notification?.appTitle || "Thông báo mới";
             const content = notification.notification?.appContent || "";
+            const url = notification.notification?.resourceUrl;
             
-            toast.info(title, {
+            const toastOptions: any = {
               description: content,
-              action: {
-                label: "Xem",
-                onClick: () => {
-                    if (content.includes("/record/edit/")) {
-                        const match = content.match(/\/record\/edit\/[^\s]+/);
-                        if (match) window.location.href = match[0];
+            };
+
+            if (url) {
+                toastOptions.action = {
+                    label: "Xem chi tiết",
+                    onClick: () => {
+                        window.location.href = url;
                     }
+                };
+            } else if (content.includes("/record/edit/")) {
+                const match = content.match(/\/record\/edit\/[^\s]+/);
+                if (match) {
+                    toastOptions.action = {
+                        label: "Xem",
+                        onClick: () => {
+                            window.location.href = match[0];
+                        }
+                    };
                 }
-              }
-            });
+            }
+
+            toast.info(title, toastOptions);
           };
 
           activeConnection.on("notification_received", handleNewNotification);

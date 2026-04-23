@@ -1,5 +1,5 @@
 import React from "react";
-import { Bell, Check, Info, AlertTriangle, AlertCircle } from "lucide-react";
+import { Bell, Check, Info, AlertTriangle, AlertCircle, ChevronRight } from "lucide-react";
 import { useNotifications } from "@/contexts/NotificationContext";
 import {
   DropdownMenu,
@@ -20,10 +20,14 @@ import { useNavigate } from "react-router-dom";
 export const NotificationCenter: React.FC = () => {
   const { notifications, unreadCount, markAsRead, markAllAsRead, fetchNotifications } = useNotifications();
   const navigate = useNavigate();
+  const [showAll, setShowAll] = React.useState(false);
+
+  const displayedNotifications = showAll ? notifications : notifications.filter(n => !n.isRead);
 
   const handleOpenChange = (open: boolean) => {
       if (open) {
           fetchNotifications();
+          setShowAll(false); // Reset to only show unread when opening
       }
   };
 
@@ -42,10 +46,11 @@ export const NotificationCenter: React.FC = () => {
       await markAsRead(n.id);
     }
     
-    // Logic to navigate if content contains record info or similar
-    // For now, let's just mark as read.
-    // In the future, we could have a 'targetUrl' in the notification DTO.
-    if (n.notification.appContent.includes("/record/edit/")) {
+    // Default fallback to parsing if resourceUrl is missing
+    const url = n.notification?.resourceUrl;
+    if (url) {
+        navigate(url);
+    } else if (n.notification?.appContent?.includes("/record/edit/")) {
         const match = n.notification.appContent.match(/\/record\/edit\/[^\s]+/);
         if (match) {
             navigate(match[0]);
@@ -86,13 +91,15 @@ export const NotificationCenter: React.FC = () => {
           )}
         </div>
         <ScrollArea className="h-[400px]">
-          {notifications.length === 0 ? (
+          {displayedNotifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
               <Bell className="h-10 w-10 text-gray-200 mb-2" />
-              <p className="text-sm text-gray-500">Chưa có thông báo nào</p>
+              <p className="text-sm text-gray-500">
+                {showAll ? "Chưa có thông báo nào" : "Bạn đã đọc tất cả thông báo"}
+              </p>
             </div>
           ) : (
-            notifications.map((n) => (
+            displayedNotifications.map((n) => (
               <DropdownMenuItem
                 key={n.id}
                 className={cn(
@@ -101,8 +108,13 @@ export const NotificationCenter: React.FC = () => {
                 )}
                 onClick={() => handleNotificationClick(n)}
               >
-                <div className="flex w-full items-start gap-2">
-                  <div className="mt-1 shrink-0">{getIcon(n.notification?.type || 0)}</div>
+                <div className="flex w-full items-start gap-3">
+                  <div className="mt-1 shrink-0 flex flex-col items-center gap-1.5">
+                    {getIcon(n.notification?.type || 0)}
+                    {!n.isRead && (
+                      <div className="h-1.5 w-1.5 rounded-full bg-vlu-red" title="Chưa đọc" />
+                    )}
+                  </div>
                   <div className="flex-1 space-y-1">
                     <p className={cn("text-sm font-medium leading-none", !n.isRead && "font-bold text-gray-900")}>
                       {n.notification?.appTitle || "Thông báo"}
@@ -117,9 +129,30 @@ export const NotificationCenter: React.FC = () => {
                       }) : "Vừa xong"}
                     </p>
                   </div>
-                  {!n.isRead && (
-                    <div className="h-2 w-2 rounded-full bg-vlu-red shrink-0 mt-1" />
-                  )}
+                  <div className="flex items-center gap-2 mt-1 shrink-0">
+                    {!n.isRead && (
+                      <Button 
+                        variant="outline" 
+                        size="icon" 
+                        className="h-7 w-7 rounded-full shrink-0 border-red-200 bg-red-50 text-vlu-red hover:!bg-vlu-red hover:!text-white transition-colors shadow-sm"
+                        title="Đánh dấu đã đọc"
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent navigating
+                          markAsRead(n.id);
+                        }}
+                      >
+                        <Check size={14} strokeWidth={2.5} />
+                      </Button>
+                    )}
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7 rounded-full shrink-0 text-gray-400 hover:text-vlu-red hover:bg-red-50"
+                      title="Xem chi tiết"
+                    >
+                      <ChevronRight size={16} />
+                    </Button>
+                  </div>
                 </div>
               </DropdownMenuItem>
             ))
@@ -127,9 +160,22 @@ export const NotificationCenter: React.FC = () => {
         </ScrollArea>
         <DropdownMenuSeparator className="m-0" />
         <div className="p-2">
-            <Button variant="ghost" className="w-full text-xs text-gray-500 h-8" disabled>
-                Xem tất cả thông báo
-            </Button>
+            {!showAll && notifications.some(n => n.isRead) ? (
+              <Button 
+                variant="ghost" 
+                className="w-full text-xs text-gray-500 h-8 hover:text-gray-900"
+                onClick={(e) => {
+                    e.preventDefault();
+                    setShowAll(true);
+                }}
+              >
+                  Xem tất cả thông báo
+              </Button>
+            ) : (
+              <p className="w-full text-center text-xs text-gray-400 py-2">
+                  Hết thông báo
+              </p>
+            )}
         </div>
       </DropdownMenuContent>
     </DropdownMenu>
