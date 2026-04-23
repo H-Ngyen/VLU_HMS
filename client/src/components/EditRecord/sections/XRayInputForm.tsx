@@ -73,6 +73,8 @@ interface XRayInputFormProps {
   defaultGender?: string;
   defaultAddress?: string;
   defaultDepartment?: string;
+  defaultDiagnosis?: string;
+  defaultBedCode?: string;
   initialData?: XRayData;
   readOnly?: boolean;
   recordId?: number;
@@ -123,6 +125,8 @@ export const XRayInputForm = ({
   defaultGender = "",
   defaultAddress = "",
   defaultDepartment = "Nội khoa",
+  defaultDiagnosis = "",
+  defaultBedCode = "",
   initialData,
   readOnly = false,
   recordId,
@@ -147,9 +151,8 @@ export const XRayInputForm = ({
     department: "",
     room: "",
     bed: "",
-    diagnosis: "",
-    request: "",
-    result: "",
+    diagnosis: defaultDiagnosis || "",
+    request: "",    result: "",
     doctor: "",
     specialist: "",
     advice: "",
@@ -180,6 +183,8 @@ export const XRayInputForm = ({
             gender: defaultGender,
             address: defaultAddress,
             department: initialData.department || defaultDepartment,
+            bed: initialData.bed || defaultBedCode || "",
+            diagnosis: initialData.diagnosis || defaultDiagnosis || "",
             status: initialData.status !== undefined ? initialData.status : 0,
             xRayStatusLogs: initialData.xRayStatusLogs || []
         };
@@ -204,6 +209,7 @@ export const XRayInputForm = ({
             gender: defaultGender,
             address: defaultAddress,
             department: defaultDepartment,
+            bed: defaultBedCode || "",
             doctor: currentUser?.name || ""
         };
         const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
@@ -630,9 +636,9 @@ export const XRayInputForm = ({
                 <Input name="gender" value={formData.gender} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={true} />
               </div>
             </div>
-            <div className="flex items-end gap-2">
-              <Label className="shrink-0">Địa chỉ:</Label>
-              <Input name="address" value={formData.address} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={true} />
+            <div className="flex items-start gap-2 pt-1">
+              <Label className="shrink-0 mt-1">Địa chỉ:</Label>
+              <div className="flex-1 border-b border-gray-200 pb-1 text-sm text-gray-500 break-words min-h-[28px]">{formData.address}</div>
             </div>
             <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 flex items-end gap-2">
@@ -645,12 +651,17 @@ export const XRayInputForm = ({
               </div>
               <div className="w-32 flex items-end gap-2">
                 <Label className="shrink-0">Giường:</Label>
-                <Input name="bed" value={formData.bed} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
+                <Input name="bed" value={formData.bed} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={true} />
               </div>
             </div>
-            <div className="flex items-end gap-2">
+            <div className="flex flex-col gap-2">
               <Label className="shrink-0">Chẩn đoán:</Label>
-              <Input name="diagnosis" value={formData.diagnosis} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
+              <Textarea 
+                name="diagnosis" 
+                value={formData.diagnosis} 
+                className="w-full min-h-[60px] border border-gray-300 rounded-sm p-2 focus-visible:ring-0 break-words bg-transparent disabled:opacity-100 disabled:cursor-not-allowed" 
+                disabled 
+              />
             </div>
           </div>
 

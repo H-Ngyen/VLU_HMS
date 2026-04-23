@@ -170,6 +170,7 @@ export interface DischargeStatusInfo {
 export interface Record {
   id: string;
   numericId?: number;
+  bedCode?: string;
   storageCode?: string;
   patientId: string;
   patientName: string;

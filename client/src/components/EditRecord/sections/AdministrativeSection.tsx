@@ -4,15 +4,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InfoRow } from "./InfoRow";
-import type { Patient } from "@/types";
+import type { Patient, Record as MedicalRecord } from "@/types";
 
 interface AdministrativeSectionProps {
   patient: Patient;
   setPatient: (patient: Patient) => void;
+  record: MedicalRecord;
+  setRecord: React.Dispatch<React.SetStateAction<MedicalRecord | null>>;
   readOnly?: boolean;
 }
 
-export const AdministrativeSection = ({ patient, setPatient, readOnly = false }: AdministrativeSectionProps) => {
+export const AdministrativeSection = ({ patient, setPatient, record, setRecord, readOnly = false }: AdministrativeSectionProps) => {
   
   const handleChange = <K extends keyof Patient>(field: K, value: Patient[K]) => {
     if (readOnly) return;
@@ -24,6 +26,11 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
     }
     
     setPatient(updatedPatient);
+  };
+
+  const handleRecordChange = (field: keyof MedicalRecord, value: any) => {
+    if (readOnly) return;
+    setRecord(prev => prev ? { ...prev, [field]: value } : prev);
   };
 
   const buildFullAddress = (parts: {
@@ -45,6 +52,18 @@ export const AdministrativeSection = ({ patient, setPatient, readOnly = false }:
   return (
     <Card className="shadow-sm border-gray-200">
       <CardContent className="p-6 space-y-2">
+        {/* 0. Giường */}
+        <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
+          <Label className="text-sm text-gray-700 font-medium">Giường</Label>
+          <Input 
+            className="h-8 text-sm w-full md:w-64"
+            placeholder="Nhập mã giường..."
+            value={record.bedCode || ""}
+            onChange={(e) => handleRecordChange("bedCode", e.target.value)}
+            disabled={readOnly}
+          />
+        </div>
+
         {/* 1. Họ và tên */}
         <InfoRow
           label="1. Họ và tên"

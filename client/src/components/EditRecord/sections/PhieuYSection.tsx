@@ -327,6 +327,8 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         defaultGender={formData.gender}
         defaultAddress={formData.address}
         defaultDepartment={formData.department}
+        defaultDiagnosis={formData.medicalRecordContent?.admissionDiagnosis?.mainDisease || formData.diagnosisInfo?.deptDiagnosis?.name || formData.diagnosisInfo?.kkbDiagnosis?.name || ""}
+        defaultBedCode={formData.bedCode || ""}
         initialData={editingXRayDoc?.data || viewingXRayDoc?.data}
         onSaved={(updatedData) => {
             setFormData(prev => {
@@ -365,7 +367,10 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         defaultDob={formData.dob}
         defaultGender={formData.gender}
         defaultAddress={formData.address}
+        defaultDepartment={formData.department}
+        defaultDiagnosis={formData.medicalRecordContent?.admissionDiagnosis?.mainDisease || formData.diagnosisInfo?.deptDiagnosis?.name || formData.diagnosisInfo?.kkbDiagnosis?.name || ""}
         defaultInsuranceNumber={formData.insuranceNumber}
+        defaultBedCode={formData.bedCode || ""}
         initialData={editingHematologyDoc?.data || viewingHematologyDoc?.data}
         onSaved={(updatedData) => {
             setFormData(prev => {

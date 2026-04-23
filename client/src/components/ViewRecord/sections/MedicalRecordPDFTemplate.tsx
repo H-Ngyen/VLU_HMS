@@ -259,9 +259,9 @@ export const MedicalRecordPDFTemplate: React.FC<Props> = ({ record, patient }) =
 
         <div style={{ fontWeight: "bold", marginBottom: "5px" }}>IV. Chẩn đoán khi vào khoa điều trị:</div>
         <div style={{ marginBottom: "15px" }}>
-            + Bệnh chính: {dInfo.deptDiagnosis?.name || ""}<br/>
-            + Bệnh kèm theo: {dInfo.dischargeDiagnosis?.comorbidities?.name || ""}<br/>
-            + Phân biệt: {dInfo.transferDiagnosis?.name || ""}
+            + Bệnh chính: {cData.admissionDiagnosis?.mainDisease || ""}<br/>
+            + Bệnh kèm theo: {cData.admissionDiagnosis?.comorbidities || ""}<br/>
+            + Phân biệt: {cData.admissionDiagnosis?.differential || ""}
         </div>
 
         <div style={{ fontWeight: "bold", marginBottom: "5px" }}>V. Tiên lượng:</div>

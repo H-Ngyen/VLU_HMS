@@ -88,7 +88,9 @@ interface HematologyInputFormProps {
   defaultGender?: string;
   defaultAddress?: string;
   defaultDepartment?: string;
+  defaultDiagnosis?: string;
   defaultInsuranceNumber?: string;
+  defaultBedCode?: string;
   initialData?: HematologyData;
   readOnly?: boolean;
   recordId?: number;
@@ -139,7 +141,9 @@ export const HematologyInputForm = ({
   defaultGender = "",
   defaultAddress = "",
   defaultDepartment = "",
+  defaultDiagnosis = "",
   defaultInsuranceNumber = "",
+  defaultBedCode = "",
   initialData,
   readOnly = false,
   recordId,
@@ -210,6 +214,8 @@ export const HematologyInputForm = ({
             address: defaultAddress,
             insuranceNumber: defaultInsuranceNumber,
             department: initialData.department || defaultDepartment || "",
+            bed: initialData.bed || defaultBedCode || "",
+            diagnosis: initialData.diagnosis || defaultDiagnosis || "",
             status: initialData.status !== undefined ? initialData.status : 0,
             hematologyStatusLogs: initialData.hematologyStatusLogs || []
         };
@@ -240,6 +246,8 @@ export const HematologyInputForm = ({
             address: defaultAddress,
             insuranceNumber: defaultInsuranceNumber,
             department: defaultDepartment || "",
+            bed: defaultBedCode || "",
+            diagnosis: defaultDiagnosis || "",
             doctor: currentUser?.name || ""
         };
         const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
@@ -678,15 +686,16 @@ export const HematologyInputForm = ({
                 <Input name="gender" value={formData.gender} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={true} />
               </div>
             </div>
-            <div className="flex flex-wrap gap-4 items-end">
-                <div className="flex-1 flex items-end gap-2">
-                    <Label className="shrink-0">Địa chỉ:</Label>
-                    <Input name="address" value={formData.address} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={true} />
+            <div className="flex flex-wrap gap-4 items-start pt-1">
+                <div className="flex-1 flex items-start gap-2">
+                    <Label className="shrink-0 mt-1">Địa chỉ:</Label>
+                    <div className="flex-1 border-b border-gray-200 pb-1 text-sm text-gray-500 break-words min-h-[28px]">{formData.address}</div>
                 </div>
-                <div className="flex-1 flex items-end gap-2">
-                    <Label className="shrink-0">Số thẻ BHYT:</Label>
-                    <Input name="insuranceNumber" value={formData.insuranceNumber} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={true} />
-                </div>            </div>
+                <div className="flex-1 flex items-start gap-2">
+                    <Label className="shrink-0 mt-1">Số thẻ BHYT:</Label>
+                    <div className="flex-1 border-b border-gray-200 pb-1 text-sm text-gray-500 min-h-[28px]">{formData.insuranceNumber}</div>
+                </div>
+            </div>
              <div className="flex flex-wrap gap-4 items-end">
               <div className="flex-1 flex items-end gap-2">
                 <Label className="shrink-0">Khoa:</Label>
@@ -698,17 +707,16 @@ export const HematologyInputForm = ({
               </div>
               <div className="w-32 flex items-end gap-2">
                 <Label className="shrink-0">Giường:</Label>
-                <Input name="bed" value={formData.bed} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
+                <Input name="bed" value={formData.bed} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={true} />
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <Label className="shrink-0">Chẩn đoán: <span className="text-red-500">*</span></Label>
+              <Label className="shrink-0">Chẩn đoán:</Label>
               <Textarea 
                 name="diagnosis" 
                 value={formData.diagnosis} 
-                onChange={handleChange} 
-                className="w-full min-h-[60px] border border-gray-300 rounded-sm p-2 focus-visible:ring-0 break-all" 
-                disabled={isRequestReadOnly} 
+                className="w-full min-h-[60px] border border-gray-300 rounded-sm p-2 focus-visible:ring-0 break-words bg-transparent disabled:opacity-100 disabled:cursor-not-allowed" 
+                disabled 
               />
             </div>
             <div className="flex justify-end pt-4 italic text-xs">
@@ -743,14 +751,14 @@ export const HematologyInputForm = ({
                     <h4 className="font-bold">1. Tế bào máu ngoại vi:</h4>
                     <div className="border border-gray-300 rounded p-4 space-y-3 bg-white text-xs">
                         {[
-                            { label: "Số lượng HC", sub: "nam (4,0-5,8); nữ (3,9-5,4 x10^12/l)", name: "rbc", check: "check_rbc", r: true },
+                            { label: "Số lượng HC", sub: "nam (4.0-5.8); nữ (3.9-5.4 x10^12/l)", name: "rbc", check: "check_rbc", r: true },
                             { label: "Huyết sắc tố", sub: "nam (140-160); nữ (125-145 g/l)", name: "hgb", check: "check_hgb", r: true },
-                            { label: "Hematocrit", sub: "nam (0,38-0,50); nữ (0,35-0,47 l/l)", name: "hct", check: "check_hct", r: true },
+                            { label: "Hematocrit", sub: "nam (0.38-0.50); nữ (0.35-0.47 l/l)", name: "hct", check: "check_hct", r: true },
                             { label: "MCV", sub: "(83-92 fl)", name: "mcv", check: "check_mcv" },
                             { label: "MCH", sub: "(27-32 pg)", name: "mch", check: "check_mch" },
                             { label: "MCHC", sub: "(320-356 g/l)", name: "mchc", check: "check_mchc" },
                             { label: "Hồng cầu có nhân", sub: "(0 x 10^9/l)", name: "nrbc", check: "check_nrbc" },
-                            { label: "Hồng cầu lưới", sub: "(0,1-0,5 %)", name: "reticulocytes", check: "check_reticulocytes" },
+                            { label: "Hồng cầu lưới", sub: "(0.1-0.5 %)", name: "reticulocytes", check: "check_reticulocytes" },
                         ].map(item => (
                             <div key={item.name} className="grid grid-cols-3 gap-2 items-center">
                                 <div className="col-span-2 flex items-start gap-2">
@@ -907,7 +915,7 @@ export const HematologyInputForm = ({
                         {[
                             // Row 1
                             { 
-                                l1: { l: "Số lượng HC", s: "nam (4,0-5,8); nữ (3,9-5,4 x10^12/l)", c: formData.check_rbc }, v1: formData.rbc,
+                                l1: { l: "Số lượng HC", s: "nam (4.0-5.8); nữ (3.9-5.4 x10^12/l)", c: formData.check_rbc }, v1: formData.rbc,
                                 l2: { l: "Số lượng BC", s: "(4-10 x 10^9/l)", c: formData.check_wbc }, v2: formData.wbc
                             },
                             // Row 2
@@ -917,7 +925,7 @@ export const HematologyInputForm = ({
                             },
                             // Row 3
                             { 
-                                l1: { l: "Hematocrit", s: "nam (0,38-0,50); nữ (0,35-0,47 l/l)", c: formData.check_hct }, v1: formData.hct,
+                                l1: { l: "Hematocrit", s: "nam (0.38-0.50); nữ (0.35-0.47 l/l)", c: formData.check_hct }, v1: formData.hct,
                                 l2: { l: "- Đoạn trung tính", c: null, indent: true }, v2: formData.neutrophils
                             },
                             // Row 4
@@ -942,7 +950,7 @@ export const HematologyInputForm = ({
                             },
                             // Row 8
                             { 
-                                l1: { l: "Hồng cầu lưới", s: "(0,1-0,5 %)", c: formData.check_reticulocytes }, v1: formData.reticulocytes,
+                                l1: { l: "Hồng cầu lưới", s: "(0.1-0.5 %)", c: formData.check_reticulocytes }, v1: formData.reticulocytes,
                                 l2: { l: "- Tế bào bất thường", c: null, indent: true }, v2: formData.abnormalCells
                             },
                             // Row 9
@@ -950,12 +958,7 @@ export const HematologyInputForm = ({
                                 l1: null, v1: null,
                                 l2: { l: "Số lượng tiểu cầu", s: "(150-400 x10^9/l)", c: formData.check_plt }, v2: formData.plt
                             },
-                            // Row 10 (ESR special case)
-                            { 
-                                l1: null, v1: null,
-                                l2: { type: 'esr', l: "Máu lắng", c: formData.check_esr }, v2: { v1: formData.esr1, v2: formData.esr2 }
-                            },
-                            // Row 11
+                            // Row 10
                             { 
                                 l1: null, v1: null,
                                 l2: { l: "KSV sốt rét", c: formData.check_malaria }, v2: formData.malaria
@@ -1026,11 +1029,11 @@ export const HematologyInputForm = ({
                                 <div style={{ paddingLeft: '5px' }}>
                                     <div style={{ marginBottom: '5px' }}>
                                         
-                                        <span style={{ verticalAlign: 'middle' }}>Thời gian máu chảy: ...........{formData.bleedingTime}......... phút ............</span>
+                                        <span style={{ verticalAlign: 'middle' }}>Thời gian máu chảy: ...........{formData.bleedingTime}......... phút </span>
                                     </div>
                                     <div>
                                         
-                                        <span style={{ verticalAlign: 'middle' }}>Thời gian máu đông: ...........{formData.clottingTime}......... phút ............</span>
+                                        <span style={{ verticalAlign: 'middle' }}>Thời gian máu đông: ...........{formData.clottingTime}......... phút </span>
                                     </div>
                                 </div>
                             </td>

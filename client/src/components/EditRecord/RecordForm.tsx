@@ -81,6 +81,8 @@ const mapDtoToRecord = (dto: any, patient: Patient): Record => {
 
   return {
     id: dto.id ? String(dto.id) : `REC${Date.now()}`,
+    numericId: dto.id,
+    bedCode: dto.bedCode || "",
     patientId: String(dto.patientId || patient.id),
     patientName: dto.patient?.name || patient.fullName || patient.name,
     cccd: patient.cccd || "",
@@ -823,7 +825,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
             <div className="flex-1 w-full min-w-0 h-full overflow-y-auto pr-4 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
               <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 min-h-full flex flex-col">
                  <div className="flex-1">
-                    {activeSection === "administrative" && <AdministrativeSection patient={editablePatient} setPatient={setEditablePatient} readOnly={readOnly} />}
+                    {activeSection === "administrative" && <AdministrativeSection patient={editablePatient} setPatient={setEditablePatient} record={formData} setRecord={setFormData} readOnly={readOnly} />}
                     {activeSection === "management" && <PatientManagementSection formData={formData} setFormData={setFormData} readOnly={readOnly} />}
                     {activeSection === "diagnosis" && <DiagnosisSection formData={formData} setFormData={setFormData} readOnly={readOnly} />}
                     {activeSection === "discharge" && <DischargeStatusSection formData={formData} setFormData={setFormData} readOnly={readOnly} />}
