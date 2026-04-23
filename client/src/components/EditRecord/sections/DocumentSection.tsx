@@ -18,10 +18,32 @@ interface DocumentSectionProps {
 }
 
 export const DocumentSection = ({ formData, readOnly = false }: DocumentSectionProps) => {
+  const DOCUMENT_TYPES = [
+    { label: "Huyết học (17/BV2)", value: "HuyetHoc" },
+    { label: "Huyết – Tủy đồ", value: "HuyetTuyDo" },
+    { label: "Rối loạn đông cầm máu", value: "RoiLoanDongCamMau" },
+    { label: "Hóa sinh máu", value: "HoaSinhMau" },
+    { label: "Nước tiểu, phân, dịch chọc dò", value: "NuocTieuPhan" },
+    { label: "Dịch não tủy", value: "DichNaoTuy" },
+    { label: "Vi sinh", value: "ViSinh" },
+    { label: "X-quang (08/BV2)", value: "XQuang" },
+    { label: "Siêu âm", value: "SieuAm" },
+    { label: "CT-scanner", value: "CTScanner" },
+    { label: "MRI", value: "MRI" },
+    { label: "Điện tim (ECG)", value: "DienTim" },
+    { label: "Điện não", value: "DienNao" },
+    { label: "Đo chức năng hô hấp", value: "HoHap" },
+    { label: "Dạ dày – đại tràng", value: "DaDayDaiTrang" },
+    { label: "Tai mũi họng", value: "TaiMuiHong" },
+    { label: "Phế quản", value: "PheQuan" },
+    { label: "Giải phẫu bệnh sinh thiết", value: "GiaiPhauBenh" },
+  ];
+
   const [attachments, setAttachments] = useState<AttachmentDto[]>([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedType, setSelectedType] = useState<string>("HuyetHoc");
 
   const fetchAttachments = async () => {
     if (!formData.numericId) return;
@@ -55,7 +77,33 @@ export const DocumentSection = ({ formData, readOnly = false }: DocumentSectionP
 
     setUploading(true);
     try {
-      await api.medicalAttachments.create(formData.numericId, selectedFile);
+      const existingFilesOfType = attachments.filter(doc => doc.name.startsWith(selectedType));
+      
+      let nextNumber = 1;
+      if (existingFilesOfType.length > 0) {
+        const numbers = existingFilesOfType.map(doc => {
+          // Remove the prefix to isolate the suffix (e.g., "HuyetHocA" -> "A")
+          const suffix = doc.name.substring(selectedType.length);
+          const letterMatch = suffix.match(/^[a-zA-Z]+$/);
+          
+          if (letterMatch) {
+             const letters = letterMatch[0].toUpperCase();
+             let num = 0;
+             for (let i = 0; i < letters.length; i++) {
+                 num = num * 26 + (letters.charCodeAt(i) - 64);
+             }
+             return num;
+          }
+          return 0;
+        });
+        nextNumber = Math.max(...numbers) + 1;
+      }
+      
+      // We pass the number (e.g. 1, 2) to the API. 
+      // The API service will convert it to A, B before sending to the backend to bypass the regex bug.
+      const customFileName = `${selectedType}${nextNumber}`;
+
+      await api.medicalAttachments.create(formData.numericId, selectedFile, customFileName);
       toast.success("Tải lên tài liệu thành công");
       setSelectedFile(null);
       fetchAttachments();
@@ -94,10 +142,23 @@ export const DocumentSection = ({ formData, readOnly = false }: DocumentSectionP
       {!readOnly && (
         <div className="mb-4 bg-gray-50 border border-dashed border-gray-300 rounded-lg p-4">
             <div className="flex flex-col md:flex-row gap-3 items-center">
+            <select
+              value={selectedType}
+              onChange={(e) => setSelectedType(e.target.value)}
+              className="h-9 px-3 py-1 rounded-md border border-gray-300 text-sm focus:outline-none focus:ring-2 focus:ring-vlu-red/50 bg-white min-w-[200px]"
+              disabled={uploading}
+            >
+              {DOCUMENT_TYPES.map(type => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
+
             <input
                 type="file"
-                accept=".pdf,.jpg,.jpeg,.png,.docx,.doc"
-                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-vlu-red file:text-white hover:file:bg-red-700"
+                accept=".pdf"
+                className="block flex-1 text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-vlu-red file:text-white hover:file:bg-red-700"
                 onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
                 disabled={uploading}
             />

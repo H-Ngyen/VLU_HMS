@@ -375,19 +375,44 @@ export const api = {
       if (!response.ok) throw new Error('Failed to fetch medical attachments');
       return response.json();
     },
-    create: async (recordId: number, file: File) => {
+    create: async (recordId: number, file: File, customName?: string) => {
       const formData = new FormData();
-      formData.append('File', file);
       
-      const nameWithoutExtension = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-      const sanitizedName = nameWithoutExtension
+      let baseName = customName || file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+      
+      // WORKAROUND FOR BACKEND BUG: Backend regex ^[\p{L}\s]+$ REJECTS NUMBERS.
+      // We will count how many files exist with the exact selected type to assign the next letter.
+      if (customName) {
+        const match = customName.match(/([a-zA-Z]+)(\d+)$/);
+        if (match) {
+            const baseStr = match[1]; // e.g. "HuyetHoc"
+            const num = parseInt(match[2], 10);
+            
+            // Map 1 -> A, 2 -> B, 26 -> Z, 27 -> AA, etc. (Simple mapping for now up to 26)
+            let letter = "";
+            if (num <= 26) {
+                letter = String.fromCharCode(64 + num);
+            } else {
+                letter = String.fromCharCode(64 + Math.floor(num / 26)) + String.fromCharCode(64 + (num % 26 || 26));
+            }
+            baseName = `${baseStr}${letter}`;
+        }
+      }
+
+      const sanitizedName = baseName
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/đ/g, 'd').replace(/Đ/g, 'D')
-        .replace(/[^a-zA-Z0-9 ]/g, ' ')
-        .replace(/\s+/g, ' ')
+        .replace(/[^a-zA-Z\s]/g, '') // Allowed: Letters and spaces ONLY (matches backend regex)
         .trim();
       
+      const extension = file.name.includes('.') ? file.name.substring(file.name.lastIndexOf('.')) : '';
+      const finalFileName = `${sanitizedName}${extension}`;
+      
+      // Create a new File object with the sanitized name so the backend receives it exactly as we want
+      const renamedFile = new File([file], finalFileName, { type: file.type });
+      
+      formData.append('File', renamedFile);
       formData.append('Name', sanitizedName);
       
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/attachments`, {
