@@ -7,7 +7,7 @@ namespace AppHost.Extensions;
 
 public static class WebApplicationBuilderExtensions
 {
-    public static void AddPresentation(this WebApplicationBuilder builder)
+    public static void AddPresentation(this WebApplicationBuilder builder, IConfiguration config)
     {
         builder.Services.AddControllers()
             .AddJsonOptions(options =>
@@ -16,11 +16,12 @@ public static class WebApplicationBuilderExtensions
             });
 
         // Add CORS
+        var BASE_CLIENT_URL = config["Client:BaseUrl"] ?? throw new InvalidOperationException("Client:BaseUrl is not configured");
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowReactApp", policy =>
             {
-                policy.WithOrigins("http://localhost:5173")
+                policy.WithOrigins(BASE_CLIENT_URL)
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials();

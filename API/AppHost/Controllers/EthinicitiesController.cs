@@ -8,10 +8,11 @@ namespace AppHost.Controllers;
 
 [ApiController]
 [Route("api/ethinicities")]
+[Authorize]
 public class EthinicitiesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]
-    [AllowAnonymous]
+    // [AllowAnonymous]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<IEnumerable<Ethnicity>>> GetAll()

@@ -6,5 +6,7 @@ namespace Domain.Repositories;
 public interface INotificationRepository
 {
     Task<int> CreateAsync(Notification entity);
+    Task<Notification?> GetByIdAsync(int id);
+    Task SaveChanges();
     // Task<IEnumerable<Notification>> GetCurrentUserNotifications(int userId);
 }

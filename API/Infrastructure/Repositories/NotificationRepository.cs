@@ -15,5 +15,11 @@ internal class NotificationRepository(AppDbContext context) : BaseRepository<Not
         await SaveChanges();
         return entity.Id;
     }
+
+    public async Task<Notification?> GetByIdAsync(int id)
+        => await TrackingQuery
+            .Include(n => n.UserNotifications)
+            .FirstOrDefaultAsync(n => n.Id == id);
+
     public Task SaveChanges() => _dbContext.SaveChangesAsync();
 }

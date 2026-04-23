@@ -113,8 +113,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPdfProcessorService, PdfProcessorService>();
         services.AddHttpClient<IGeminiClientService, GeminiClientService>();
         services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
-        // services.AddHostedService<BackgroundWorker>();
+        services.AddHostedService<BackgroundWorker>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<INotificationEmailJobService, NotificationEmailJobService>();
 
         // add authorization
         services.AddScoped<IUserAuthorizationService, UserAuthorizationService>();

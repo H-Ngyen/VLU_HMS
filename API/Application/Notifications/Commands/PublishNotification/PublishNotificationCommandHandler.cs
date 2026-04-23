@@ -9,6 +9,7 @@ using Domain.Repositories;
 using MediatR;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Application.Notifications.Commands.PublishNotification;
@@ -19,11 +20,11 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
     IHematologyRepository hematologyRepository,
     IXRayRepository xRayRepository,
     IUserRepository userRepository,
-    IEmailService emailService,
     IDateTimeProvider datetimeProvider,
     IMapper mapper,
     IHubContext<NotificationHub> hubContext,
-    IConfiguration config) : IRequestHandler<PublishNotificationCommand, bool>
+    IConfiguration config,
+    IBackgroundTaskQueue backgroundTask) : IRequestHandler<PublishNotificationCommand, bool>
 {
     public async Task<bool> Handle(PublishNotificationCommand request, CancellationToken cancellationToken)
     {
@@ -35,7 +36,7 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
         var storageCode = await GetMedicalRecordId(request.ResourceId, request.ClinicalType);
         var newNotification = await CreateNewNotification(request.ResourceId, storageCode, request.NotificattionType, listUser);
 
-        await notificationRepository.CreateAsync(newNotification);
+        var id = await notificationRepository.CreateAsync(newNotification);
 
         foreach (var user in listUser)
         {
@@ -48,7 +49,20 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
                     .SendAsync("notification_received", dto, cancellationToken);
             }
         }
+        EnqueueBackgroundTasks(id, listUser);
         return true;
+    }
+
+    private void EnqueueBackgroundTasks(int notificationId, IEnumerable<User> users)
+    {
+        foreach (var user in users)
+        {
+            backgroundTask.Queue(async (sp, ct) =>
+            {
+                var emailService = sp.GetRequiredService<INotificationEmailJobService>();
+                await emailService.Job(notificationId, user.Id, user.Email, ct);
+            });
+        }
     }
 
     private async Task<string> GetMedicalRecordId(int resourceId, ClinicalsType clinicalsType)
@@ -89,14 +103,11 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
 
         foreach (var user in users)
         {
-            var isSuccess = await emailService.SendAsync(notification.EmailTitle, notification.EmailContent, user.Email);
-
             notification.UserNotifications.Add(
                 new UserNotification
                 {
                     UserId = user.Id,
-                    EmailSentAt = datetimeProvider.Now,
-                    IsEmailSend = isSuccess
+                    IsEmailSend = false
                 }
             );
         }

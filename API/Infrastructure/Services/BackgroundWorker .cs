@@ -1,10 +1,13 @@
 using Domain.Interfaces;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace Infrastructure.Services;
 
-public class BackgroundWorker(IBackgroundTaskQueue queue, ILogger<BackgroundWorker> logger) : BackgroundService
+public class BackgroundWorker(IBackgroundTaskQueue queue,
+    ILogger<BackgroundWorker> logger,
+    IServiceProvider serviceProvider) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -16,7 +19,8 @@ public class BackgroundWorker(IBackgroundTaskQueue queue, ILogger<BackgroundWork
 
             try
             {
-                await workItem(stoppingToken);
+                using var scope = serviceProvider.CreateScope();
+                await workItem(scope.ServiceProvider, stoppingToken);
             }
             catch (Exception ex)
             {

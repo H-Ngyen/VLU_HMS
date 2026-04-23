@@ -13,7 +13,7 @@ builder.LoadEnv();
 // Add services to the container.
 var config = builder.Configuration;
 
-builder.AddPresentation();
+builder.AddPresentation(config);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(config);
 

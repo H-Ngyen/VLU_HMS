@@ -5,10 +5,10 @@ namespace Infrastructure.Services;
 
 public class BackgroundTaskQueue : IBackgroundTaskQueue
 {
-    private readonly Channel<Func<CancellationToken, Task>> _queue =
-            Channel.CreateUnbounded<Func<CancellationToken, Task>>();
+    private readonly Channel<Func<IServiceProvider, CancellationToken, Task>> _queue =
+            Channel.CreateUnbounded<Func<IServiceProvider, CancellationToken, Task>>();
 
-    public void Queue(Func<CancellationToken, Task> workItem)
+    public void Queue(Func<IServiceProvider, CancellationToken, Task> workItem)
     {
         if (workItem == null)
             throw new ArgumentNullException(nameof(workItem));
@@ -16,7 +16,7 @@ public class BackgroundTaskQueue : IBackgroundTaskQueue
         _queue.Writer.TryWrite(workItem);
     }
 
-    public async Task<Func<CancellationToken, Task>> DequeueAsync(CancellationToken ct)
+    public async Task<Func<IServiceProvider, CancellationToken, Task>> DequeueAsync(CancellationToken ct)
     {
         return await _queue.Reader.ReadAsync(ct);
     }
