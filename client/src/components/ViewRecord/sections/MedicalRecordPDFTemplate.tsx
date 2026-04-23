@@ -1,5 +1,5 @@
 import React from "react";
-import type { Record as MedicalRecord, Patient } from "@/types";
+import type { Record as MedicalRecord, Patient, Transfer } from "@/types";
 
 interface Props {
   record: MedicalRecord;
@@ -7,27 +7,27 @@ interface Props {
 }
 
 export const MedicalRecordPDFTemplate: React.FC<Props> = ({ record, patient }) => {
-  const parseDateToParts = (dateString?: string) => {
-    if (!dateString) return { day: "...", month: "...", year: "....", time: "..." };
+  const parseDateToParts = (dateString?: string, timeString?: string) => {
+    if (!dateString) return { day: "...", month: "...", year: "....", time: timeString || "..." };
     try {
       const d = new Date(dateString);
-      if (isNaN(d.getTime())) return { day: "...", month: "...", year: "....", time: "..." };
+      if (isNaN(d.getTime())) return { day: "...", month: "...", year: "....", time: timeString || "..." };
       return {
         day: d.getDate().toString().padStart(2, "0"),
         month: (d.getMonth() + 1).toString().padStart(2, "0"),
         year: d.getFullYear().toString(),
-        time: `${d.getHours().toString().padStart(2, "0")} Giờ ${d.getMinutes().toString().padStart(2, "0")} phút`,
+        time: timeString || `${d.getHours().toString().padStart(2, "0")}:${d.getMinutes().toString().padStart(2, "0")}`,
       };
     } catch {
-      return { day: "...", month: "...", year: "....", time: "..." };
+      return { day: "...", month: "...", year: "....", time: timeString || "..." };
     }
   };
 
-  const adParts = parseDateToParts(record.admissionDate);
-  const disParts = parseDateToParts(record.dischargeDate);
+  const adParts = parseDateToParts(record.admissionDate, record.managementData?.admissionTime);
+  const disParts = parseDateToParts(record.dischargeDate, record.managementData?.dischargeTime);
   
-  const mData = record.managementData || {};
-  const totalDays = mData.transfers?.reduce((acc, t) => acc + (Number(t.days) || 0), 0) || 0;
+  const mData = record.managementData || { transfers: [] };
+  const totalDays = mData.totalDays || 0;
   const cData = record.medicalRecordContent || {};
   const dInfo = record.diagnosisInfo || {};
   const dsInfo = record.dischargeStatusInfo || {};
@@ -39,8 +39,8 @@ export const MedicalRecordPDFTemplate: React.FC<Props> = ({ record, patient }) =
     backgroundColor: "white",
     color: "black",
     fontFamily: "'Times New Roman', Times, serif",
-    fontSize: "11pt",
-    lineHeight: "1.4",
+    fontSize: "10.5pt",
+    lineHeight: "1.3",
     boxSizing: "border-box",
     position: "relative",
     pageBreakAfter: "always",
@@ -48,8 +48,21 @@ export const MedicalRecordPDFTemplate: React.FC<Props> = ({ record, patient }) =
 
   const cellStyle: React.CSSProperties = {
     border: "1px solid black",
-    padding: "4px",
+    padding: "2px 4px",
     verticalAlign: "top",
+  };
+
+  const boxStyle: React.CSSProperties = {
+    display: "inline-block",
+    width: "14px",
+    height: "14px",
+    border: "1px solid black",
+    textAlign: "center",
+    lineHeight: "12px",
+    fontSize: "12px",
+    verticalAlign: "middle",
+    marginLeft: "5px",
+    fontWeight: "normal"
   };
 
   const getGenderCheck = (g: string | number) => {
@@ -59,296 +72,604 @@ export const MedicalRecordPDFTemplate: React.FC<Props> = ({ record, patient }) =
   };
   const [isMale, isFemale] = getGenderCheck(patient.gender);
 
+  const renderTransferRow = (transfer?: Transfer) => {
+    return (
+        <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
+            <span style={{ width: "90px", color: transfer ? "black" : "transparent" }}>16. Chuyển Khoa:</span>
+            <div style={{ border: "1px solid black", padding: "0 5px", width: "80px", height: "18px", textAlign: "center", overflow: "hidden", marginRight: "10px" }}>{transfer?.department}</div>
+            <span style={{ flex: 1, textAlign: "center", color: transfer ? "black" : "#666", fontSize: "7.5pt" }}>
+                {transfer ? `${transfer.time || "..."} ${transfer.date ? new Date(transfer.date).toLocaleDateString('vi-VN') : "..."}` : "........................................"}
+            </span>
+            <div style={{ border: "1px solid black", padding: "0 5px", width: "40px", height: "18px", textAlign: "center", marginLeft: "10px" }}>{transfer?.days}</div>
+        </div>
+    );
+  };
+
   return (
     <div className="pdf-container">
       {/* PAGE 1 */}
       <div style={pageStyle}>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
-          <div style={{ width: "40%" }}>
-            <div style={{ textTransform: "uppercase" }}>SỞ Y TẾ ...................</div>
-            <div style={{ textTransform: "uppercase", fontWeight: "bold" }}>BỆNH VIỆN ...................</div>
-            <div>Khoa: {record.department}</div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
+          <div style={{ width: "45%" }}>
+            <div style={{ fontSize: "9pt", textTransform: "uppercase", fontWeight: "bold" }}>SỞ Y TẾ TPHCM: ........................................</div>
+            <div style={{ fontWeight: "bold", fontSize: "10pt", textTransform: "uppercase" }}>BỆNH VIỆN: .................................</div>
+            <div style={{ fontSize: "10pt" }}>Khoa: {record.department} <span style={{marginLeft: "20px"}}>Giường: {record.bedCode || "........."}</span></div>
           </div>
-          <div style={{ width: "40%", textAlign: "center" }}>
-            <h1 style={{ fontSize: "16pt", fontWeight: "bold", margin: "10px 0" }}>BỆNH ÁN {record.type === "surgery" ? "NGOẠI KHOA" : "NỘI KHOA"}</h1>
-          </div>
-          <div style={{ width: "20%", fontSize: "10pt", textAlign: "right" }}>
-            <div>Số lưu trữ: {record.id}</div>
-            <div>Mã YT: ..................</div>
+          <div style={{ width: "35%", textAlign: "right", fontSize: "9pt" }}>
+            <div style={{fontWeight: "bold"}}>MS: 01/BV-01</div>
+            <div>Số lưu trữ: {record.storageCode || record.numericId}</div>
+            <div>Mã YT: ..............................</div>
           </div>
         </div>
 
+        <div style={{ textAlign: "center", marginBottom: "15px" }}>
+          <h1 style={{ fontSize: "16pt", fontWeight: "bold", margin: "5px 0" }}>BỆNH ÁN NỘI KHOA</h1>
+        </div>
+
         {/* I. HÀNH CHÍNH */}
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>I. HÀNH CHÍNH:</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px", border: "none" }}>
+        <div style={{ fontWeight: "bold", marginBottom: "3px" }}>I. HÀNH CHÍNH:</div>
+        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "10px", border: "none", fontSize: "10pt" }}>
           <tbody>
             <tr>
-              <td colSpan={2}>1. Họ và tên: <b style={{ textTransform: "uppercase" }}>{patient.name}</b></td>
-              <td>2. Sinh ngày: {patient.dob}</td>
-              <td>Tuổi: {patient.age}</td>
+              <td style={{ width: "60%", paddingBottom: "3px" }}>
+                1. Họ và tên (In hoa): <b style={{ textTransform: "uppercase" }}>{patient.name}</b>
+              </td>
+              <td style={{ width: "40%", paddingBottom: "3px" }}>
+                2. Sinh ngày: {patient.dob} <span style={{marginLeft: "20px"}}>Tuổi: <span style={{ border: "1px solid black", padding: "0 5px", minWidth: "40px", display: "inline-block", textAlign: "center" }}>{patient.age}</span></span>
+              </td>
             </tr>
             <tr>
-              <td>3. Giới tính: 1.Nam <span style={{display:"inline-block", width:"12px", border:"1px solid black", textAlign:"center"}}>{isMale?"X":""}</span> 2.Nữ <span style={{display:"inline-block", width:"12px", border:"1px solid black", textAlign:"center"}}>{isFemale?"X":""}</span></td>
-              <td colSpan={3}>4. Nghề nghiệp: {patient.job || ""}</td>
+              <td style={{ paddingBottom: "3px" }}>
+                3. Giới: 1. Nam <span style={boxStyle}>{isMale ? "x" : ""}</span> 2. Nữ <span style={boxStyle}>{isFemale ? "x" : ""}</span>
+              </td>
+              <td style={{ paddingBottom: "3px" }}>
+                4. Nghề nghiệp: {patient.job || "................................................"}&nbsp;&nbsp;&nbsp;
+                <span style={{ border: "1px solid black", padding: "0 5px", minWidth: "40px", display: "inline-block", textAlign: "center" }}>{patient.jobCode || "00000"}</span>
+              </td>
             </tr>
             <tr>
-              <td colSpan={2}>5. Dân tộc: .................</td>
-              <td colSpan={2}>6. Ngoại kiều: .................</td>
+              <td style={{ paddingBottom: "3px" }}>
+                5. Dân tộc: {patient.ethnicity && typeof patient.ethnicity === 'object' ? patient.ethnicity.name : patient.ethnicity || "...................................."}&nbsp;&nbsp;&nbsp;
+                <span style={{ border: "1px solid black", padding: "0 5px", minWidth: "40px", display: "inline-block", textAlign: "center" }}>{patient.ethnicity && typeof patient.ethnicity === 'object' ? patient.ethnicity.id : "1"}</span>
+              </td>
+              <td style={{ paddingBottom: "3px" }}>
+                6. Ngoại kiều: {patient.nationality || "...................................."}&nbsp;&nbsp;&nbsp;
+                <span style={{ border: "1px solid black", padding: "0 5px", minWidth: "40px", display: "inline-block", textAlign: "center" }}>{patient.nationality === "Việt Nam" ? "000" : "   "}</span>
+              </td>
             </tr>
             <tr>
-              <td colSpan={4}>7. Địa chỉ: {patient.address}</td>
+              <td colSpan={2} style={{ paddingBottom: "3px" }}>
+                7. Địa chỉ: Số nhà: {patient.houseNumber || "............"}&nbsp;&nbsp;&nbsp; Thôn, phố: {patient.village || ".............................................."}&nbsp;&nbsp;&nbsp; Xã, phường: {patient.wardName || "...................................."}
+              </td>
             </tr>
             <tr>
-              <td colSpan={4}>8. Nơi làm việc: {patient.workplace || ""}</td>
+              <td colSpan={2} style={{ paddingBottom: "3px" }}>
+                Huyện (Q, Tx): {patient.districtName || "............................................................."}&nbsp;&nbsp;&nbsp; Tỉnh, thành phố: {patient.provinceName || ".........................................."}
+              </td>
             </tr>
             <tr>
-              <td colSpan={4}>9. Đối tượng: 1.BHYT 2.Thu phí 3.Miễn 4.Khác <span style={{ marginLeft: "20px" }}>Số thẻ BHYT: {patient.insuranceNumber || patient.healthInsuranceNumber}</span></td>
+              <td colSpan={2} style={{ paddingBottom: "3px" }}>
+                8. Nơi làm việc: {patient.workplace || "..........................................................."} 
+                <span style={{marginLeft: "40px"}}>9. Đối tượng: 1.BHYT<span style={boxStyle}>{patient.subjectType === "BHYT" ? "x" : ""}</span> 2.Thu phí<span style={boxStyle}>{patient.subjectType === "Thu phí" ? "x" : ""}</span> 3.Miễn<span style={boxStyle}>{patient.subjectType === "Miễn" ? "x" : ""}</span></span>
+              </td>
             </tr>
             <tr>
-              <td colSpan={4}>10. Họ tên, địa chỉ người nhà cần báo tin: {patient.relativeInfo || ""} {patient.relativePhone ? ` - ĐT: ${patient.relativePhone}` : ""}</td>
+              <td colSpan={2} style={{ paddingBottom: "3px" }}>
+                10. BHYT giá trị đến ngày {patient.insuranceExpiry || ".......tháng...... năm......."}
+                <span style={{marginLeft: "100px"}}>Số thẻ BHYT: <span style={{ border: "1px solid black", padding: "0 10px", fontWeight: "bold" }}>{patient.insuranceNumber || patient.healthInsuranceNumber || "........................"}</span></span>
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{ paddingBottom: "3px" }}>
+                11. Họ tên, địa chỉ người nhà khi cần báo tin: {patient.relativeInfo || "................................................................................................................."}
+              </td>
+            </tr>
+            <tr>
+              <td colSpan={2} style={{ paddingBottom: "3px" }}>
+                ................................................................................................. Điện thoại số: {patient.relativePhone || "................................................"}
+              </td>
             </tr>
           </tbody>
         </table>
 
         {/* II. QUẢN LÝ NGƯỜI BỆNH */}
-        <div style={{ fontWeight: "bold", marginBottom: "5px", backgroundColor: "#e5e7eb", padding: "2px 5px", borderTop: "1px solid black", borderBottom: "1px solid black" }}>II. QUẢN LÝ NGƯỜI BỆNH</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px", border: "1px solid black" }}>
-          <tbody>
-            <tr>
-              <td style={cellStyle} colSpan={2}>
-                11. Vào viện: {adParts.time} ngày {adParts.day}/{adParts.month}/{adParts.year}
-              </td>
-              <td style={cellStyle}>
-                12. Nơi giới thiệu: ...................
-              </td>
-            </tr>
-            <tr>
-              <td style={cellStyle} colSpan={2}>
-                13. Vào khoa: {record.department}
-              </td>
-              <td style={cellStyle}>
-                14. Chuyển viện: ...................
-              </td>
-            </tr>
-            <tr>
-              <td style={cellStyle} colSpan={2}>
-                15. Ra viện: {disParts.time} ngày {disParts.day}/{disParts.month}/{disParts.year}
-              </td>
-              <td style={cellStyle}>
-                Tổng số ngày điều trị: {totalDays}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div style={{ fontWeight: "bold", marginBottom: "3px" }}>II. QUẢN LÝ NGƯỜI BỆNH:</div>
+        <div style={{ border: "1px solid black", fontSize: "9pt", marginBottom: "10px" }}>
+            <div style={{ display: "flex", borderBottom: "1px solid black" }}>
+                <div style={{ flex: 1, padding: "2px 4px", borderRight: "1px solid black" }}>
+                    <div style={{ marginBottom: "4px" }}>12. Vào viện: {adParts.time} ngày {adParts.day}/{adParts.month}/{adParts.year}</div>
+                    <div>
+                        13. Trực tiếp vào: 
+                        1.Cấp cứu <span style={boxStyle}>{mData.admissionType === "Cấp cứu" ? "x" : ""}</span> 
+                        2.KKB <span style={boxStyle}>{mData.admissionType === "KKB" ? "x" : ""}</span> 
+                        3.Khoa điều trị <span style={boxStyle}>{mData.admissionType === "Khoa điều trị" ? "x" : ""}</span>
+                    </div>
+                </div>
+                <div style={{ flex: 1, padding: "2px 4px" }}>
+                    <div style={{ marginBottom: "4px" }}>
+                        14. Nơi giới thiệu: 
+                        1.Cơ quan y tế <span style={boxStyle}>{mData.referralSource === "Cơ quan y tế" ? "x" : ""}</span> 
+                        2.Tự đến <span style={boxStyle}>{mData.referralSource === "Tự đến" ? "x" : ""}</span> 
+                        3.Khác <span style={boxStyle}>{mData.referralSource === "Khác" ? "x" : ""}</span>
+                    </div>
+                    <div>- Vào viện do bệnh này lần thứ: {mData.admissionCount || "......."}</div>
+                </div>
+            </div>
 
-        {/* III. CHẨN ĐOÁN */}
-        <div style={{ fontWeight: "bold", marginBottom: "5px", backgroundColor: "#e5e7eb", padding: "2px 5px", borderTop: "1px solid black", borderBottom: "1px solid black" }}>III. CHẨN ĐOÁN</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px", border: "1px solid black" }}>
-          <tbody>
-            <tr>
-              <td style={{ ...cellStyle, width: "50%" }}>
-                16. Nơi chuyển đến: {dInfo.transferDiagnosis?.name || ""}
-              </td>
-              <td style={{ ...cellStyle, width: "50%" }} rowSpan={3}>
-                19. Ra viện:<br />
-                + Bệnh chính: <b>{dInfo.dischargeDiagnosis?.mainDisease?.name || ""}</b> (Mã: {dInfo.dischargeDiagnosis?.mainDisease?.code || ""})<br /><br />
-                + Bệnh kèm theo: {dInfo.dischargeDiagnosis?.comorbidities?.name || ""} (Mã: {dInfo.dischargeDiagnosis?.comorbidities?.code || ""})<br /><br />
-                + Biến chứng: {dInfo.dischargeDiagnosis?.isComplication ? "Có" : "Không"}
-              </td>
-            </tr>
-            <tr>
-              <td style={cellStyle}>
-                17. KKB, Cấp cứu: {dInfo.kkbDiagnosis?.name || ""}
-              </td>
-            </tr>
-            <tr>
-              <td style={cellStyle}>
-                18. Khi vào khoa điều trị: {dInfo.deptDiagnosis?.name || ""}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+            <div style={{ display: "flex", borderBottom: "1px solid black" }}>
+                {/* Left: 15 & 16 */}
+                <div style={{ flex: 1, padding: "5px 4px", borderRight: "1px solid black" }}>
+                    <div style={{ display: "flex", alignItems: "flex-end", marginBottom: "4px", fontSize: "7.5pt" }}>
+                        <div style={{ width: "90px" }}></div>
+                        <div style={{ width: "80px", textAlign: "center", marginRight: "10px" }}>Khoa</div>
+                        <div style={{ flex: 1, textAlign: "center" }}>ng/ th/ năm</div>
+                        <div style={{ width: "60px", textAlign: "center", marginLeft: "10px" }}>Số ngày ĐTr</div>
+                    </div>
+
+                    <div style={{ display: "flex", alignItems: "center", marginBottom: "8px" }}>
+                        <span style={{ width: "90px" }}>15. Vào khoa:</span>
+                        <div style={{ border: "1px solid black", padding: "0 10px", minWidth: "80px", textAlign: "center", fontWeight: "normal", marginRight: "10px" }}>{mData.transfers[0]?.department || record.department}</div>
+                        <span style={{ flex: 1, textAlign: "center", fontSize: "7.5pt" }}>{adParts.time} {adParts.day}/{adParts.month}/{adParts.year}</span>
+                        <div style={{ border: "1px solid black", padding: "0 10px", minWidth: "40px", textAlign: "center", fontWeight: "normal", marginLeft: "10px" }}>{mData.transfers[0]?.days || "0"}</div>
+                    </div>
+
+                    {renderTransferRow(mData.transfers[1])}
+                    {renderTransferRow(mData.transfers[2])}
+                </div>
+
+                {/* Right: 17, 18 & 19 */}
+                <div style={{ flex: 1, padding: "5px 4px" }}>
+                    <div style={{ marginBottom: "10px" }}>
+                        17. Chuyển viện: 
+                        1.Tuyến trên <span style={boxStyle}>{mData.hospitalTransfer?.type === "Tuyến trên" ? "x" : ""}</span> 
+                        2.Tuyến dưới <span style={boxStyle}>{mData.hospitalTransfer?.type === "Tuyến dưới" ? "x" : ""}</span> 
+                        3.CK <span style={boxStyle}>{mData.hospitalTransfer?.type === "CK" ? "x" : ""}</span><br/>
+                        - Chuyển đến: {mData.hospitalTransfer?.destination || "...................................................................."}<br/>
+                        .........................................................................................
+                    </div>
+                    <div style={{ marginBottom: "10px" }}>
+                        18. Ra viện: {disParts.time} ngày {disParts.day}/{disParts.month}/{disParts.year}<br/>
+                        1.Ra viện <span style={boxStyle}>{mData.dischargeType === "Ra viện" ? "x" : ""}</span> 
+                        2.Xin về <span style={boxStyle}>{mData.dischargeType === "Xin về" ? "x" : ""}</span> 
+                        3.Bỏ về <span style={boxStyle}>{mData.dischargeType === "Bỏ về" ? "x" : ""}</span> 
+                        4.Đưa về <span style={boxStyle}>{mData.dischargeType === "Đưa về" ? "x" : ""}</span>
+                    </div>
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                        <span>19. Tổng số ngày điều trị:</span>
+                        <div style={{ fontWeight: "bold", border: "1px solid black", padding: "0 15px", marginLeft: "10px" }}>{totalDays}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* III. CHẨN ĐOÁN & RA VIỆN BLOCK */}
+        <div style={{ display: "flex", justifyContent: "space-between", fontWeight: "bold", marginBottom: "2px", fontSize: "9pt" }}>
+            <div style={{ width: "50%", display: "flex", justifyContent: "space-between" }}>
+                <span>III. CHẨN ĐOÁN</span>
+                <span style={{ marginRight: "35px" }}>MÃ</span>
+            </div>
+            <div style={{ width: "50%", display: "flex", justifyContent: "flex-end" }}>
+                <span style={{ marginRight: "35px" }}>MÃ</span>
+            </div>
+        </div>
+        
+        <div style={{ border: "1px solid black", fontSize: "8.5pt", marginBottom: "10px" }}>
+            <div style={{ display: "flex" }}>
+                {/* Left Column (20, 21, 22) */}
+                <div style={{ width: "50%", borderRight: "1px solid black" }}>
+                    <div style={{ padding: "4px", minHeight: "35px", position: "relative", borderBottom: "none" }}>
+                        20. Nơi chuyển đến: {dInfo.transferDiagnosis?.name || "..........................................................................."}
+                        <div style={{ position: "absolute", bottom: "4px", right: "10px", border: "1px solid black", width: "70px", height: "18px", textAlign: "center", lineHeight: "16px", fontWeight: "bold" }}>{dInfo.transferDiagnosis?.code}</div>
+                    </div>
+                    <div style={{ padding: "4px", minHeight: "55px", position: "relative", borderBottom: "none" }}>
+                        21. KKB, Cấp cứu: {dInfo.kkbDiagnosis?.name || "..........................................................................."}
+                        <div style={{ position: "absolute", bottom: "4px", right: "10px", border: "1px solid black", width: "70px", height: "18px", textAlign: "center", lineHeight: "16px", fontWeight: "bold" }}>{dInfo.kkbDiagnosis?.code}</div>
+                    </div>
+                    <div style={{ padding: "4px", minHeight: "50px", position: "relative", borderBottom: "none" }}>
+                        22. Khi vào khoa điều trị: {dInfo.deptDiagnosis?.name || "..........................................................................."}
+                        <div style={{ position: "absolute", bottom: "4px", right: "10px", border: "1px solid black", width: "70px", height: "18px", textAlign: "center", lineHeight: "16px", fontWeight: "bold" }}>{dInfo.deptDiagnosis?.code}</div>
+                    </div>
+                    <div style={{ padding: "4px", display: "flex", alignItems: "center" }}>
+                        <span style={{ marginRight: "10px" }}>+ Thủ thuật:</span> <span style={boxStyle}>{dInfo.deptDiagnosis?.isProcedure ? "x" : ""}</span>
+                        <span style={{ marginLeft: "40px", marginRight: "10px" }}>+ Phẫu thuật:</span> <span style={boxStyle}>{dInfo.deptDiagnosis?.isSurgery ? "x" : ""}</span>
+                    </div>
+                </div>
+
+                {/* Right Column (23) */}
+                <div style={{ width: "50%" }}>
+                    <div style={{ padding: "4px", borderBottom: "none", minHeight: "75px", position: "relative" }}>
+                        23. Ra viện<br/>
+                        + Bệnh chính: {dInfo.dischargeDiagnosis?.mainDisease?.name || "..........................................................................."}
+                        <div style={{ position: "absolute", bottom: "4px", right: "10px", border: "1px solid black", width: "70px", height: "18px", textAlign: "center", lineHeight: "16px", fontWeight: "bold" }}>{dInfo.dischargeDiagnosis?.mainDisease?.code}</div>
+                    </div>
+                    <div style={{ padding: "4px", borderBottom: "none", minHeight: "65px", position: "relative" }}>
+                        + Bệnh kèm theo: {dInfo.dischargeDiagnosis?.comorbidities?.name || "..........................................................................."}
+                        <div style={{ position: "absolute", bottom: "4px", right: "10px", border: "1px solid black", width: "70px", height: "18px", textAlign: "center", lineHeight: "16px", fontWeight: "bold" }}>{dInfo.dischargeDiagnosis?.comorbidities?.code}</div>
+                    </div>
+                    <div style={{ padding: "4px", display: "flex", alignItems: "center" }}>
+                        <span style={{ marginRight: "10px" }}>+ Tai biến:</span> <span style={boxStyle}>{dInfo.dischargeDiagnosis?.isAccident ? "x" : ""}</span>
+                        <span style={{ marginLeft: "40px", marginRight: "10px" }}>+ Biến chứng:</span> <span style={boxStyle}>{dInfo.dischargeDiagnosis?.isComplication ? "x" : ""}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         {/* IV. TÌNH TRẠNG RA VIỆN */}
-        <div style={{ fontWeight: "bold", marginBottom: "5px", backgroundColor: "#e5e7eb", padding: "2px 5px", borderTop: "1px solid black", borderBottom: "1px solid black" }}>IV. TÌNH TRẠNG RA VIỆN</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: "15px", border: "1px solid black" }}>
-          <tbody>
-            <tr>
-              <td style={cellStyle} colSpan={2}>
-                20. Kết quả điều trị: <b>{dsInfo.treatmentResult || ""}</b>
-              </td>
-              <td style={cellStyle} colSpan={2}>
-                21. Tình hình tử vong: {dsInfo.deathStatus?.description || ""}
-              </td>
-            </tr>
-            <tr>
-              <td style={cellStyle} colSpan={2}>
-                22. Giải phẫu bệnh: {dsInfo.pathology || ""}
-              </td>
-              <td style={cellStyle} colSpan={2}>
-                23. Nguyên nhân tử vong: {dsInfo.mainCauseOfDeath?.name || ""}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div style={{ fontWeight: "bold", marginBottom: "3px", fontSize: "9pt" }}>IV. TÌNH TRẠNG RA VIỆN:</div>
+        <div style={{ fontSize: "8.5pt", marginBottom: "15px" }}>
+            <div style={{ display: "flex", border: "1px solid black" }}>
+                {/* Left Column (24, 25) */}
+                <div style={{ width: "40%", borderRight: "1px solid black", padding: "4px" }}>
+                    <div style={{ fontWeight: "bold", marginBottom: "4px" }}>24. Kết quả điều trị</div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}>
+                        <span>1. Khỏi</span> <span style={boxStyle}>{dsInfo.treatmentResult === "Khoi" ? "x" : ""}</span>
+                        <span style={{ marginLeft: "20px" }}>4. Nặng hơn</span> <span style={boxStyle}>{dsInfo.treatmentResult === "NangHon" ? "x" : ""}</span>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "2px" }}>
+                        <span>2. Đỡ, giảm</span> <span style={boxStyle}>{dsInfo.treatmentResult === "DoGiam" ? "x" : ""}</span>
+                        <span style={{ marginLeft: "14px" }}>5. Tử vong</span> <span style={boxStyle}>{dsInfo.treatmentResult === "TuVong" ? "x" : ""}</span>
+                    </div>
+                    <div style={{ marginBottom: "10px" }}>
+                        3. Không thay đổi <span style={boxStyle}>{dsInfo.treatmentResult === "KhongThayDoi" ? "x" : ""}</span>
+                    </div>
+                    <div style={{ paddingTop: "4px" }}>
+                        <div style={{ fontWeight: "bold" }}>25. Giải phẫu bệnh <span style={{ fontWeight: "normal", fontSize: "7.5pt" }}>(Khi có sinh thiết)</span></div>
+                        <div style={{ display: "flex", marginTop: "4px" }}>
+                            <span>1.Lành tính</span> <span style={boxStyle}>{dsInfo.pathology === "Lành tính" ? "x" : ""}</span>
+                            <span style={{ marginLeft: "5px" }}>2.Nghi ngờ</span> <span style={boxStyle}>{dsInfo.pathology === "Nghi ngờ" ? "x" : ""}</span>
+                            <span style={{ marginLeft: "5px" }}>3.Ác tính</span> <span style={boxStyle}>{dsInfo.pathology === "Ác tính" ? "x" : ""}</span>
+                        </div>
+                    </div>
+                </div>
 
-        {/* Footer Page 1 */}
-        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "30px", textAlign: "center" }}>
-          <div style={{ width: "40%" }}>
+                {/* Right Column (26, 27, 28, 29) */}
+                <div style={{ width: "60%", padding: "4px" }}>
+                    <div style={{ marginBottom: "4px" }}>
+                        26. Tình hình tử vong: ..........................................................................................
+                    </div>
+                    <div style={{ display: "flex", marginBottom: "4px" }}>
+                        <div style={{ flex: 1 }}>
+                            1. Do bệnh <span style={boxStyle}>{dsInfo.deathStatus?.cause === "Do bệnh" ? "x" : ""}</span><br/>
+                            1. Trong 24 giờ vào viện <span style={boxStyle}>{dsInfo.deathStatus?.time === "Trong 24 giờ vào viện" ? "x" : ""}</span>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            2. Do tai biến điều trị <span style={boxStyle}>{dsInfo.deathStatus?.cause === "Do tai biến điều trị" ? "x" : ""}</span><br/>
+                            2. Sau 24 giờ vào viện <span style={boxStyle}>{dsInfo.deathStatus?.time === "Sau 24 giờ vào viện" ? "x" : ""}</span>
+                        </div>
+                        <div style={{ flex: 0.5 }}>
+                            3. Khác <span style={boxStyle}>{dsInfo.deathStatus?.cause === "Khác" ? "x" : ""}</span>
+                        </div>
+                    </div>
+                    
+                    <div style={{ paddingTop: "4px", marginBottom: "5px" }}>
+                        <div>27. Nguyên nhân chính tử vong: {dsInfo.mainCauseOfDeath?.name || "........................................................................"}</div>
+                        <div style={{ textAlign: "right", marginTop: "2px" }}>
+                            <div style={{ border: "1px solid black", display: "inline-block", width: "80px", height: "18px", textAlign: "center", lineHeight: "16px", fontWeight: "bold" }}>{dsInfo.mainCauseOfDeath?.code}</div>
+                        </div>
+                    </div>
+
+                    <div style={{ paddingTop: "4px" }}>
+                        <div style={{ display: "flex", alignItems: "center", marginBottom: "2px" }}>
+                            <span>28. Khám nghiệm tử thi:</span> <span style={boxStyle}>{dsInfo.isAutopsy ? "x" : ""}</span>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <span style={{ flex: 1 }}>29. Chẩn đoán giải phẫu tử thi: {dsInfo.autopsyDiagnosis?.name || "............................"}</span>
+                        </div>
+                        <div style={{ textAlign: "right" }}>
+                            <div style={{ border: "1px solid black", display: "inline-block", width: "80px", height: "18px", textAlign: "center", lineHeight: "16px", fontWeight: "bold" }}>{dsInfo.autopsyDiagnosis?.code}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {/* Signatures Page 1 */}
+        <div style={{ display: "flex", justifyContent: "space-between", marginTop: "20px", textAlign: "center", fontSize: "10pt", border: "none" }}>
+          <div style={{ width: "45%", border: "none" }}>
             <div style={{ fontWeight: "bold", textTransform: "uppercase" }}>GIÁM ĐỐC BỆNH VIỆN</div>
           </div>
-          <div style={{ width: "40%" }}>
-            <div><i>Ngày {new Date().getDate()} tháng {new Date().getMonth()+1} năm {new Date().getFullYear()}</i></div>
+          <div style={{ width: "45%", border: "none" }}>
+            <div style={{ marginBottom: "5px" }}><i>Ngày {new Date().getDate()} tháng {new Date().getMonth()+1} năm {new Date().getFullYear()}</i></div>
             <div style={{ fontWeight: "bold", textTransform: "uppercase" }}>TRƯỞNG KHOA</div>
           </div>
         </div>
       </div>
 
-      {/* PAGE 2 */}
+      {/* PAGE 2 - BỆNH ÁN */}
       <div style={pageStyle}>
-        <div style={{ textAlign: "right", fontWeight: "bold", marginBottom: "20px" }}>BỆNH ÁN</div>
-        
         <div style={{ fontWeight: "bold", marginBottom: "5px" }}>A. BỆNH ÁN</div>
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>I. Lý do vào viện: <span style={{ fontWeight: "normal" }}>{cData.reason || ""}</span></div>
-        <div style={{ marginBottom: "15px" }}>Vào ngày thứ ..... của bệnh.</div>
+        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
+            <div style={{ fontWeight: "bold" }}>I. Lý do vào viện: <span style={{ fontWeight: "normal" }}>{cData.reason || "................................................................."}</span></div>
+            <div>Vào ngày thứ <span style={{ borderBottom: "1px solid black", padding: "0 10px", minWidth: "30px", display: "inline-block", textAlign: "center" }}>{cData.dayOfIllness || "..."}</span> của bệnh</div>
+        </div>
 
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>II. Hỏi bệnh</div>
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>1. Quá trình bệnh lý:</div>
-        <div style={{ marginBottom: "15px", whiteSpace: "pre-wrap", textAlign: "justify" }}>{cData.pathologicalProcess || ""}</div>
+        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>II. Hỏi bệnh:</div>
+        <div style={{ fontWeight: "bold", marginLeft: "10px", marginBottom: "3px" }}>1. Quá trình bệnh lý: <span style={{ fontWeight: "normal", fontSize: "8pt" }}>(Khởi phát, diễn biến, chẩn đoán, điều trị của tuyến dưới v.v...)</span></div>
+        <div style={{ marginBottom: "15px", paddingLeft: "15px", whiteSpace: "pre-wrap", textAlign: "justify", minHeight: "150px", lineHeight: "1.8" }}>
+            {cData.pathologicalProcess || "................................................................................................................................\n................................................................................................................................\n................................................................................................................................"}
+        </div>
 
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>2. Tiền sử bệnh:</div>
-        <div style={{ marginBottom: "5px" }}>+ Bản thân:</div>
-        <div style={{ marginBottom: "15px", whiteSpace: "pre-wrap" }}>{cData.personalHistory || ""}</div>
-        <div style={{ marginBottom: "5px" }}>+ Gia đình:</div>
-        <div style={{ marginBottom: "15px", whiteSpace: "pre-wrap" }}>{cData.familyHistory || ""}</div>
+        <div style={{ fontWeight: "bold", marginLeft: "10px", marginBottom: "3px" }}>2. Tiền sử bệnh:</div>
+        <div style={{ paddingLeft: "15px", marginBottom: "10px" }}>
+            <div style={{ marginBottom: "5px" }}><b>+ Bản thân:</b> <span style={{ fontSize: "8pt", fontWeight: "normal" }}>(phát triển thể lực từ nhỏ đến lớn, những bệnh đã mắc, phương pháp ĐTr, tiêm phòng, ăn uống, sinh hoạt v.v...)</span></div>
+            <div style={{ marginBottom: "10px", minHeight: "30px", textAlign: "justify" }}>{cData.personalHistory || "................................................................................................................................"}</div>
+        </div>
 
-        <div style={{ fontWeight: "bold", marginBottom: "5px", marginTop: "20px" }}>III. Khám bệnh:</div>
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>1. Toàn thân:</div>
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "15px" }}>
-          <div style={{ width: "65%", whiteSpace: "pre-wrap" }}>{cData.organs?.wholeBody || ""}</div>
-          <div style={{ width: "30%", borderLeft: "1px dotted black", paddingLeft: "10px" }}>
-            Mạch: {cData.vitalSigns?.pulse || "..."} lần/ph<br/>
-            Nhiệt độ: {cData.vitalSigns?.temperature || "..."} °C<br/>
-            Huyết áp: {cData.vitalSigns?.bloodPressure || "..."} mmHg<br/>
-            Nhịp thở: {cData.vitalSigns?.respiratoryRate || "..."} lần/ph<br/>
-            Cân nặng: {cData.vitalSigns?.weight || "..."} kg
+        {/* Related Characteristics Table - Two Column layout exactly like screenshot */}
+        <div style={{ marginLeft: "15px", marginBottom: "15px", display: "flex", gap: "20px" }}>
+            <div style={{ flex: 1 }}>
+                <div style={{ marginBottom: "3px", fontSize: "9pt" }}>Đặc điểm liên quan bệnh:</div>
+                <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid black", fontSize: "8.5pt", textAlign: "center" }}>
+                    <thead>
+                        <tr>
+                            <th style={{ ...cellStyle, width: "10%" }}>TT</th>
+                            <th style={{ ...cellStyle, width: "40%" }}>Ký hiệu</th>
+                            <th style={{ ...cellStyle, width: "10%" }}></th>
+                            <th style={{ ...cellStyle, width: "40%" }}>Thời gian (tính theo tháng)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style={cellStyle}>01</td><td style={{ ...cellStyle, textAlign: "left" }}>Dị ứng</td><td style={cellStyle}><span style={boxStyle}>{cData.relatedCharacteristics?.allergy?.isChecked ? "x" : ""}</span></td><td style={cellStyle}>{cData.relatedCharacteristics?.allergy?.time}</td>
+                        </tr>
+                        <tr>
+                            <td style={cellStyle}>02</td><td style={{ ...cellStyle, textAlign: "left" }}>Ma tuý</td><td style={cellStyle}><span style={boxStyle}>{cData.relatedCharacteristics?.drugs?.isChecked ? "x" : ""}</span></td><td style={cellStyle}>{cData.relatedCharacteristics?.drugs?.time}</td>
+                        </tr>
+                        <tr>
+                            <td style={cellStyle}>03</td><td style={{ ...cellStyle, textAlign: "left" }}>Rượu bia</td><td style={cellStyle}><span style={boxStyle}>{cData.relatedCharacteristics?.alcohol?.isChecked ? "x" : ""}</span></td><td style={cellStyle}>{cData.relatedCharacteristics?.alcohol?.time}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div style={{ flex: 1 }}>
+                <div style={{ marginBottom: "3px", color: "transparent", fontSize: "9pt" }}>Header Spacer</div>
+                <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid black", fontSize: "8.5pt", textAlign: "center" }}>
+                    <thead>
+                        <tr>
+                            <th style={{ ...cellStyle, width: "10%" }}>TT</th>
+                            <th style={{ ...cellStyle, width: "40%" }}>Ký hiệu</th>
+                            <th style={{ ...cellStyle, width: "10%" }}></th>
+                            <th style={{ ...cellStyle, width: "40%" }}>Thời gian (tính theo tháng)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style={cellStyle}>04</td><td style={{ ...cellStyle, textAlign: "left" }}>Thuốc lá</td><td style={cellStyle}><span style={boxStyle}>{cData.relatedCharacteristics?.tobacco?.isChecked ? "x" : ""}</span></td><td style={cellStyle}>{cData.relatedCharacteristics?.tobacco?.time}</td>
+                        </tr>
+                        <tr>
+                            <td style={cellStyle}>05</td><td style={{ ...cellStyle, textAlign: "left" }}>Thuốc lào</td><td style={cellStyle}><span style={boxStyle}>{cData.relatedCharacteristics?.pipeTobacco?.isChecked ? "x" : ""}</span></td><td style={cellStyle}>{cData.relatedCharacteristics?.pipeTobacco?.time}</td>
+                        </tr>
+                        <tr>
+                            <td style={cellStyle}>06</td><td style={{ ...cellStyle, textAlign: "left" }}>Khác</td><td style={cellStyle}><span style={boxStyle}>{cData.relatedCharacteristics?.other?.isChecked ? "x" : ""}</span></td><td style={cellStyle}>{cData.relatedCharacteristics?.other?.time}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div style={{ paddingLeft: "15px", marginBottom: "15px" }}>
+            <div style={{ marginBottom: "5px" }}><b>+ Gia đình:</b> <span style={{ fontSize: "8pt", fontWeight: "normal" }}>(Những người trong gia đình: bệnh đã mắc, đời sống, tinh thần, vật chất v.v...)</span></div>
+            <div style={{ textAlign: "justify", minHeight: "30px" }}>{cData.familyHistory || "................................................................................................................................"}</div>
+        </div>
+
+        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>III. KHÁM BỆNH:</div>
+        <div style={{ fontWeight: "bold", marginLeft: "10px", marginBottom: "3px" }}>1. Toàn thân:</div>
+        <div style={{ display: "flex", gap: "20px", marginBottom: "15px", paddingLeft: "15px" }}>
+          <div style={{ flex: 1, whiteSpace: "pre-wrap", textAlign: "justify" }}>{cData.organs?.wholeBody || cData.overallExamination || ""}</div>
+          <div style={{ width: "160px", borderLeft: "1px solid black", paddingLeft: "10px", fontSize: "9.5pt" }}>
+            Mạch: <span style={{float:"right"}}>{cData.vitalSigns?.pulse || "..."} lần/ph</span><br/>
+            Nhiệt độ: <span style={{float:"right"}}>{cData.vitalSigns?.temperature || "..."} °C</span><br/>
+            Huyết áp: <span style={{float:"right"}}>{cData.vitalSigns?.bloodPressure || ".../..."} mmHg</span><br/>
+            Nhịp thở: <span style={{float:"right"}}>{cData.vitalSigns?.respiratoryRate || "..."} lần/ph</span><br/>
+            Cân nặng: <span style={{float:"right"}}>{cData.vitalSigns?.weight || "..."} kg</span>
           </div>
         </div>
 
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>2. Các cơ quan:</div>
-        <div style={{ marginBottom: "10px" }}>+ Tuần hoàn: <span style={{ whiteSpace: "pre-wrap" }}>{cData.organs?.circulatory || ""}</span></div>
-        <div style={{ marginBottom: "10px" }}>+ Hô hấp: <span style={{ whiteSpace: "pre-wrap" }}>{cData.organs?.respiratory || ""}</span></div>
-        <div style={{ marginBottom: "10px" }}>+ Tiêu hóa: <span style={{ whiteSpace: "pre-wrap" }}>{cData.organs?.digestive || ""}</span></div>
-        <div style={{ marginBottom: "10px" }}>+ Thận - Tiết niệu - Sinh dục: <span style={{ whiteSpace: "pre-wrap" }}>{cData.organs?.kidneyUrologyGenital || ""}</span></div>
+        <div style={{ fontWeight: "bold", marginLeft: "10px", marginBottom: "3px" }}>2. Các cơ quan:</div>
+        <div style={{ paddingLeft: "15px" }}>
+            {[
+                { label: "+ Tuần hoàn:", value: cData.organs?.circulatory },
+                { label: "+ Hô hấp:", value: cData.organs?.respiratory },
+                { label: "+ Tiêu hóa:", value: cData.organs?.digestive },
+                { label: "+ Thận - Tiết niệu - Sinh dục:", value: cData.organs?.kidneyUrology }
+            ].map((organ, idx) => (
+                <div key={idx} style={{ marginBottom: "10px" }}>
+                    <div style={{ fontWeight: "bold" }}>{organ.label}</div>
+                    <div style={{ 
+                        paddingLeft: "15px", 
+                        minHeight: "54px", // Tương đương 3 dòng (18px * 3)
+                        lineHeight: "18px", 
+                        position: "relative",
+                        textAlign: "justify",
+                        whiteSpace: "pre-wrap"
+                    }}>
+                        {/* Dòng kẻ chấm làm nền */}
+                        <div style={{ 
+                            position: "absolute", 
+                            top: 0, 
+                            left: 15, 
+                            right: 0, 
+                            bottom: 0, 
+                            zIndex: 0, 
+                            backgroundImage: "linear-gradient(to bottom, transparent 17px, #999 17px, #999 18px)", 
+                            backgroundSize: "100% 18px" 
+                        }}></div>
+                        {/* Nội dung thực tế nằm trên */}
+                        <div style={{ position: "relative", zIndex: 1 }}>
+                            {organ.value || ""}
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
       </div>
 
-      {/* PAGE 3 */}
+      {/* PAGE 3 - CHẨN ĐOÁN & ĐIỀU TRỊ */}
       <div style={pageStyle}>
-        <div style={{ marginBottom: "10px" }}>+ Thần kinh: <span style={{ whiteSpace: "pre-wrap" }}>{cData.organs?.neurological || ""}</span></div>
-        <div style={{ marginBottom: "10px" }}>+ Cơ - Xương - Khớp: <span style={{ whiteSpace: "pre-wrap" }}>{cData.organs?.musculoskeletal || ""}</span></div>
-        <div style={{ marginBottom: "10px" }}>+ Tai - Mũi - Họng: <span style={{ whiteSpace: "pre-wrap" }}>{cData.organs?.ent || ""}</span></div>
-        <div style={{ marginBottom: "10px" }}>+ Răng - Hàm - Mặt: <span style={{ whiteSpace: "pre-wrap" }}>{cData.organs?.maxillofacial || ""}</span></div>
-        <div style={{ marginBottom: "10px" }}>+ Mắt: <span style={{ whiteSpace: "pre-wrap" }}>{cData.organs?.eye || ""}</span></div>
-        <div style={{ marginBottom: "15px" }}>+ Nội tiết, dinh dưỡng và các bệnh lý khác: <span style={{ whiteSpace: "pre-wrap" }}>{cData.organs?.endocrineNutritionOther || ""}</span></div>
-
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>3. Các xét nghiệm cận lâm sàng cần làm:</div>
-        <div style={{ marginBottom: "15px", whiteSpace: "pre-wrap" }}>{cData.clinicalTests || ""}</div>
-
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>4. Tóm tắt bệnh án:</div>
-        <div style={{ marginBottom: "15px", whiteSpace: "pre-wrap", textAlign: "justify" }}>{cData.summary || ""}</div>
-
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>IV. Chẩn đoán khi vào khoa điều trị:</div>
-        <div style={{ marginBottom: "15px" }}>
-            + Bệnh chính: {cData.admissionDiagnosis?.mainDisease || ""}<br/>
-            + Bệnh kèm theo: {cData.admissionDiagnosis?.comorbidities || ""}<br/>
-            + Phân biệt: {cData.admissionDiagnosis?.differential || ""}
+        <div style={{ paddingLeft: "15px" }}>
+            {[
+                { label: "+ Thần kinh:", value: cData.organs?.neurological },
+                { label: "+ Cơ - Xương - Khớp:", value: cData.organs?.musculoskeletal },
+                { label: "+ Tai - Mũi - Họng:", value: cData.organs?.ent },
+                { label: "+ Răng - Hàm - Mặt:", value: cData.organs?.maxillofacial },
+                { label: "+ Mắt:", value: cData.organs?.eye },
+                { label: "+ Nội tiết, dinh dưỡng và các bệnh lý khác:", value: cData.organs?.endocrineAndOthers }
+            ].map((organ, idx) => (
+                <div key={idx} style={{ marginBottom: "10px" }}>
+                    <div style={{ fontWeight: "bold" }}>{organ.label}</div>
+                    <div style={{ 
+                        paddingLeft: "15px", 
+                        minHeight: "54px", // 3 lines
+                        lineHeight: "18px", 
+                        position: "relative",
+                        textAlign: "justify",
+                        whiteSpace: "pre-wrap"
+                    }}>
+                        <div style={{ 
+                            position: "absolute", 
+                            top: 0, 
+                            left: 15, 
+                            right: 0, 
+                            bottom: 0, 
+                            zIndex: 0, 
+                            backgroundImage: "linear-gradient(to bottom, transparent 17px, #999 17px, #999 18px)", 
+                            backgroundSize: "100% 18px" 
+                        }}></div>
+                        <div style={{ position: "relative", zIndex: 1 }}>
+                            {organ.value || ""}
+                        </div>
+                    </div>
+                </div>
+            ))}
         </div>
 
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>V. Tiên lượng:</div>
-        <div style={{ marginBottom: "15px", whiteSpace: "pre-wrap" }}>{cData.prognosis || ""}</div>
+        <div style={{ fontWeight: "bold", marginTop: "15px", marginBottom: "5px" }}>3. Các xét nghiệm cận lâm sàng cần làm:</div>
+        <div style={{ 
+            paddingLeft: "15px", 
+            minHeight: "54px", 
+            lineHeight: "18px", 
+            position: "relative",
+            textAlign: "justify",
+            whiteSpace: "pre-wrap",
+            marginBottom: "15px"
+        }}>
+            <div style={{ 
+                position: "absolute", 
+                top: 0, 
+                left: 15, 
+                right: 0, 
+                bottom: 0, 
+                zIndex: 0, 
+                backgroundImage: "linear-gradient(to bottom, transparent 17px, #999 17px, #999 18px)", 
+                backgroundSize: "100% 18px" 
+            }}></div>
+            <div style={{ position: "relative", zIndex: 1 }}>
+                {cData.clinicalTests || ""}
+            </div>
+        </div>
 
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>VI. Hướng điều trị:</div>
-        <div style={{ marginBottom: "15px", whiteSpace: "pre-wrap" }}>{cData.treatmentPlan || ""}</div>
+        <div style={{ fontWeight: "bold", marginBottom: "3px" }}>4. Tóm tắt bệnh án:</div>
+        <div style={{ 
+            paddingLeft: "15px", 
+            minHeight: "36px", // Reduced to 2 lines
+            lineHeight: "18px", 
+            position: "relative",
+            textAlign: "justify",
+            whiteSpace: "pre-wrap",
+            marginBottom: "10px"
+        }}>
+            <div style={{ 
+                position: "absolute", 
+                top: 0, 
+                left: 15, 
+                right: 0, 
+                bottom: 0, 
+                zIndex: 0, 
+                backgroundImage: "linear-gradient(to bottom, transparent 17px, #999 17px, #999 18px)", 
+                backgroundSize: "100% 18px" 
+            }}></div>
+            <div style={{ position: "relative", zIndex: 1 }}>
+                {cData.summary || ""}
+            </div>
+        </div>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "30px", textAlign: "center" }}>
-          <div style={{ width: "40%" }}>
-            <div><i>Ngày {new Date().getDate()} tháng {new Date().getMonth()+1} năm {new Date().getFullYear()}</i></div>
-            <div style={{ fontWeight: "bold", textTransform: "uppercase" }}>Bác sĩ làm bệnh án</div>
+        <div style={{ fontWeight: "bold", marginBottom: "3px" }}>IV. CHẨN ĐOÁN KHI VÀO KHOA ĐIỀU TRỊ:</div>
+        <div style={{ 
+            paddingLeft: "15px", 
+            minHeight: "54px", // Reduced to 3 lines
+            lineHeight: "18px", 
+            position: "relative",
+            marginBottom: "10px"
+        }}>
+            <div style={{ 
+                position: "absolute", 
+                top: 0, 
+                left: 15, 
+                right: 0, 
+                bottom: 0, 
+                zIndex: 0, 
+                backgroundImage: "linear-gradient(to bottom, transparent 17px, #999 17px, #999 18px)", 
+                backgroundSize: "100% 18px" 
+            }}></div>
+            <div style={{ position: "relative", zIndex: 1 }}>
+                <div>+ Bệnh chính: {cData.admissionDiagnosis?.mainDisease || ""}</div>
+                <div>+ Bệnh kèm theo (nếu có): {cData.admissionDiagnosis?.comorbidities || ""}</div>
+                <div>+ Phân biệt: {cData.admissionDiagnosis?.differential || ""}</div>
+            </div>
+        </div>
+
+        <div style={{ fontWeight: "bold", marginBottom: "3px" }}>V. TIÊN LƯỢNG:</div>
+        <div style={{ 
+            paddingLeft: "15px", 
+            minHeight: "18px", // Reduced to 1 line
+            lineHeight: "18px", 
+            position: "relative",
+            marginBottom: "10px"
+        }}>
+            <div style={{ 
+                position: "absolute", 
+                top: 0, 
+                left: 15, 
+                right: 0, 
+                bottom: 0, 
+                zIndex: 0, 
+                backgroundImage: "linear-gradient(to bottom, transparent 17px, #999 17px, #999 18px)", 
+                backgroundSize: "100% 18px" 
+            }}></div>
+            <div style={{ position: "relative", zIndex: 1 }}>
+                {cData.prognosis || ""}
+            </div>
+        </div>
+
+        <div style={{ fontWeight: "bold", marginBottom: "3px" }}>VI. HƯỚNG ĐIỀU TRỊ:</div>
+        <div style={{ 
+            paddingLeft: "15px", 
+            minHeight: "36px", // Reduced to 2 lines
+            lineHeight: "18px", 
+            position: "relative",
+            marginBottom: "20px"
+        }}>
+            <div style={{ 
+                position: "absolute", 
+                top: 0, 
+                left: 15, 
+                right: 0, 
+                bottom: 0, 
+                zIndex: 0, 
+                backgroundImage: "linear-gradient(to bottom, transparent 17px, #999 17px, #999 18px)", 
+                backgroundSize: "100% 18px" 
+            }}></div>
+            <div style={{ position: "relative", zIndex: 1 }}>
+                {cData.treatmentPlan || ""}
+            </div>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "auto", textAlign: "center", fontSize: "9.5pt", paddingBottom: "20mm" }}>
+          <div style={{ width: "45%" }}>
+            <div><i>Ngày {adParts.day} tháng {adParts.month} năm {adParts.year}</i></div>
+            <div style={{ fontWeight: "bold", marginTop: "5px" }}>Bác sĩ làm bệnh án</div>
+            <div style={{ height: "120px" }}></div>
           </div>
         </div>
-      </div>
-      {/* PAGE 4 */}
-      <div style={pageStyle}>
-        <div style={{ fontWeight: "bold", marginBottom: "20px", borderBottom: "1px solid black", paddingBottom: "5px" }}>TỔNG KẾT BỆNH ÁN</div>
-        
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>1. Quá trình bệnh lý và diễn biến lâm sàng:</div>
-        <div style={{ marginBottom: "15px", whiteSpace: "pre-wrap", textAlign: "justify" }}>{cData.pathologicalProcess || ""}</div>
-
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>2. Tóm tắt kết quả xét nghiệm cận lâm sàng có giá trị chẩn đoán:</div>
-        <div style={{ marginBottom: "15px", whiteSpace: "pre-wrap", textAlign: "justify" }}>{cData.clinicalTests || ""}</div>
-
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>3. Phương pháp điều trị:</div>
-        <div style={{ marginBottom: "15px", whiteSpace: "pre-wrap" }}>{cData.treatmentPlan || ""}</div>
-
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>4. Tình trạng người bệnh ra viện:</div>
-        <div style={{ marginBottom: "15px" }}>{dsInfo.treatmentResult || ""}</div>
-
-        <div style={{ fontWeight: "bold", marginBottom: "5px" }}>5. Hướng điều trị và các chế độ tiếp theo:</div>
-        <div style={{ marginBottom: "25px", whiteSpace: "pre-wrap" }}>{cData.prognosis || ""}</div>
-
-        {/* Table Hồ sơ phim ảnh */}
-        <table style={{ width: "100%", borderCollapse: "collapse", border: "1px solid black", fontSize: "10pt", textAlign: "center" }}>
-          <thead>
-            <tr>
-              <th colSpan={2} style={cellStyle}>Hồ sơ, phim, ảnh</th>
-              <th rowSpan={2} style={{ ...cellStyle, width: "30%" }}>Người giao hồ sơ:</th>
-              <th rowSpan={2} style={{ ...cellStyle, width: "30%" }}>
-                Ngày {new Date().getDate()} tháng {new Date().getMonth()+1} năm {new Date().getFullYear()}<br/>
-                Bác sĩ điều trị
-              </th>
-            </tr>
-            <tr>
-              <th style={{ ...cellStyle, width: "30%" }}>Loại</th>
-              <th style={{ ...cellStyle, width: "10%" }}>Số tờ</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td style={{ ...cellStyle, textAlign: "left" }}>- X quang</td>
-              <td style={cellStyle}></td>
-              <td rowSpan={5} style={{ ...cellStyle, verticalAlign: "bottom", paddingBottom: "10px" }}>
-                Họ tên: ...............................<br/><br/>
-                <b>Người nhận hồ sơ:</b><br/><br/><br/><br/><br/>
-                Họ tên: ...............................
-              </td>
-              <td rowSpan={5} style={{ ...cellStyle, verticalAlign: "bottom", paddingBottom: "10px" }}>
-                <br/><br/><br/><br/><br/><br/>
-                <b>{""}</b>
-              </td>
-            </tr>
-            <tr>
-              <td style={{ ...cellStyle, textAlign: "left" }}>- CT Scanner</td>
-              <td style={cellStyle}></td>
-            </tr>
-            <tr>
-              <td style={{ ...cellStyle, textAlign: "left" }}>- Siêu âm</td>
-              <td style={cellStyle}></td>
-            </tr>
-            <tr>
-              <td style={{ ...cellStyle, textAlign: "left" }}>- Xét nghiệm</td>
-              <td style={cellStyle}></td>
-            </tr>
-            <tr>
-              <td style={{ ...cellStyle, textAlign: "left" }}>- Khác....</td>
-              <td style={cellStyle}></td>
-            </tr>
-            <tr>
-              <td style={{ ...cellStyle, textAlign: "left" }}>- Toàn bộ hồ sơ</td>
-              <td style={cellStyle}></td>
-              <td colSpan={2} style={cellStyle}></td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </div>
   );

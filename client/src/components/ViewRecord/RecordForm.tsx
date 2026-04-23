@@ -130,38 +130,47 @@ export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProp
     if (!printRef.current) return;
     try {
         setIsGenerating(true);
-        toast.info("Đang tạo file PDF, vui lòng đợi...");
-        const canvas = await html2canvas(printRef.current, {
-            scale: 1.5,
-            useCORS: true,
-            backgroundColor: '#ffffff'
-        });
-        const imgData = canvas.toDataURL("image/jpeg", 0.8);
+        toast.info("Đang tạo hồ sơ PDF...");
+        
+        // Tìm tất cả các trang trong template (các div con trực tiếp của pdf-container)
+        const pdfContainer = printRef.current.querySelector('.pdf-container');
+        const pages = pdfContainer ? Array.from(pdfContainer.children) : [];
+        
+        if (pages.length === 0) {
+            toast.error("Không tìm thấy nội dung để xuất PDF.");
+            return;
+        }
+
         const pdf = new jsPDF("p", "mm", "a4");
         const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-        
-        let heightLeft = pdfHeight;
-        let position = 0;
-        const pageHeight = pdf.internal.pageSize.getHeight();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
 
-        pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
+        for (let i = 0; i < pages.length; i++) {
+            const page = pages[i] as HTMLElement;
+            
+            // Render từng trang
+            const canvas = await html2canvas(page, {
+                scale: 2, // Tăng scale để sắc nét
+                useCORS: true,
+                backgroundColor: '#ffffff',
+                logging: false,
+                width: 210 * 3.78, // Chuyển mm sang px (xấp xỉ)
+                height: 297 * 3.78
+            });
 
-        while (heightLeft >= 0) {
-            position = heightLeft - pdfHeight;
-            pdf.addPage();
-            pdf.addImage(imgData, "JPEG", 0, position, pdfWidth, pdfHeight);
-            heightLeft -= pageHeight;
+            const imgData = canvas.toDataURL("image/jpeg", 0.95);
+            
+            if (i > 0) pdf.addPage();
+            pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
         }
 
         const blob = pdf.output("blob");
         const url = URL.createObjectURL(blob);
         window.open(url, "_blank");
-        toast.success("Tạo PDF thành công!");
+        toast.success("Hồ sơ bệnh án đã được xuất thành công!");
     } catch (error) {
         console.error("Lỗi khi tạo PDF:", error);
-        toast.error("Không thể xuất file PDF. Thử lại sau.");
+        toast.error("Không thể xuất file PDF. Vui lòng thử lại.");
     } finally {
         setIsGenerating(false);
     }
