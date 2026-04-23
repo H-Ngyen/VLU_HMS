@@ -15,6 +15,9 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
         return record.Id;
     }
 
+    public async Task<IEnumerable<MedicalRecord>> GetAllAsync()
+        => await NoTrackingQuery.ToListAsync();
+
     public async Task<string?> GetLastStorageIdForYear(string yearPrefix)
         => await _dbContext.MedicalRecords
             .Where(m => m.StorageCode != null && m.StorageCode.StartsWith(yearPrefix + "."))

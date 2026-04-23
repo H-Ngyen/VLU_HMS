@@ -124,5 +124,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IHematologyAuthorizationService, HematologyAuthorizationService>();
         services.AddScoped<IDepartmentAuthorizationService, DepartmentAuthorizationService>();
         services.AddScoped<IUserNotificationAuthorizationService, UserNotificationAuthorizationService>();
+        services.AddScoped<IStatisticsAuthorizationService, StatisticsAuthorizationService>();
     }
 }
