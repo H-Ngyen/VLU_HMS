@@ -18,13 +18,15 @@ public class UserContext(IHttpContextAccessor httpContextAccessor, IUserReposito
     {
         var payload = GetPayloadTokenUser();
         var user = await userRepository.FindOneAsync(u => u.Auth0Id == payload.Auth0Id)
-            ?? throw new ForbidException();
+            ?? throw new UnauthorizedException();
 
         var role = user.Role.Name;
 
         var id = user.Id;
 
         var departmentId = user.DepartmentId;
+
+        if (!user.Active) throw new ForbidException();
 
         return new CurrentUser(id, payload.Auth0Id, payload.Email, payload.EmailVerified, payload.Name, role, departmentId);
     }
