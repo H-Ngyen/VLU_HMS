@@ -280,7 +280,7 @@ export const HematologyInputForm = ({
   const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
   const [departmentInput, setDepartmentInput] = useState("");
   const [openConfirmCombobox, setOpenConfirmCombobox] = useState(false);
-  const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "FAST_TRACK">("SAVE");
+  const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "FAST_TRACK" | "PDF">("SAVE");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(!!(isOpen && initialData && readOnly));
 
@@ -1029,8 +1029,8 @@ export const HematologyInputForm = ({
                                 <td style={{ border: '1px solid black', padding: '4px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle' }}>
                                     {row.l2?.type === 'esr' && typeof row.v2 === 'object' && row.v2 ? (
                                         <>
-                                            <div style={{ marginBottom: '5px' }}>{(row.v2 as any).v1}</div>
-                                            <div>{(row.v2 as any).v2}</div>
+                                            <div style={{ marginBottom: '5px' }}>{((row as any).v2 as any).v1}</div>
+                                            <div>{((row as any).v2 as any).v2}</div>
                                         </>
                                     ) : (
                                         row.v2 as React.ReactNode

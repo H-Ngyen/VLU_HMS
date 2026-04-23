@@ -7,6 +7,7 @@ import { api } from "@/services/api";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
 import { toast } from "sonner";
+import { PDFDocument } from "pdf-lib";
 
 import { AdministrativeSection } from "../EditRecord/sections/AdministrativeSection";
 import { PatientManagementSection } from "../EditRecord/sections/PatientManagementSection";
@@ -16,8 +17,6 @@ import { MedicalHistorySection } from "../EditRecord/sections/MedicalHistorySect
 import { ExaminationSection } from "../EditRecord/sections/ExaminationSection";
 import { TreatmentSection } from "../EditRecord/sections/TreatmentSection";
 import { 
-    XRayResultView, 
-    HematologyResultView, 
     AttachmentResultView,
     ClinicalResultsList 
 } from "./sections/ClinicalResultViews";
@@ -28,6 +27,7 @@ interface AttachmentDto {
   id: number;
   name: string;
   path: string;
+  fileName?: string;
 }
 
 interface ViewRecordFormProps {
@@ -130,9 +130,8 @@ export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProp
     if (!printRef.current) return;
     try {
         setIsGenerating(true);
-        toast.info("Đang tạo hồ sơ PDF...");
+        toast.info("Đang tạo hồ sơ PDF tổng hợp...");
         
-        // Tìm tất cả các trang trong template (các div con trực tiếp của pdf-container)
         const pdfContainer = printRef.current.querySelector('.pdf-container');
         const pages = pdfContainer ? Array.from(pdfContainer.children) : [];
         
@@ -141,36 +140,74 @@ export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProp
             return;
         }
 
-        const pdf = new jsPDF("p", "mm", "a4");
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
+        const jspdf = new jsPDF("p", "mm", "a4");
+        const pdfWidth = jspdf.internal.pageSize.getWidth();
+        const pdfHeight = jspdf.internal.pageSize.getHeight();
 
         for (let i = 0; i < pages.length; i++) {
             const page = pages[i] as HTMLElement;
-            
-            // Render từng trang
             const canvas = await html2canvas(page, {
-                scale: 2, // Tăng scale để sắc nét
+                scale: 2,
                 useCORS: true,
                 backgroundColor: '#ffffff',
                 logging: false,
-                width: 210 * 3.78, // Chuyển mm sang px (xấp xỉ)
+                width: 210 * 3.78,
                 height: 297 * 3.78
             });
 
             const imgData = canvas.toDataURL("image/jpeg", 0.95);
-            
-            if (i > 0) pdf.addPage();
-            pdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
+            if (i > 0) jspdf.addPage();
+            jspdf.addImage(imgData, "JPEG", 0, 0, pdfWidth, pdfHeight);
         }
 
-        const blob = pdf.output("blob");
+        // --- MERGE WITH ATTACHMENTS USING PDF-LIB ---
+        const mainPdfBytes = jspdf.output("arraybuffer");
+        const mergedPdf = await PDFDocument.create();
+        
+        // 1. Add main medical record pages (including images rendered by html2canvas)
+        const mainPdfDoc = await PDFDocument.load(mainPdfBytes);
+        const mainPages = await mergedPdf.copyPages(mainPdfDoc, mainPdfDoc.getPageIndices());
+        mainPages.forEach(p => mergedPdf.addPage(p));
+
+        // 2. Fetch and Merge actual PDF files from MinIO
+        const pdfAttachments = attachments.filter(att => {
+            const cleanPath = (att.path || "").split('?')[0];
+            return cleanPath.toLowerCase().endsWith('.pdf') || 
+                   att.fileName?.toLowerCase().endsWith('.pdf');
+        });
+        
+        if (pdfAttachments.length > 0) {
+            toast.info(`Đang nạp ${pdfAttachments.length} nội dung file PDF gốc...`);
+            for (const att of pdfAttachments) {
+                try {
+                    // Fetch the original PDF from MinIO
+                    const response = await fetch(att.path);
+                    if (!response.ok) {
+                        console.warn(`Lỗi fetch file: ${att.name}`);
+                        continue;
+                    }
+                    const attPdfBytes = await response.arrayBuffer();
+                    const attPdfDoc = await PDFDocument.load(attPdfBytes);
+                    const attPages = await mergedPdf.copyPages(attPdfDoc, attPdfDoc.getPageIndices());
+                    
+                    // Add all pages of this attachment
+                    attPages.forEach(p => mergedPdf.addPage(p));
+                } catch (err) {
+                    console.error(`Lỗi gộp PDF: ${att.name}`, err);
+                }
+            }
+        }
+
+        const finalPdfBytes = await mergedPdf.save();
+        const blob = new Blob([finalPdfBytes as BlobPart], { type: "application/pdf" });
         const url = URL.createObjectURL(blob);
+        
         window.open(url, "_blank");
-        toast.success("Hồ sơ bệnh án đã được xuất thành công!");
+        
+        toast.success("Hồ sơ bệnh án và tài liệu đã được xuất thành công!");
     } catch (error) {
         console.error("Lỗi khi tạo PDF:", error);
-        toast.error("Không thể xuất file PDF. Vui lòng thử lại.");
+        toast.error("Không thể xuất file PDF tổng hợp. Vui lòng thử lại.");
     } finally {
         setIsGenerating(false);
     }
@@ -352,7 +389,7 @@ export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProp
         {/* Hidden PDF Template */}
         <div style={{ position: "fixed", left: "-10000px", top: 0 }}>
           <div ref={printRef}>
-            <MedicalRecordPDFTemplate record={formData} patient={editablePatient} />
+            <MedicalRecordPDFTemplate record={formData} patient={patient} attachments={attachments} />
           </div>
         </div>
 

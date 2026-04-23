@@ -130,6 +130,7 @@ interface MedicalRecordDetailDto {
 interface MedicalRecordDto {
   id: number;
   storageCode: string;
+  bedCode?: string;
   patientId: number;
   patient: PatientDto;
   recordType: number;

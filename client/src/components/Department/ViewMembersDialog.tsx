@@ -6,7 +6,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { User as UserIcon, ShieldCheck, UserMinus, Loader2, Search, FlagOff } from "lucide-react";
+import { User as UserIcon, UserMinus, Loader2, Search, FlagOff } from "lucide-react";
 import type { Department } from "@/types";
 import { RoleBadge } from "../Account/RoleBadge";
 import { useAuth } from "@/contexts/AuthContext";

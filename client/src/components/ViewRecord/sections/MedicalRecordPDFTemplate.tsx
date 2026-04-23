@@ -1,12 +1,14 @@
 import React from "react";
 import type { Record as MedicalRecord, Patient, Transfer } from "@/types";
+import { XRayPaper, HematologyPaper } from "./ClinicalResultViews";
 
 interface Props {
   record: MedicalRecord;
   patient: Patient;
+  attachments?: any[];
 }
 
-export const MedicalRecordPDFTemplate: React.FC<Props> = ({ record, patient }) => {
+export const MedicalRecordPDFTemplate: React.FC<Props> = ({ record, patient, attachments = [] }) => {
   const parseDateToParts = (dateString?: string, timeString?: string) => {
     if (!dateString) return { day: "...", month: "...", year: "....", time: timeString || "..." };
     try {
@@ -671,6 +673,49 @@ export const MedicalRecordPDFTemplate: React.FC<Props> = ({ record, patient }) =
           </div>
         </div>
       </div>
+
+      {/* PAGE 4+ - CLINICAL RESULTS (SECTION V) */}
+      {(record.documents || []).filter(doc => (doc.type === "X-Quang" || doc.type === "XN-HuyetHoc") && doc.data?.status === 3).map((doc, index) => {
+          const enrichedData = {
+              ...doc.data,
+              patientName: doc.data?.patientName || record.patientName,
+              age: doc.data?.age || record.age,
+              gender: doc.data?.gender || record.gender,
+              address: doc.data?.address || record.address,
+              department: doc.data?.department || record.department,
+              bed: doc.data?.bed || record.bedCode,
+              insuranceNumber: doc.data?.insuranceNumber || record.insuranceNumber,
+              diagnosis: doc.data?.diagnosis || record.diagnosisInfo?.deptDiagnosis?.name || ""
+          };
+
+          return (
+              <div key={doc.id || index} style={{ ...pageStyle, padding: "0mm" }}>
+                  <div style={{ transformOrigin: "top center" }}>
+                      {doc.type === "X-Quang" ? <XRayPaper data={enrichedData} /> : <HematologyPaper data={enrichedData} />}
+                  </div>
+              </div>
+          );
+      })}
+
+      {/* SECTION VI - ATTACHMENTS - RENDER IMAGES ONLY (PDFs are handled by pdf-lib merge) */}
+      {attachments.map((doc, index) => {
+          const cleanPath = (doc.path || "").split('?')[0];
+          const isImage = /\.(jpg|jpeg|png|webp|gif)$/i.test(cleanPath || doc.fileName || "");
+          
+          if (!isImage) return null; // Skip non-image files in HTML template
+
+          return (
+              <div key={doc.id || index} style={{ ...pageStyle, padding: "5mm" }}>
+                  <div style={{ textAlign: "center", width: "100%", height: "280mm", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <img 
+                          src={doc.path} 
+                          alt={doc.name} 
+                          style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} 
+                      />
+                  </div>
+              </div>
+          );
+      })}
     </div>
   );
 };

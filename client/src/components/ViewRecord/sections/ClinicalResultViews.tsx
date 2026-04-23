@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { FileText, Info, Check, AlertTriangle, AlertCircle, Bell, Loader2 } from "lucide-react";
+import { FileText, Loader2 } from "lucide-react";
 import type { XRayData } from "../../EditRecord/sections/XRayInputForm";
 import type { HematologyData } from "../../EditRecord/sections/HematologyInputForm";
 import html2canvas from "html2canvas-pro";
@@ -276,8 +276,8 @@ export const HematologyPaper = ({ data }: { data: HematologyData }) => {
                         <td style={{ border: '1px solid black', padding: '4px', textAlign: 'center', fontWeight: 'bold', verticalAlign: 'middle' }}>
                             {row.l2?.type === 'esr' && typeof row.v2 === 'object' && row.v2 ? (
                                 <>
-                                    <div style={{ marginBottom: '5px' }}>{(row.v2 as any).v1}</div>
-                                    <div>{(row.v2 as any).v2}</div>
+                                    <div style={{ marginBottom: '5px' }}>{((row as any).v2 as any).v1}</div>
+                                    <div>{((row as any).v2 as any).v2}</div>
                                 </>
                             ) : (
                                 row.v2 as React.ReactNode
