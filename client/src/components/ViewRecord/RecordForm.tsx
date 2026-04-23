@@ -15,7 +15,13 @@ import { DischargeStatusSection } from "../EditRecord/sections/DischargeStatusSe
 import { MedicalHistorySection } from "../EditRecord/sections/MedicalHistorySection";
 import { ExaminationSection } from "../EditRecord/sections/ExaminationSection";
 import { TreatmentSection } from "../EditRecord/sections/TreatmentSection";
-import { XRayResultView, HematologyResultView, AttachmentResultView } from "./sections/ClinicalResultViews";
+import { 
+    XRayResultView, 
+    HematologyResultView, 
+    AttachmentResultView,
+    ClinicalResultsList 
+} from "./sections/ClinicalResultViews";
+
 import { MedicalRecordPDFTemplate } from "./sections/MedicalRecordPDFTemplate";
 
 interface AttachmentDto {
@@ -345,7 +351,13 @@ export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProp
         <div className="flex-1 w-full min-w-0 pr-4">
           <div className="space-y-12 pb-24">
             <div id="section-administrative" className="scroll-mt-8">
-              <AdministrativeSection patient={editablePatient} setPatient={setEditablePatient} readOnly={true} />
+              <AdministrativeSection 
+                patient={editablePatient} 
+                setPatient={setEditablePatient} 
+                record={formData}
+                setRecord={setFormData as any}
+                readOnly={true} 
+              />
             </div>
             
             <div id="section-management" className="scroll-mt-8">
@@ -374,24 +386,7 @@ export const ViewRecordForm = ({ record, patient, onCancel }: ViewRecordFormProp
 
             <div id="section-forms" className="scroll-mt-8">
               <h3 className="font-bold text-gray-800 border-b border-gray-100 pb-2 mb-6 text-xl">V. Phiếu Cận Lâm Sàng</h3>
-              <div className="space-y-8">
-                {(() => {
-                    const completedForms = (formData.documents || []).filter(doc => (doc.type === "X-Quang" || doc.type === "XN-HuyetHoc") && doc.data?.status === 3);
-                    if (completedForms.length > 0) {
-                        return completedForms.map((doc) => (
-                            <div key={doc.id}>
-                                {doc.type === "X-Quang" && <XRayResultView data={doc.data} />}
-                                {doc.type === "XN-HuyetHoc" && <HematologyResultView data={doc.data} />}
-                            </div>
-                        ));
-                    }
-                    return (
-                        <div className="bg-white p-10 text-center rounded-lg border border-dashed border-gray-300 text-gray-400 italic">
-                            Chưa có phiếu cận lâm sàng nào hoàn thành kết quả.
-                        </div>
-                    );
-                })()}
-              </div>
+              <ClinicalResultsList documents={formData.documents || []} record={formData} />
             </div>
 
             <div id="section-documents" className="scroll-mt-8">

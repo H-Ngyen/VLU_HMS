@@ -116,6 +116,27 @@ const STEPS = [
   "Đã có kết quả"
 ];
 
+const formatAddress = (address: string) => {
+    if (!address) return "";
+    const keywords = ["Thành phố", "Tỉnh"];
+    let splitIndex = -1;
+    for (const kw of keywords) {
+        const idx = address.indexOf(kw);
+        if (idx !== -1 && (splitIndex === -1 || idx < splitIndex)) {
+            splitIndex = idx;
+        }
+    }
+    if (splitIndex <= 0) return address;
+    const part1 = address.substring(0, splitIndex);
+    const part2 = address.substring(splitIndex);
+    return (
+        <>
+            {part1}
+            <span style={{ display: 'inline-block' }}>{part2}</span>
+        </>
+    );
+};
+
 export const XRayInputForm = ({
   isOpen,
   onClose,
@@ -743,7 +764,7 @@ export const XRayInputForm = ({
                     <span className="w-1/4">Tuổi: {formData.age}</span>
                     <span className="w-1/4 text-right">Nam/Nữ: {formData.gender}</span>
                 </div>
-                <p className="m-0 mb-2">Địa chỉ: {formData.address}</p>
+                <p className="m-0 mb-2">Địa chỉ: {formatAddress(formData.address)}</p>
                 <div className="flex justify-between mb-2">
                     <span className="w-1/2">Khoa: {formData.department}</span>
                     <span className="w-1/4">Buồng: {formData.room}</span>
@@ -754,7 +775,7 @@ export const XRayInputForm = ({
 
             <div className="mb-6 border border-black">
                  <div className="bg-white border-b border-black p-2 font-bold text-left text-black">Yêu cầu chiếu/ chụp</div>
-                 <div className="p-2 min-h-[30mm] whitespace-pre-wrap break-all text-black">{formData.request}</div>
+                 <div className="p-2 min-h-[30mm] whitespace-pre-wrap break-words text-black">{formData.request}</div>
             </div>
 
             <div className="flex justify-end mb-8">
@@ -770,13 +791,13 @@ export const XRayInputForm = ({
               <>
                 <div className="mb-6 border border-black">
                     <div className="bg-white border-b border-black p-2 font-bold text-left text-black">Kết quả chiếu/ chụp</div>
-                    <div className="p-2 min-h-[40mm] whitespace-pre-wrap break-all text-black font-bold">{formData.result}</div>
+                    <div className="p-2 min-h-[40mm] whitespace-pre-wrap break-words text-black font-bold">{formData.result}</div>
                 </div>
 
                 <div className="flex justify-between items-start">
                     <div className="w-1/2 pr-4">
                         <p className="font-bold underline mb-2">Lời dặn của BS chuyên khoa:</p>
-                        <p className="whitespace-pre-wrap break-all m-0 italic">{formData.advice}</p>
+                        <p className="whitespace-pre-wrap break-words m-0 italic">{formData.advice}</p>
                     </div>
                     <div className="text-center w-1/3">
                         <p className="italic m-0">Ngày {formData.resultDateDay} tháng {formData.resultDateMonth} năm {formData.resultDateYear}</p>

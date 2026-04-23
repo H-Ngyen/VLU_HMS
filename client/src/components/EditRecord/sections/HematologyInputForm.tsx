@@ -132,6 +132,27 @@ const STEPS = [
   "Đã có kết quả"
 ];
 
+const formatAddress = (address: string) => {
+    if (!address) return "";
+    const keywords = ["Thành phố", "Tỉnh"];
+    let splitIndex = -1;
+    for (const kw of keywords) {
+        const idx = address.indexOf(kw);
+        if (idx !== -1 && (splitIndex === -1 || idx < splitIndex)) {
+            splitIndex = idx;
+        }
+    }
+    if (splitIndex <= 0) return address;
+    const part1 = address.substring(0, splitIndex);
+    const part2 = address.substring(splitIndex);
+    return (
+        <>
+            {part1}
+            <span style={{ display: 'inline-block' }}>{part2}</span>
+        </>
+    );
+};
+
 export const HematologyInputForm = ({
   isOpen,
   onClose,
@@ -888,7 +909,7 @@ export const HematologyInputForm = ({
                         <div style={{ width: '15%', textAlign: 'right' }}>Nam/Nữ: {formData.gender}</div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
-                        <div style={{ flex: 1 }}>- Địa chỉ: {formData.address}</div>
+                        <div style={{ flex: 1 }}>- Địa chỉ: {formatAddress(formData.address)}</div>
                         <div style={{ width: '40%' }}>Số thẻ BHYT: {formData.insuranceNumber}</div>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>

@@ -479,6 +479,7 @@ const mapDtoToRecord = (dto: MedicalRecordDto): MedicalRecord => {
     id: dto.storageCode || dto.id.toString(),
     numericId: dto.id,
     storageCode: dto.storageCode,
+    bedCode: dto.bedCode || "",
     patientId: dto.patientId.toString(),
     patientName: dto.patient.name,
     cccd: "",
