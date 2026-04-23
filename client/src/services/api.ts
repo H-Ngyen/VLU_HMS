@@ -545,6 +545,13 @@ export const api = {
       });
       if (!response.ok) throw new Error('Failed to assign head to department');
     },
+    unassignHead: async (departmentId: number, userId: number): Promise<void> => {
+      const response = await fetch(`${API_BASE_URL}/departments/${departmentId}/users/${userId}/head`, {
+        method: 'DELETE',
+        headers: getHeaders(),
+      });
+      if (!response.ok) throw new Error('Failed to unassign head from department');
+    },
     removeUser: async (departmentId: number, userId: number): Promise<void> => {
       const response = await fetch(`${API_BASE_URL}/departments/${departmentId}/users/${userId}`, {
         method: 'DELETE',

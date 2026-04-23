@@ -8,7 +8,8 @@ import {
   UserPlus, 
   UserCheck, 
   Users as UsersIcon,
-  MoreHorizontal
+  MoreHorizontal,
+  FlagOff
 } from "lucide-react";
 import { api } from "@/services/api";
 import { toast } from "sonner";
@@ -76,6 +77,21 @@ export const DepartmentTableRow = ({ department, onRefresh }: DepartmentTableRow
     setIsAssignDialogOpen(true);
   };
 
+  const handleUnassignHead = async () => {
+    const headId = department.headUser?.id || department.headUserId;
+    if (!headId) return;
+    if (!window.confirm(`Bạn có chắc chắn muốn hủy gán trưởng khoa cho ${department.headUser?.name}?`)) return;
+    
+    try {
+      await api.departments.unassignHead(department.id, headId);
+      toast.success("Hủy gán trưởng khoa thành công");
+      onRefresh();
+    } catch (error: any) {
+      console.error("Failed to unassign head:", error);
+      toast.error(error.message || "Lỗi khi hủy gán trưởng khoa");
+    }
+  };
+
   return (
     <>
       <TableRow>
@@ -130,9 +146,16 @@ export const DepartmentTableRow = ({ department, onRefresh }: DepartmentTableRow
                   <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
                     <Edit size={14} className="mr-2" /> Chỉnh sửa tên
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={openAssignHead}>
-                    <UserCheck size={14} className="mr-2" /> Gán trưởng khoa
-                  </DropdownMenuItem>
+                  {!department.headUser?.id && !department.headUserId && (
+                    <DropdownMenuItem onClick={openAssignHead}>
+                      <UserCheck size={14} className="mr-2" /> Gán trưởng khoa
+                    </DropdownMenuItem>
+                  )}
+                  {(department.headUser?.id || department.headUserId) && (
+                    <DropdownMenuItem onClick={handleUnassignHead} className="text-orange-600 focus:text-orange-600">
+                      <FlagOff size={14} className="mr-2" /> Hủy gán trưởng khoa
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem 
                     className="text-red-600 focus:text-red-600"

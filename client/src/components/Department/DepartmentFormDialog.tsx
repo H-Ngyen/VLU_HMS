@@ -75,7 +75,7 @@ export const DepartmentFormDialog = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
-    if (!headUserId) {
+    if (!department && !headUserId) {
       toast.error("Vui lòng chọn một Trưởng khoa");
       return;
     }
@@ -127,27 +127,28 @@ export const DepartmentFormDialog = ({
             />
           </div>
           
-          <div className="space-y-2 flex flex-col">
-            <Label htmlFor="headUser">Trưởng Khoa <span className="text-red-500">*</span></Label>
-            <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
-              <PopoverTrigger asChild>
-                <Button
-                  id="headUser"
-                  variant="outline"
-                  role="combobox"
-                  aria-expanded={openCombobox}
-                  className="w-full justify-between font-normal"
-                >
-                  {selectedUser
-                    ? `${selectedUser.name} (${selectedUser.email})`
-                    : "Chọn Trưởng khoa..."}
-                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-[375px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Tìm theo tên hoặc email..." />
-                  <CommandList>
+          {!department && (
+            <div className="space-y-2 flex flex-col">
+              <Label htmlFor="headUser">Trưởng Khoa <span className="text-red-500">*</span></Label>
+              <Popover open={openCombobox} onOpenChange={setOpenCombobox}>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="headUser"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openCombobox}
+                    className="w-full justify-between font-normal"
+                  >
+                    {selectedUser
+                      ? `${selectedUser.name} (${selectedUser.email})`
+                      : "Chọn Trưởng khoa..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[375px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Tìm theo tên hoặc email..." />
+                    <CommandList>
                     <CommandEmpty>Không tìm thấy nhân sự phù hợp.</CommandEmpty>
                     <CommandGroup>
                       {users.map((user) => (
@@ -173,15 +174,15 @@ export const DepartmentFormDialog = ({
                       ))}
                     </CommandGroup>
                   </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
-          </div>
+                  </Command>
+                  </PopoverContent>
+                  </Popover>
+                  </div>
+                  )}
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
+                  <DialogFooter>
+                  <Button
+                  type="button"              variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={submitting}
             >

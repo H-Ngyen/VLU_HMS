@@ -6,7 +6,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { User as UserIcon, ShieldCheck, UserMinus, Loader2, Search } from "lucide-react";
+import { User as UserIcon, ShieldCheck, UserMinus, Loader2, Search, FlagOff } from "lucide-react";
 import type { Department } from "@/types";
 import { RoleBadge } from "../Account/RoleBadge";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { api } from "@/services/api";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -39,10 +40,11 @@ export const ViewMembersDialog = ({
 }: ViewMembersDialogProps) => {
   const { isAdmin, currentUser } = useAuth();
   const [removingId, setRemovingId] = useState<number | null>(null);
+  const [unassigningHeadId, setUnassigningHeadId] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const members = department.users || [];
   
-  const isHeadOfThisDept = department.headUserId === currentUser?.id;
+  const isHeadOfThisDept = department.headUser?.id === currentUser?.id || department.headUserId === currentUser?.id;
   const canManageMembers = isAdmin || isHeadOfThisDept;
 
   const filteredMembers = members.filter(user => 
@@ -52,8 +54,9 @@ export const ViewMembersDialog = ({
 
   // Sắp xếp: Trưởng khoa lên đầu
   const sortedMembers = [...filteredMembers].sort((a, b) => {
-    if (a.id === department.headUserId) return -1;
-    if (b.id === department.headUserId) return 1;
+    const headId = department.headUser?.id || department.headUserId;
+    if (a.id === headId) return -1;
+    if (b.id === headId) return 1;
     return 0;
   });
 
@@ -69,6 +72,22 @@ export const ViewMembersDialog = ({
       toast.error("Lỗi khi gỡ thành viên");
     } finally {
       setRemovingId(null);
+    }
+  };
+
+  const handleUnassignHead = async (userId: number) => {
+    if (!window.confirm("Bạn có chắc chắn muốn hủy gán trưởng khoa?")) return;
+    
+    setUnassigningHeadId(userId);
+    try {
+      await api.departments.unassignHead(department.id, userId);
+      toast.success("Đã hủy gán trưởng khoa thành công");
+      onRefresh();
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Lỗi khi hủy gán trưởng khoa");
+    } finally {
+      setUnassigningHeadId(null);
     }
   };
 
@@ -121,22 +140,15 @@ export const ViewMembersDialog = ({
                 <TableBody>
                   {sortedMembers.length > 0 ? (
                     sortedMembers.map((user, index) => {
-                      const isHead = department.headUserId === user.id;
+                      const headId = department.headUser?.id || department.headUserId;
+                      const isHead = headId === user.id;
                       return (
                         <TableRow 
                           key={user.id}
                           className={isHead ? "bg-red-50/30 hover:bg-red-50/50" : ""}
                         >
                           <TableCell className="text-center text-gray-500 font-medium">
-                            {isHead ? (
-                              <div className="flex items-center justify-center">
-                                <span title="Trưởng khoa">
-                                  <ShieldCheck size={16} className="text-red-500" />
-                                </span>
-                              </div>
-                            ) : (
-                              index + 1
-                            )}
+                            {index + 1}
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-3">
@@ -147,12 +159,12 @@ export const ViewMembersDialog = ({
                               </div>
                               <div className="flex flex-col">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-medium text-gray-900 line-clamp-1">{user.name}</span>
-                                  {isHead && (
-                                    <div className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-600 text-white uppercase tracking-wider shrink-0">
-                                      <ShieldCheck size={10} /> Trưởng khoa
-                                    </div>
-                                  )}
+                                  <span className={cn(
+                                    "font-medium line-clamp-1",
+                                    isHead ? "text-red-600" : "text-gray-900"
+                                  )}>
+                                    {user.name}
+                                  </span>
                                 </div>
                                 <span className="text-xs text-gray-500">{user.email}</span>
                               </div>
@@ -160,26 +172,50 @@ export const ViewMembersDialog = ({
                           </TableCell>
 
                           <TableCell>
-                            <RoleBadge role={user.roleName} />
+                            <div className="flex flex-col gap-1 items-start">
+                              <RoleBadge role={user.roleName} />
+                              {isHead && (
+                                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-red-600 text-white uppercase tracking-wider shrink-0">
+                                  Trưởng khoa
+                                </div>
+                              )}
+                            </div>
                           </TableCell>
                           {canManageMembers && (
                             <TableCell className="text-right">
-                              {!isHead && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleRemoveMember(user.id)}
-                                  disabled={removingId !== null}
-                                  className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
-                                  title="Gỡ khỏi khoa"
-                                >
-                                  {removingId === user.id ? (
-                                    <Loader2 size={16} className="animate-spin" />
-                                  ) : (
-                                    <UserMinus size={16} />
-                                  )}
-                                </Button>
-                              )}
+                              <div className="flex justify-end gap-1">
+                                {isHead ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleUnassignHead(user.id)}
+                                    disabled={unassigningHeadId !== null}
+                                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    title="Hủy gán trưởng khoa"
+                                  >
+                                    {unassigningHeadId === user.id ? (
+                                      <Loader2 size={16} className="animate-spin" />
+                                    ) : (
+                                      <FlagOff size={16} />
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleRemoveMember(user.id)}
+                                    disabled={removingId !== null}
+                                    className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                                    title="Gỡ khỏi khoa"
+                                  >
+                                    {removingId === user.id ? (
+                                      <Loader2 size={16} className="animate-spin" />
+                                    ) : (
+                                      <UserMinus size={16} />
+                                    )}
+                                  </Button>
+                                )}
+                              </div>
                             </TableCell>
                           )}
                         </TableRow>

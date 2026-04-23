@@ -37,8 +37,23 @@ export const AssignUserDialog = ({
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const data = await api.identities.getAllUsers();
-      setUsers(data);
+      const [usersData, departmentsData] = await Promise.all([
+        api.identities.getAllUsers(),
+        api.departments.getAll()
+      ]);
+
+      const enrichedUsers = usersData.map(user => {
+        const dept = departmentsData.find(d => 
+          d.users?.some(u => u.id === user.id) || d.headUser?.id === user.id || d.headUserId === user.id
+        );
+        return {
+          ...user,
+          departmentId: dept?.id,
+          departmentName: dept?.name
+        };
+      });
+
+      setUsers(enrichedUsers);
     } catch (error) {
       console.error("Failed to fetch users:", error);
       toast.error("Không thể tải danh sách người dùng");
@@ -122,24 +137,26 @@ export const AssignUserDialog = ({
                       <span className="font-medium text-gray-900">{user.name}</span>
                       <span className="text-xs text-gray-500">{user.email}</span>
                       {user.departmentName && (
-                        <span className="text-[10px] text-blue-600 font-medium">
-                          Thuộc: {user.departmentName}
+                        <span className="text-[10px] text-blue-600 font-medium mt-0.5 border border-blue-200 bg-blue-50 px-1.5 py-0.5 rounded w-fit">
+                          Đang thuộc: {user.departmentName}
                         </span>
                       )}
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => handleAssign(user.id)}
-                    disabled={submittingId !== null}
-                    className="h-8"
-                  >
-                    {submittingId === user.id ? (
-                      <Loader2 size={14} className="animate-spin" />
-                    ) : (
-                      "Chọn"
-                    )}
-                  </Button>
+                  {(!user.departmentId || (mode === "head" && user.departmentId === departmentId)) && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleAssign(user.id)}
+                      disabled={submittingId !== null}
+                      className="h-8"
+                    >
+                      {submittingId === user.id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        "Chọn"
+                      )}
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
