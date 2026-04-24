@@ -57,11 +57,14 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
     {
         foreach (var user in users)
         {
-            backgroundTask.Queue(async (sp, ct) =>
-            {
-                var emailService = sp.GetRequiredService<INotificationEmailJobService>();
-                await emailService.Job(notificationId, user.Id, user.Email, ct);
-            });
+            var key = $"email:{notificationId}:{user.Id}";
+
+            backgroundTask.Queue(
+                new QueueItem(key, async (sp, ct) =>
+                {
+                    var emailService = sp.GetRequiredService<INotificationEmailJobService>();
+                    await emailService.Job(notificationId, user.Id, user.Email, ct);
+                }));
         }
     }
 

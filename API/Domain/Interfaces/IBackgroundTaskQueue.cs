@@ -1,7 +1,10 @@
+using Domain.Constants;
+
 namespace Domain.Interfaces;
 
 public interface IBackgroundTaskQueue
 {
-    void Queue(Func<IServiceProvider, CancellationToken, Task> workItem);
-    Task<Func<IServiceProvider, CancellationToken, Task>> DequeueAsync(CancellationToken ct);
+    void Queue(QueueItem item);
+    Task<QueueItem> DequeueAsync(CancellationToken ct);
+    public void Release(string key);
 }

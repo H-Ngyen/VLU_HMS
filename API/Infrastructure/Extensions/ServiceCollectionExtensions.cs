@@ -113,7 +113,6 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPdfProcessorService, PdfProcessorService>();
         services.AddHttpClient<IGeminiClientService, GeminiClientService>();
         services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
-        services.AddHostedService<BackgroundWorker>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<INotificationEmailJobService, NotificationEmailJobService>();
 
@@ -126,5 +125,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDepartmentAuthorizationService, DepartmentAuthorizationService>();
         services.AddScoped<IUserNotificationAuthorizationService, UserNotificationAuthorizationService>();
         services.AddScoped<IStatisticsAuthorizationService, StatisticsAuthorizationService>();
+
+        // Background Services
+        services.AddHostedService<Worker>();
+        services.AddHostedService<NotificationEmailRecoveryService>();
     }
 }
