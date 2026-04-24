@@ -79,7 +79,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           console.log("NotificationContext: Connecting to SignalR Hub...");
           
           activeConnection = new signalR.HubConnectionBuilder()
-            .withUrl("https://localhost:5001/hubs/notifications", {
+            .withUrl(import.meta.env.VITE_API_HUB_URL, {
               accessTokenFactory: () => token
             })
             .withAutomaticReconnect()
