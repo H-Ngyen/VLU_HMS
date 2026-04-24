@@ -470,7 +470,10 @@ export const api = {
       const response = await fetch(`${API_BASE_URL}/identities/users/${userId}`, {
         headers: getHeaders(manualToken)
       });
-      if (!response.ok) throw new Error('Failed to fetch user');
+      if (!response.ok) {
+        if (response.status === 403) throw new Error('403_FORBIDDEN');
+        throw new Error('Failed to fetch user');
+      }
       return response.json();
     },
 

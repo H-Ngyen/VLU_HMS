@@ -64,13 +64,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             try {
               dbUser = await api.identities.getUser(userId, token);
             } catch (e: any) {
+              if (e.message === '403_FORBIDDEN') {
+                throw new Error("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Quản trị viên để biết thêm chi tiết.");
+              }
               console.warn("Lấy thông tin bị lỗi, đang thử xử lý lại...");
               // Chờ thêm một chút rồi thử lại lần cuối
               await new Promise(resolve => setTimeout(resolve, 3000));
               try {
                 dbUser = await api.identities.getUser(userId, token);
-              } catch (retryError) {
+              } catch (retryError: any) {
                 console.error("Retry failed:", retryError);
+                if (retryError.message === '403_FORBIDDEN') {
+                  throw new Error("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Quản trị viên để biết thêm chi tiết.");
+                }
                 throw new Error("Tài khoản đã được tạo nhưng hệ thống cần thời gian để đồng bộ. Vui lòng F5 hoặc đăng nhập lại sau 1 phút.");
               }
             }
