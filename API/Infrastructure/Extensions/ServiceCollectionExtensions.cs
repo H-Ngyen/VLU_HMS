@@ -1,6 +1,7 @@
 using Domain.Interfaces;
 using Domain.Repositories;
 using Infrastructure.Authorization.Services;
+using Infrastructure.Background;
 using Infrastructure.Configurations;
 using Infrastructure.Persistence;
 using Infrastructure.Repositories;

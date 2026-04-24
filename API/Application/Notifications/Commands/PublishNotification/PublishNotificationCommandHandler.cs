@@ -24,14 +24,15 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
     IMapper mapper,
     IHubContext<NotificationHub> hubContext,
     IConfiguration config,
-    IBackgroundTaskQueue backgroundTask) : IRequestHandler<PublishNotificationCommand, bool>
+    IBackgroundTaskQueue queue) : IRequestHandler<PublishNotificationCommand, bool>
 {
     public async Task<bool> Handle(PublishNotificationCommand request, CancellationToken cancellationToken)
     {
         logger.LogInformation("Publishing new notification");
 
-        var users = await userRepository.GetAllAsync();
-        var listUser = users!.Where(u => request.ListUserId.Contains(u.Id)).ToList();
+        // var users = await userRepository.GetAllAsync();
+        // var listUser = users!.Where(u => request.ListUserId.Contains(u.Id)).ToList();
+        var listUser = await userRepository.GetListByIdsAsync(request.ListUserId);
 
         var storageCode = await GetMedicalRecordId(request.ResourceId, request.ClinicalType);
         var newNotification = await CreateNewNotification(request.ResourceId, storageCode, request.NotificattionType, listUser);
@@ -59,7 +60,7 @@ public class PublishNotificationCommandHandler(ILogger<PublishNotificationComman
         {
             var key = $"email:{notificationId}:{user.Id}";
 
-            backgroundTask.Queue(
+            queue.Enqueue(
                 new QueueItem(key, async (sp, ct) =>
                 {
                     var emailService = sp.GetRequiredService<INotificationEmailJobService>();

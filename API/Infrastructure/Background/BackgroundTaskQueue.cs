@@ -3,14 +3,14 @@ using System.Threading.Channels;
 using Domain.Constants;
 using Domain.Interfaces;
 
-namespace Infrastructure.Services;
+namespace Infrastructure.Background;
 
 public class BackgroundTaskQueue : IBackgroundTaskQueue
 {
     private readonly Channel<QueueItem> _queue = Channel.CreateUnbounded<QueueItem>();
     private ConcurrentDictionary<string, byte> _locks = new();
 
-    public void Queue(QueueItem item)
+    public void Enqueue(QueueItem item)
     {
         if (item == null)
             throw new ArgumentNullException(nameof(item));

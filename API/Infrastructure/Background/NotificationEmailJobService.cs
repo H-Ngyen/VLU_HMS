@@ -2,7 +2,7 @@ using Domain.Interfaces;
 using Domain.Repositories;
 using Microsoft.Extensions.Logging;
 
-namespace Infrastructure.Services;
+namespace Infrastructure.Background;
 
 public class NotificationEmailJobService(ILogger<NotificationEmailJobService> logger,
     INotificationRepository notificationRepository,

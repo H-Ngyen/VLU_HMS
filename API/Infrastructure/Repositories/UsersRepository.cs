@@ -23,15 +23,21 @@ internal class UsersRepository(AppDbContext context) : BaseRepository<User>(cont
                 .Include(u => u.Role)
                 .FirstOrDefaultAsync(predicate);
 
-    public async Task<IEnumerable<User>?> GetAllAsync()
+    public async Task<IEnumerable<User>> GetAllAsync()
         => await NoTrackingQuery
                 .Include(u => u.Role)
                 .ToListAsync();
-    public async Task<IEnumerable<User>?> GetAllAsync(Expression<Func<User, bool>> predicate)
+    public async Task<IEnumerable<User>> GetAllAsync(Expression<Func<User, bool>> predicate)
         => await NoTrackingQuery
                 .Include(u => u.Role)
                 .Where(predicate)
                 .ToListAsync();
+
+    public async Task<IEnumerable<User>> GetListByIdsAsync(IEnumerable<int> ids)
+        => await NoTrackingQuery
+            .Where(u => ids.Contains(u.Id))
+            .Include(u => u.Role)
+            .ToListAsync();
 
     public async Task SaveChanges()
         => await _dbContext.SaveChangesAsync();

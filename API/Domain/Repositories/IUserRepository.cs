@@ -9,7 +9,8 @@ public interface IUserRepository
     Task<User?> FindOneAsync(Expression<Func<User, bool>> predicate);
     Task<int> CreateAsync(User entity);
 
-    Task<IEnumerable<User>?> GetAllAsync();
-    Task<IEnumerable<User>?> GetAllAsync(Expression<Func<User, bool>> predicate); 
+    Task<IEnumerable<User>> GetAllAsync();
+    Task<IEnumerable<User>> GetAllAsync(Expression<Func<User, bool>> predicate); 
+    Task<IEnumerable<User>> GetListByIdsAsync(IEnumerable<int> ids);
     Task SaveChanges();
 }

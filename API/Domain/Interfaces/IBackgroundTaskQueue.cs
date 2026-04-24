@@ -4,7 +4,7 @@ namespace Domain.Interfaces;
 
 public interface IBackgroundTaskQueue
 {
-    void Queue(QueueItem item);
+    void Enqueue(QueueItem item);
     Task<QueueItem> DequeueAsync(CancellationToken ct);
     public void Release(string key);
 }

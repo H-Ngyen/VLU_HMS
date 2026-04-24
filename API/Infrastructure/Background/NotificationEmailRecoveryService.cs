@@ -5,7 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
-namespace Infrastructure.Services;
+namespace Infrastructure.Background;
 
 public class NotificationEmailRecoveryService(ILogger<NotificationEmailRecoveryService> logger,
     IServiceProvider serviceProvider,
@@ -27,7 +27,7 @@ public class NotificationEmailRecoveryService(ILogger<NotificationEmailRecoveryS
                 {
                     var key = QueueKeys.KeyEmail(item.NotificationId, item.UserId);
 
-                    backgroundTask.Queue(
+                    backgroundTask.Enqueue(
                     new QueueItem(key, async (sp, ct) =>
                     {
                         var emailJob = sp.GetRequiredService<INotificationEmailJobService>();
