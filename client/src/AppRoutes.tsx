@@ -13,6 +13,7 @@ import LoginPage from "./pages/LoginPage";
 import { ClinicalRecordPage } from "./pages/ClinicalRecordPage";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useAuth } from "./contexts/AuthContext";
+import DashboardPage from "./pages/DashboardPage";
 
 function AppRoutes() {
   const { isAdmin, isTeacher } = useAuth();
@@ -23,6 +24,7 @@ function AppRoutes() {
         
         <Route element={<ProtectedRoute component={Layout} />}>
           <Route path="/" element={<RecordsPage />} />
+          <Route path="/dashboard" element={isAdmin || isTeacher ? <DashboardPage /> : <Navigate to="/" replace />} />
           <Route path="/record/:id" element={<RecordDetailView />} />
           <Route path="/record/edit/:id" element={<EditRecordView />} />
           <Route path="/record/create/:patientId" element={<CreateRecordView />} />

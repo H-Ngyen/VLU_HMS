@@ -236,3 +236,43 @@ export interface UserNotification {
   readAt?: string;
   notification: Notification;
 }
+
+export interface SummaryDto {
+  totalRecords: number;
+  surgicalRate: number;
+  procedureRate: number;
+  emergencyRate: number;
+}
+
+export interface UserGrowthDto {
+  newUsersThisMonth: number;
+  newUsersLastMonth: number;
+  growthPercentage: number;
+  isIncrease: boolean;
+}
+
+export interface DataPointDto {
+  label: string;
+  value: number;
+  percentage?: number;
+}
+
+export interface TrendStatsDto {
+  medicalRecords: DataPointDto[];
+  userOnboarding: DataPointDto[];
+}
+
+export interface MortalityStatsDto {
+  before24h: number;
+  after24h: number;
+  autopsyRate: number;
+}
+
+export interface DashboardDto {
+  summary: SummaryDto;
+  userGrowth: UserGrowthDto;
+  trends: TrendStatsDto;
+  outcomeDistribution: DataPointDto[];
+  admissionTypeDistribution: DataPointDto[];
+  mortalityStats: MortalityStatsDto;
+}

@@ -11,6 +11,7 @@ import { NotificationCenter } from "./NotificationCenter";
 const navs = [
   { href: "/", label: "Bệnh án" },
   { href: "/patients", label: "Bệnh nhân" },
+  { href: "/dashboard", label: "Thống kê" },
   { href: "/account", label: "Tài khoản" },
   { href: "/departments", label: "Khoa" },
 ];
@@ -25,6 +26,7 @@ export function Header() {
   };
 
   const filteredNavs = navs.filter(nav => {
+    if (nav.href === "/dashboard") return isAdmin || isTeacher;
     if (nav.href === "/account") return isAdmin;
     if (nav.href === "/departments") return isAdmin || isTeacher;
     return true;

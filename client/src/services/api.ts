@@ -601,5 +601,15 @@ export const api = {
       });
       if (!response.ok) throw new Error('Failed to mark notification as read');
     }
+  },
+
+  statistics: {
+    getDashboard: async () => {
+      const response = await fetch(`${API_BASE_URL}/statistics/dashboard`, {
+        headers: getHeaders()
+      });
+      if (!response.ok) throw new Error('Failed to fetch dashboard statistics');
+      return response.json();
+    }
   }
 };
