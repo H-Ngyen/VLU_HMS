@@ -280,6 +280,8 @@ export const HematologyInputForm = ({
   const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
   const [departmentInput, setDepartmentInput] = useState("");
   const [openConfirmCombobox, setOpenConfirmCombobox] = useState(false);
+  const [ccDepartmentInputs, setCcDepartmentInputs] = useState<string[]>([]);
+  const [openCcCombobox, setOpenCcCombobox] = useState(false);
   const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "FAST_TRACK" | "PDF">("SAVE");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(!!(isOpen && initialData && readOnly));
@@ -410,6 +412,16 @@ export const HematologyInputForm = ({
         toast.error("Vui lòng nhập 'Năm' của ngày yêu cầu.");
         return false;
     }
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+
+    if (formData.requestDateDay?.trim() && formData.requestDateMonth?.trim() && formData.requestDateYear?.trim()) {
+        const reqDate = new Date(parseInt(formData.requestDateYear), parseInt(formData.requestDateMonth) - 1, parseInt(formData.requestDateDay));
+        if (reqDate > today) {
+            toast.error("Ngày yêu cầu không được vượt quá ngày hiện tại.");
+            return false;
+        }
+    }
     if (action === "NEXT" && formData.status === 2) {
         const requiredResults = [
             { field: 'rbc', label: 'Số lượng HC' },
@@ -424,6 +436,14 @@ export const HematologyInputForm = ({
             const val = (formData as any)[item.field];
             if (!val?.toString().trim()) {
                 toast.error(`Vui lòng điền '${item.label}' để hoàn thành phiếu.`);
+                return false;
+            }
+        }
+        
+        if (formData.resultDateDay?.trim() && formData.resultDateMonth?.trim() && formData.resultDateYear?.trim()) {
+            const resDate = new Date(parseInt(formData.resultDateYear), parseInt(formData.resultDateMonth) - 1, parseInt(formData.resultDateDay));
+            if (resDate > today) {
+                toast.error("Ngày trả kết quả không được vượt quá ngày hiện tại.");
                 return false;
             }
         }
@@ -1145,7 +1165,7 @@ export const HematologyInputForm = ({
 
     {/* Dialog xác nhận đơn vị thực hiện */}
     <Dialog open={isDeptDialogOpen} onOpenChange={setIsDeptDialogOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Xác nhận đơn vị thực hiện</DialogTitle>
           <DialogDescription>
@@ -1171,7 +1191,7 @@ export const HematologyInputForm = ({
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[300px] p-0" align="start">
+                <PopoverContent className="w-[380px] p-0" align="start">
                   <Command>
                     <CommandInput placeholder="Tìm khoa..." />
                     <CommandList>
@@ -1190,6 +1210,62 @@ export const HematologyInputForm = ({
                               className={cn(
                                 "mr-2 h-4 w-4",
                                 departmentInput === d.name ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {d.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="cc-dept" className="text-right">
+              Đồng gửi (CC)
+            </Label>
+            <div className="col-span-3">
+              <Popover open={openCcCombobox} onOpenChange={setOpenCcCombobox}>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="cc-dept"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openCcCombobox}
+                    className="w-full justify-between font-normal text-left h-auto min-h-9 py-2 px-4 whitespace-normal"
+                  >
+                    <span className="flex-1 break-words">
+                      {ccDepartmentInputs.length > 0
+                        ? ccDepartmentInputs.join(", ")
+                        : "Chọn thêm khoa nhận thông báo..."}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[380px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Tìm khoa..." />
+                    <CommandList>
+                      <CommandEmpty>Không tìm thấy khoa phù hợp.</CommandEmpty>
+                      <CommandGroup>
+                        {departmentsList.filter(d => d.name !== departmentInput).map((d) => (
+                          <CommandItem
+                            key={d.id}
+                            value={d.name}
+                            onSelect={(currentValue) => {
+                              setCcDepartmentInputs(prev => 
+                                prev.includes(currentValue) 
+                                  ? prev.filter(name => name !== currentValue)
+                                  : [...prev, currentValue]
+                              );
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                ccDepartmentInputs.includes(d.name) ? "opacity-100" : "opacity-0"
                               )}
                             />
                             {d.name}

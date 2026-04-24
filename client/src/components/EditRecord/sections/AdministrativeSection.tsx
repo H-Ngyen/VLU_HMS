@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { InfoRow } from "./InfoRow";
+import { formatDate } from "@/lib/utils";
 import type { Patient, Record as MedicalRecord } from "@/types";
 
 interface AdministrativeSectionProps {
@@ -74,7 +75,7 @@ export const AdministrativeSection = ({ patient, setPatient, record, setRecord, 
         <div className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-2 md:gap-4 py-2 border-b border-gray-100 last:border-0 items-center">
              <label className="text-sm text-gray-700 font-medium">2. Sinh ngày</label>
              <div className="flex items-center gap-4">
-                 <span>{patient.dob || patient.dateOfBirth?.split('T')[0]}</span>
+                 <span>{formatDate(patient.dob || patient.dateOfBirth || "")}</span>
                  <span className="text-gray-400">|</span>
                  <span className="text-gray-700">Tuổi: {patient.age}</span>
              </div>
@@ -215,6 +216,7 @@ export const AdministrativeSection = ({ patient, setPatient, record, setRecord, 
             <label className="text-sm text-gray-700 font-medium">9. BHYT giá trị đến ngày</label>
             <Input
                 type="date"
+                max={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}
                 value={patient.insuranceExpiry || ""}
                 onChange={(e) => handleChange("insuranceExpiry", e.target.value)}
                 className="h-8 text-sm w-full md:w-64"

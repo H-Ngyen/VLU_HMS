@@ -45,8 +45,20 @@ export const AddPatientForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitting(true);
 
+    // Validate date of birth
+    if (formData.dateOfBirth) {
+        const now = new Date();
+        const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+        const todayStr = localNow.toISOString().split("T")[0];
+        const dobDateOnly = formData.dateOfBirth.split("T")[0];
+        if (dobDateOnly > todayStr) {
+            toast.error("Ngày sinh không được vượt quá ngày hiện tại.");
+            return;
+        }
+    }
+
+    setSubmitting(true);
     try {
       const localToday = new Date();
       const todayStr = `${localToday.getFullYear()}-${String(localToday.getMonth() + 1).padStart(2, '0')}-${String(localToday.getDate()).padStart(2, '0')}`;

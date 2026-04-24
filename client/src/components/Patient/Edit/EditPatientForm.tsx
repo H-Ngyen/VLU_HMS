@@ -70,8 +70,20 @@ export const EditPatientForm = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!id) return;
-    setSubmitting(true);
 
+    // Validate date of birth
+    if (formData.dateOfBirth) {
+        const now = new Date();
+        const localNow = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+        const todayStr = localNow.toISOString().split("T")[0];
+        const dobDateOnly = formData.dateOfBirth.split("T")[0];
+        if (dobDateOnly > todayStr) {
+            toast.error("Ngày sinh không được vượt quá ngày hiện tại.");
+            return;
+        }
+    }
+
+    setSubmitting(true);
     try {
       const payload = {
         name: formData.name,

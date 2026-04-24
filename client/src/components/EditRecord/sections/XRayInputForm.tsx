@@ -241,6 +241,8 @@ export const XRayInputForm = ({
   const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
   const [departmentInput, setDepartmentInput] = useState("");
   const [openConfirmCombobox, setOpenConfirmCombobox] = useState(false);
+  const [ccDepartmentInputs, setCcDepartmentInputs] = useState<string[]>([]);
+  const [openCcCombobox, setOpenCcCombobox] = useState(false);
   const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "PDF" | "FAST_TRACK" | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(!!(isOpen && initialData && readOnly));
@@ -387,6 +389,13 @@ export const XRayInputForm = ({
         toast.error("Vui lòng nhập đầy đủ ngày, tháng, năm của ngày yêu cầu.");
         return false;
     }
+    const reqDate = new Date(parseInt(formData.requestDateYear), parseInt(formData.requestDateMonth) - 1, parseInt(formData.requestDateDay));
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    if (reqDate > today) {
+        toast.error("Ngày yêu cầu không được vượt quá ngày hiện tại.");
+        return false;
+    }
     if (action === "NEXT" && formData.status === 2) {
         if (!formData.result?.trim()) {
             toast.error("Vui lòng nhập 'Kết quả chiếu/ chụp'.");
@@ -398,6 +407,11 @@ export const XRayInputForm = ({
         }
         if (!formData.resultDateDay?.trim() || !formData.resultDateMonth?.trim() || !formData.resultDateYear?.trim()) {
             toast.error("Vui lòng nhập đầy đủ ngày, tháng, năm của ngày trả kết quả.");
+            return false;
+        }
+        const resDate = new Date(parseInt(formData.resultDateYear), parseInt(formData.resultDateMonth) - 1, parseInt(formData.resultDateDay));
+        if (resDate > today) {
+            toast.error("Ngày trả kết quả không được vượt quá ngày hiện tại.");
             return false;
         }
     }
@@ -420,7 +434,7 @@ export const XRayInputForm = ({
     }
   };
 
-  const handleConfirmDepartmentDirect = async (action: "SAVE" | "NEXT" | "FAST_TRACK", deptName: string) => {
+  const handleConfirmDepartmentDirect = async (action: "SAVE" | "NEXT" | "FAST_TRACK", deptName: string, ccDeptNames?: string[]) => {
     if (!recordId) {
         toast.error("Không tìm thấy ID Hồ sơ bệnh án. Vui lòng lưu hồ sơ trước khi tạo phiếu X-Quang.");
         return;
@@ -454,6 +468,15 @@ export const XRayInputForm = ({
         if (!currentXrayId) {
             const selectedDept = departmentsList.find(d => d.name === deptName);
             const deptIds = selectedDept ? [selectedDept.id] : [];
+
+            if (ccDeptNames && ccDeptNames.length > 0) {
+                ccDeptNames.forEach(ccName => {
+                    const ccDept = departmentsList.find(d => d.name === ccName);
+                    if (ccDept && !deptIds.includes(ccDept.id)) {
+                        deptIds.push(ccDept.id);
+                    }
+                });
+            }
 
             const createPayload = {
                 listDepartmentId: deptIds,
@@ -535,7 +558,7 @@ export const XRayInputForm = ({
 
   const handleConfirmDepartment = async () => {
     setIsDeptDialogOpen(false);
-    await handleConfirmDepartmentDirect(targetAction as any, departmentInput);
+    await handleConfirmDepartmentDirect(targetAction as any, departmentInput, ccDepartmentInputs);
   };
 
   const isRequestReadOnly = readOnly || (formData.status > 0 && !isImportMode) || !!initialData;
@@ -872,7 +895,7 @@ export const XRayInputForm = ({
 
     {/* Dialog xác nhận đơn vị thực hiện */}
     <Dialog open={isDeptDialogOpen} onOpenChange={setIsDeptDialogOpen}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Xác nhận đơn vị thực hiện</DialogTitle>
           <DialogDescription>
@@ -898,7 +921,7 @@ export const XRayInputForm = ({
                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[300px] p-0" align="start">
+                <PopoverContent className="w-[380px] p-0" align="start">
                   <Command>
                     <CommandInput placeholder="Tìm khoa..." />
                     <CommandList>
@@ -917,6 +940,62 @@ export const XRayInputForm = ({
                               className={cn(
                                 "mr-2 h-4 w-4",
                                 departmentInput === d.name ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                            {d.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="cc-dept" className="text-right">
+              Đồng gửi (CC)
+            </Label>
+            <div className="col-span-3">
+              <Popover open={openCcCombobox} onOpenChange={setOpenCcCombobox}>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="cc-dept"
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={openCcCombobox}
+                    className="w-full justify-between font-normal text-left h-auto min-h-9 py-2 px-4 whitespace-normal"
+                  >
+                    <span className="flex-1 break-words">
+                      {ccDepartmentInputs.length > 0
+                        ? ccDepartmentInputs.join(", ")
+                        : "Chọn thêm khoa nhận thông báo..."}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[380px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Tìm khoa..." />
+                    <CommandList>
+                      <CommandEmpty>Không tìm thấy khoa phù hợp.</CommandEmpty>
+                      <CommandGroup>
+                        {departmentsList.filter(d => d.name !== departmentInput).map((d) => (
+                          <CommandItem
+                            key={d.id}
+                            value={d.name}
+                            onSelect={(currentValue) => {
+                              setCcDepartmentInputs(prev => 
+                                prev.includes(currentValue) 
+                                  ? prev.filter(name => name !== currentValue)
+                                  : [...prev, currentValue]
+                              );
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                ccDepartmentInputs.includes(d.name) ? "opacity-100" : "opacity-0"
                               )}
                             />
                             {d.name}

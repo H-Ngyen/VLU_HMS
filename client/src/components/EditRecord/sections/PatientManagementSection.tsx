@@ -136,6 +136,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
             <Label>12. Vào viện lúc</Label>
             <Input
               type="datetime-local"
+              max={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
               value={dateTimeValue}
               onChange={handleDateTimeChange}
               disabled={readOnly}
@@ -214,6 +215,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
                        <Label className="text-xs">Giờ</Label>
                        <Input
                         type="time"
+                        max={managementData.transfers[0]?.date === new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0] ? new Date().toTimeString().slice(0, 5) : undefined}
                         value={managementData.transfers[0]?.time || ""}
                         onChange={(e) => handleTransferChange(0, "time", e.target.value)}
                         className="h-9 bg-white"
@@ -263,6 +265,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
                        <Label className="text-xs">Ngày đến</Label>
                        <Input
                         type="date"
+                        max={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}
                         value={transfer.date}
                         onChange={(e) => handleTransferChange(realIndex, "date", e.target.value)}
                         className="h-9 bg-white"
@@ -273,6 +276,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
                        <Label className="text-xs">Giờ</Label>
                        <Input
                         type="time"
+                        max={transfer.date === new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0] ? new Date().toTimeString().slice(0, 5) : undefined}
                         value={transfer.time || ""}
                         onChange={(e) => handleTransferChange(realIndex, "time", e.target.value)}
                         className="h-9 bg-white"
@@ -336,6 +340,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
                 <Label>18. Ra viện</Label>
                 <Input
                   type="datetime-local"
+                  max={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split(".")[0].slice(0, 16)}
                   value={dischargeDateTimeValue}
                   onChange={handleDischargeDateTimeChange}
                   disabled={readOnly}

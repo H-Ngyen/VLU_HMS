@@ -81,13 +81,13 @@ export const PatientInfoSection = ({ formData, handleChange }: PatientInfoProps)
         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="md:col-span-2">
             <Label className="mb-1.5 block">Sinh ngày <span className="text-red-500">*</span></Label>
-            <Input 
+            <Input
               required
-              type="date" 
+              type="date"
+              max={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}
               value={formData.dateOfBirth}
               onChange={(e) => handleChange('dateOfBirth', e.target.value)}
-            />
-          </div>
+            />          </div>
           <div>
             <Label className="mb-1.5 block">Tuổi</Label>
             <Input 

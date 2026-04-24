@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import type { Record, Patient, RelatedCharacteristics } from "@/types";
 import { api } from "@/services/api";
+import { toast } from "sonner";
 
 import { AdministrativeSection } from "./sections/AdministrativeSection";
 import { PatientManagementSection } from "./sections/PatientManagementSection";
@@ -489,15 +490,20 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
   // State for collapsible sidebar group
   const [isMedicalGroupOpen, setIsMedicalGroupOpen] = useState(true);
 
+  const initializedRef = useRef(false);
+
   useEffect(() => {
+    // Only initialize if not already done
+    if (initializedRef.current) return;
+
     if (mode === "create" && patient) {
       setFormData(createInitialRecord(patient, initialType));
       setEditablePatient(patient);
+      initializedRef.current = true;
     } else if (mode === "edit" && record) {
       setFormData(prepareRecordData(record));
-      // In edit mode, we might want to update patient info from record if it was stored there, 
-      // but currently record only has patientId. We assume patient prop is up to date or passed correctly.
       setEditablePatient(patient); 
+      initializedRef.current = true;
     }
   }, [mode, record, patient, initialType]);
 
@@ -543,7 +549,71 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (formData && !readOnly) {
-      // In a real app, we would also submit editablePatient to update patient details
+      // Validate dates
+      const now = new Date();
+      // Calculate local ISO string parts
+      const localTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+      const todayStr = localTime.toISOString().split("T")[0];
+      
+      // For datetime-local comparison, add 1 minute grace period to account for slow typing
+      const nowWithGrace = new Date(now.getTime() + 60000 - now.getTimezoneOffset() * 60000);
+      const nowTimeStrWithGrace = nowWithGrace.toISOString().slice(0, 16);
+      const currentTimeStr = localTime.toTimeString().slice(0, 5);
+
+      // 1. Check admissionDate
+      if (formData.admissionDate && formData.admissionDate > todayStr) {
+        toast.error("Ngày vào viện không được vượt quá ngày hiện tại.");
+        return;
+      }
+
+      // 2. Check admission date/time
+      if (formData.admissionDate && formData.managementData.admissionTime) {
+        const admissionDateTime = `${formData.admissionDate}T${formData.managementData.admissionTime}`;
+        if (admissionDateTime > nowTimeStrWithGrace) {
+          toast.error("Thời gian vào viện không được vượt quá thời gian hiện tại.");
+          return;
+        }
+      }
+
+      // 3. Check dischargeDate if it exists
+      if (formData.dischargeDate && formData.dischargeDate > todayStr) {
+        toast.error("Ngày ra viện không được vượt quá ngày hiện tại.");
+        return;
+      }
+
+      // 4. Check discharge date/time if it exists
+      if (formData.dischargeDate && formData.managementData.dischargeTime) {
+        const dischargeDateTime = `${formData.dischargeDate}T${formData.managementData.dischargeTime}`;
+        if (dischargeDateTime > nowTimeStrWithGrace) {
+          toast.error("Thời gian ra viện không được vượt quá thời gian hiện tại.");
+          return;
+        }
+      }
+
+      // 5. Check transfers
+      if (formData.managementData.transfers) {
+        for (const transfer of formData.managementData.transfers) {
+          if (transfer.date && transfer.date > todayStr) {
+            toast.error(`Ngày chuyển khoa (${transfer.department || "N/A"}) không được vượt quá ngày hiện tại.`);
+            return;
+          }
+          if (transfer.date === todayStr && transfer.time && transfer.time > currentTimeStr) {
+            // Give a bit of grace for time as well? (optional, usually users pick exact time)
+            toast.error(`Thời gian chuyển khoa (${transfer.department || "N/A"}) không được vượt quá thời gian hiện tại.`);
+            return;
+          }
+        }
+      }
+
+      // 6. Check Patient date of birth
+      if (editablePatient.dateOfBirth) {
+        const dobDateOnly = editablePatient.dateOfBirth.split('T')[0];
+        if (dobDateOnly > todayStr) {
+          toast.error("Ngày sinh bệnh nhân không được vượt quá ngày hiện tại.");
+          return;
+        }
+      }
+
       onSubmit(formData, editablePatient);
     }
   };
