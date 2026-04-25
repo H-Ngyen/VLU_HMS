@@ -17,6 +17,21 @@ public class ImportXrayCompletedCommandValidator : AbstractValidator<ImportXrayC
             .NotEmpty().WithMessage("Tên khoa/phòng không được để trống.")
             .MaximumLength(255).WithMessage("Tên khoa/phòng không được vượt quá 255 ký tự.");
 
+        RuleFor(dto => dto.DepartmentOfHealth)
+            .MaximumLength(255).WithMessage("Sở y tế không được vượt quá 255 ký tự.");
+
+        RuleFor(dto => dto.HospitalName)
+            .MaximumLength(255).WithMessage("Tên bệnh viện không được vượt quá 255 ký tự.");
+
+        RuleFor(dto => dto.FormNumber)
+            .MaximumLength(50).WithMessage("Mẫu số không được vượt quá 50 ký tự.");
+
+        RuleFor(dto => dto.RoomNumber)
+            .MaximumLength(50).WithMessage("Số buồng không được vượt quá 50 ký tự.");
+
+        RuleFor(dto => dto.BedNumber)
+            .MaximumLength(50).WithMessage("Số giường không được vượt quá 50 ký tự.");
+
 
         RuleFor(dto => dto.RequestDescription)
             .NotEmpty().WithMessage("Nội dung yêu cầu không được để trống.")

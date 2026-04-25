@@ -24,6 +24,21 @@ internal class XRayConfiguration : IEntityTypeConfiguration<XRay>
               builder.Property(x => x.Status)
                      .IsRequired();
 
+              builder.Property(x => x.DepartmentOfHealth)
+                     .HasMaxLength(255);
+
+              builder.Property(x => x.HospitalName)
+                     .HasMaxLength(255);
+
+              builder.Property(x => x.FormNumber)
+                     .HasMaxLength(50);
+
+              builder.Property(x => x.RoomNumber)
+                     .HasMaxLength(50);
+
+              builder.Property(x => x.BedNumber)
+                     .HasMaxLength(50);
+
               // ===== RELATIONSHIPS =====
 
               // MedicalRecord

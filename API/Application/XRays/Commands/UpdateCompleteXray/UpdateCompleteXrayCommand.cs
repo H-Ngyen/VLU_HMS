@@ -9,6 +9,11 @@ public class UpdateCompleteXrayCommand : IRequest
     public int MedicalRecordId { get; set; }
     // public MedicalStatus Status { get; set; }
     // public required string DepartmentName { get; set; }
+    public required string DepartmentOfHealth { get; set; }
+    public required string HospitalName { get; set; }
+    public required string FormNumber { get; set; }
+    public required string RoomNumber { get; set; }
+    public required string BedNumber { get; set; }
     
     // --- Phần Kết quả (Result) ---
     public string? ResultDescription { get; set; }

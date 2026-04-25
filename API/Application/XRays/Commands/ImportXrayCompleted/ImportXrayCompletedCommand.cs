@@ -18,6 +18,11 @@ public class ImportXrayCompletedCommand : IRequest<int>
     // public required MedicalStatus Status { get; set; }
     public required string RequestDepartmentName { get; set; }
     public required string PerformDepartmentName { get; set; }
+    public required string DepartmentOfHealth { get; set; }
+    public required string HospitalName { get; set; }
+    public required string FormNumber { get; set; }
+    public required string RoomNumber { get; set; }
+    public required string BedNumber { get; set; }
 
     // --- Phần Yêu cầu (Request) ---
     public required string RequestDescription { get; set; }

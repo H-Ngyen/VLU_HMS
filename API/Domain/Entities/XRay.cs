@@ -13,6 +13,12 @@ public class XRay
     public int? PerformedById { get; set; }
 
     // Props
+    public string? DepartmentOfHealth { get; set; }
+    public string? HospitalName { get; set; }
+    public string? FormNumber { get; set; }
+    public string? RoomNumber { get; set; }
+    public string? BedNumber { get; set; }
+    
     public MedicalStatus Status { get; set; }
 
     // --- Phần Yêu cầu (Request) ---
