@@ -13,6 +13,11 @@ public class ImportHematologyCompletedCommand : IRequest<int>
 
     // Props
     // --- Thông tin chung ---
+    public required string DepartmentOfHealth { get; set; }
+    public required string HospitalName { get; set; }
+    public required string FormNumber { get; set; }
+    public required string RoomNumber { get; set; }
+
     public bool IsEmergency { get; set; } // Thường = false, Cấp cứu = true
     public required DateOnly RequestedAt { get; set; }
     public required DateOnly CompletedAt { get; set; }
@@ -20,7 +25,7 @@ public class ImportHematologyCompletedCommand : IRequest<int>
     public required string RequestDescription { get; set; }
     public required string RequestDepartmentName { get; set; }
     public required string PerformDepartmentName { get; set; }
-    
+
     // --- Nhóm 1: Tế bào máu ngoại vi (Lưu dạng float để có số thập phân) ---
     // Hồng cầu (RBC) & Bạch cầu (WBC) & Tiểu cầu (PLT)
     public required float RedBloodCellCount { get; set; } // Số lượng HC (x 10^12/l)

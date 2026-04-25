@@ -13,6 +13,11 @@ public class Hematology
     // Props
     // --- Thông tin chung ---
     // public bool IsEmergency { get; set; } // Thường = false, Cấp cứu = true
+    public string? DepartmentOfHealth { get; set; }
+    public string? HospitalName { get; set; }
+    public string? FormNumber { get; set; }
+    public string? RoomNumber { get; set; }
+
     public DateOnly? RequestedAt { get; set; }
     public DateOnly? CompletedAt { get; set; }
     public MedicalStatus Status { get; set; }

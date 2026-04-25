@@ -26,6 +26,18 @@ internal class HematologyConfiguration : IEntityTypeConfiguration<Hematology>
               builder.Property(h => h.BloodTypeAbo).HasConversion<int>();
               builder.Property(h => h.BloodTypeRh).HasConversion<int>();
 
+              builder.Property(x => x.DepartmentOfHealth)
+                     .HasMaxLength(255);
+
+              builder.Property(x => x.HospitalName)
+                     .HasMaxLength(255);
+
+              builder.Property(x => x.FormNumber)
+                     .HasMaxLength(50);
+
+              builder.Property(x => x.RoomNumber)
+                     .HasMaxLength(50);
+
               // ===== RELATIONSHIPS =====
 
               builder.HasOne(h => h.MedicalRecord)

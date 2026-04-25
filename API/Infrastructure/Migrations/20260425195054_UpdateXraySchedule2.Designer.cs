@@ -4,6 +4,7 @@ using Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260425195054_UpdateXraySchedule2")]
+    partial class UpdateXraySchedule2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -127,10 +130,6 @@ namespace Infrastructure.Migrations
                     b.Property<DateOnly?>("CompletedAt")
                         .HasColumnType("date");
 
-                    b.Property<string>("DepartmentOfHealth")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<float?>("Eosinophil")
                         .HasColumnType("real");
 
@@ -140,19 +139,11 @@ namespace Infrastructure.Migrations
                     b.Property<float?>("Esr2h")
                         .HasColumnType("real");
 
-                    b.Property<string>("FormNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<float?>("Hematocrit")
                         .HasColumnType("real");
 
                     b.Property<float?>("Hemoglobin")
                         .HasColumnType("real");
-
-                    b.Property<string>("HospitalName")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
 
                     b.Property<float?>("Lymphocyte")
                         .HasColumnType("real");
@@ -203,10 +194,6 @@ namespace Infrastructure.Migrations
 
                     b.Property<float?>("ReticulocyteCount")
                         .HasColumnType("real");
-
-                    b.Property<string>("RoomNumber")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");

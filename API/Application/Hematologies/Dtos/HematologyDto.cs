@@ -14,6 +14,11 @@ public class HematologyDto
 
     // Props
     // --- Thông tin chung ---
+    public required string DepartmentOfHealth { get; set; }
+    public required string HospitalName { get; set; }
+    public required string FormNumber { get; set; }
+    public required string RoomNumber { get; set; }
+
     public bool IsEmergency { get; set; } // Thường = false, Cấp cứu = true
     public DateOnly? RequestedAt { get; set; }
     public DateOnly? CompletedAt { get; set; }

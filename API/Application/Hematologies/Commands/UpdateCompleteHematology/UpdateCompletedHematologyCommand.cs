@@ -9,6 +9,12 @@ public class UpdateCompletedHematologyCommand : IRequest
     public int MedicalRecordId { get; set; }
     public DateOnly? CompletedAt { get; set; }
 
+    public required string DepartmentOfHealth { get; set; }
+    public required string HospitalName { get; set; }
+    public required string FormNumber { get; set; }
+    public required string RoomNumber { get; set; }
+
+
     public float? RedBloodCellCount { get; set; } // Số lượng HC (x 10^12/l)
     public float? WhiteBloodCellCount { get; set; } // Số lượng BC (x 10^9/l)
     public float? Hemoglobin { get; set; } // Huyết sắc tố (g/l)

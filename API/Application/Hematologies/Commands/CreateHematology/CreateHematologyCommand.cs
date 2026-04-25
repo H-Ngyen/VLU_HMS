@@ -10,5 +10,9 @@ public class CreateHematologyCommand : IRequest
     public required DateOnly RequestedAt { get; set; }
     public required string RequestDescription { get; set; }
     // public required string DepartmentName { get; set; }
+    public required string DepartmentOfHealth { get; set; }
+    public required string HospitalName { get; set; }
+    public required string FormNumber { get; set; }
+    public required string RoomNumber { get; set; }
     public required IEnumerable<int> ListDepartmentId { get; set; }
 }

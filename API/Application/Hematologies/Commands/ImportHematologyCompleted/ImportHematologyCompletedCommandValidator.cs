@@ -8,7 +8,21 @@ public class ImportHematologyCompletedCommandValidator : AbstractValidator<Impor
     public ImportHematologyCompletedCommandValidator(IDateTimeProvider dateTimeProvider)
     {
         var today = DateOnly.FromDateTime(dateTimeProvider.Now);
-        
+
+        RuleFor(dto => dto.DepartmentOfHealth)
+            .NotEmpty().WithMessage("Sở y tế không được để trống.")
+            .MaximumLength(255).WithMessage("Sở y tế không được vượt quá 255 ký tự.");
+
+        RuleFor(dto => dto.HospitalName)
+            .NotEmpty().WithMessage("Tên bệnh viện không được để trống.")
+            .MaximumLength(255).WithMessage("Tên bệnh viện không được vượt quá 255 ký tự.");
+
+        RuleFor(dto => dto.FormNumber)
+            .MaximumLength(50).WithMessage("Mẫu số không được vượt quá 50 ký tự.");
+
+        RuleFor(dto => dto.RoomNumber)
+            .MaximumLength(50).WithMessage("Số buồng không được vượt quá 50 ký tự.");
+
         RuleFor(dto => dto.RequestDepartmentName)
             .NotEmpty().WithMessage("Tên khoa/phòng không được để trống.")
             .MaximumLength(255).WithMessage("Tên khoa/phòng không được vượt quá 255 ký tự.");
