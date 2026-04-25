@@ -29,8 +29,8 @@ public class ImportXrayCompletedCommandValidator : AbstractValidator<ImportXrayC
         RuleFor(dto => dto.RoomNumber)
             .MaximumLength(50).WithMessage("Số buồng không được vượt quá 50 ký tự.");
 
-        RuleFor(dto => dto.BedNumber)
-            .MaximumLength(50).WithMessage("Số giường không được vượt quá 50 ký tự.");
+        // RuleFor(dto => dto.BedNumber)
+        //     .MaximumLength(50).WithMessage("Số giường không được vượt quá 50 ký tự.");
 
 
         RuleFor(dto => dto.RequestDescription)

@@ -10,7 +10,7 @@ public class XRayDto
     public string? HospitalName { get; set; }
     public string? FormNumber { get; set; }
     public string? RoomNumber { get; set; }
-    public string? BedNumber { get; set; }
+    // public string? BedNumber { get; set; }
 
     public int MedicalRecordId { get; set; }
     public int RequestedById { get; set; }

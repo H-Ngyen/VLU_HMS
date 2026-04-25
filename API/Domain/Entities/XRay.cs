@@ -17,7 +17,7 @@ public class XRay
     public string? HospitalName { get; set; }
     public string? FormNumber { get; set; }
     public string? RoomNumber { get; set; }
-    public string? BedNumber { get; set; }
+    // public string? BedNumber { get; set; }
     
     public MedicalStatus Status { get; set; }
 

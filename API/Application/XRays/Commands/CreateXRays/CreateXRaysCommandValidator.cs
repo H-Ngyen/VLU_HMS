@@ -32,8 +32,8 @@ public class CreateXRaysCommandValidator : AbstractValidator<CreateXRaysCommand>
         RuleFor(dto => dto.RoomNumber)
             .MaximumLength(50).WithMessage("Số buồng không được vượt quá 50 ký tự.");
 
-        RuleFor(dto => dto.BedNumber)
-            .MaximumLength(50).WithMessage("Số giường không được vượt quá 50 ký tự.");
+        // RuleFor(dto => dto.BedNumber)
+        //     .MaximumLength(50).WithMessage("Số giường không được vượt quá 50 ký tự.");
 
         RuleFor(dto => dto.RequestedAt)
             .LessThanOrEqualTo(today).WithMessage("Ngày yêu cầu không được lớn hơn ngày hiện tại.")

@@ -36,8 +36,8 @@ internal class XRayConfiguration : IEntityTypeConfiguration<XRay>
               builder.Property(x => x.RoomNumber)
                      .HasMaxLength(50);
 
-              builder.Property(x => x.BedNumber)
-                     .HasMaxLength(50);
+              // builder.Property(x => x.BedNumber)
+              //        .HasMaxLength(50);
 
               // ===== RELATIONSHIPS =====
 

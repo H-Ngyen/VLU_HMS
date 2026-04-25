@@ -29,8 +29,8 @@ public class UpdateCompleteXrayValidator : AbstractValidator<UpdateCompleteXrayC
         RuleFor(x => x.RoomNumber)
             .MaximumLength(50).WithMessage("Số buồng không được vượt quá 50 ký tự.");
 
-        RuleFor(x => x.BedNumber)
-            .MaximumLength(50).WithMessage("Số giường không được vượt quá 50 ký tự.");
+        // RuleFor(x => x.BedNumber)
+        //     .MaximumLength(50).WithMessage("Số giường không được vượt quá 50 ký tự.");
 
         RuleFor(x => x.CompletedAt)
             .LessThanOrEqualTo(today).WithMessage("Ngày hoàn thành không được lớn hơn ngày hiện tại.")

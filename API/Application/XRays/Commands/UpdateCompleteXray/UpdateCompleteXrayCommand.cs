@@ -13,7 +13,7 @@ public class UpdateCompleteXrayCommand : IRequest
     public required string HospitalName { get; set; }
     public required string FormNumber { get; set; }
     public required string RoomNumber { get; set; }
-    public required string BedNumber { get; set; }
+    // public required string BedNumber { get; set; }
     
     // --- Phần Kết quả (Result) ---
     public string? ResultDescription { get; set; }

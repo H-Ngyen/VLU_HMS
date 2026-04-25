@@ -22,7 +22,7 @@ public class ImportXrayCompletedCommand : IRequest<int>
     public required string HospitalName { get; set; }
     public required string FormNumber { get; set; }
     public required string RoomNumber { get; set; }
-    public required string BedNumber { get; set; }
+    // public required string BedNumber { get; set; }
 
     // --- Phần Yêu cầu (Request) ---
     public required string RequestDescription { get; set; }
