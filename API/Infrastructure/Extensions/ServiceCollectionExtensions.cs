@@ -21,7 +21,7 @@ public static class ServiceCollectionExtensions
     public static void AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
         var ConnectionString = config.GetConnectionString("HopitalManagementDB");
-        services.AddDbContext<AppDbContext>(options => options.UseSqlServer(ConnectionString));
+        services.AddDbContext<AppDbContext>(options => options.UseNpgsql(ConnectionString));
 
         // setting minio
         var minioSettings = config.GetSection("MinIO").Get<FileStorageSettings>()

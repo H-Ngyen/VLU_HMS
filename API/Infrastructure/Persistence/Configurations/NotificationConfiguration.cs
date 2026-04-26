@@ -22,7 +22,7 @@ internal class NotificationConfiguration : IEntityTypeConfiguration<Notification
             .HasMaxLength(250);
 
         builder.Property(x => x.EmailContent)
-            .HasColumnType("nvarchar(max)");
+            .IsRequired();
 
         builder.Property(x => x.Type)
             .IsRequired()
