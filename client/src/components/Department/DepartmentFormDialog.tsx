@@ -88,15 +88,26 @@ export const DepartmentFormDialog = ({
     setSubmitting(true);
     try {
       if (department) {
+        // 1. Always update the department name first as per Swagger
         await api.departments.update(department.id, name);
-        if (headUserId !== department.headUserId?.toString()) {
-           await api.departments.assignHead(department.id, parseInt(headUserId));
+        
+        // 2. Only attempt to assign a new head if the selection has actually changed
+        // and we have a valid numeric ID (avoiding the NaN error)
+        const newHeadId = parseInt(headUserId, 10);
+        const currentHeadId = department.headUserId;
+        
+        if (!isNaN(newHeadId) && newHeadId !== currentHeadId) {
+           await api.departments.assignHead(department.id, newHeadId);
         }
-        toast.success("Cập nhật khoa thành công");
+        
+        toast.success("Cập nhật thông tin khoa thành công");
         onSuccess();
       } else {
         const newId = await api.departments.create(name);
-        await api.departments.assignHead(newId, parseInt(headUserId));
+        const newHeadId = parseInt(headUserId, 10);
+        if (!isNaN(newHeadId)) {
+          await api.departments.assignHead(newId, newHeadId);
+        }
         toast.success("Thêm khoa mới và phân công Trưởng khoa thành công.");
         onSuccess();
       }

@@ -582,7 +582,21 @@ export const api = {
         headers: getHeaders(null, { 'Content-Type': 'application/json' }),
         body: JSON.stringify({ name }),
       });
-      if (!response.ok) throw new Error('Failed to update department');
+      if (!response.ok) {
+        const text = await response.text();
+        let errorMessage = 'Failed to update department';
+        try {
+          const errorData = JSON.parse(text);
+          if (errorData.errors) {
+            errorMessage = Object.values(errorData.errors).flat().join('\n');
+          } else {
+            errorMessage = errorData.message || errorData.title || text;
+          }
+        } catch {
+          errorMessage = text;
+        }
+        throw new Error(errorMessage);
+      }
     },
     delete: async (id: number): Promise<void> => {
       const response = await fetch(`${API_BASE_URL}/departments/${id}`, {
