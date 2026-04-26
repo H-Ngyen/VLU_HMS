@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialPostgreSql : Migration
+    public partial class InitialDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -37,7 +37,7 @@ namespace Infrastructure.Migrations
                     Type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     ResourceId = table.Column<int>(type: "integer", nullable: false),
                     ResourceUrl = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -64,7 +64,7 @@ namespace Infrastructure.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     HeadUserId = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -84,8 +84,8 @@ namespace Infrastructure.Migrations
                     EmailVerify = table.Column<bool>(type: "boolean", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     PictureUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    CreateAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdateAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreateAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    UpdateAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Active = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
@@ -117,7 +117,7 @@ namespace Infrastructure.Migrations
                     DateOfBirth = table.Column<DateTime>(type: "date", nullable: false),
                     Gender = table.Column<int>(type: "integer", nullable: false),
                     HealthInsuranceNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -145,9 +145,9 @@ namespace Infrastructure.Migrations
                     UserId = table.Column<int>(type: "integer", nullable: false),
                     NotificationId = table.Column<int>(type: "integer", nullable: false),
                     IsRead = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    ReadAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    ReadAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     IsEmailSend = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
-                    EmailSentAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                    EmailSentAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -188,17 +188,17 @@ namespace Infrastructure.Migrations
                     ProvinceName = table.Column<string>(type: "text", nullable: true),
                     DistrictName = table.Column<string>(type: "text", nullable: true),
                     WardName = table.Column<string>(type: "text", nullable: true),
-                    HealthInsuranceExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    HealthInsuranceExpiryDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     RelativeInfo = table.Column<string>(type: "text", nullable: true),
                     RelativePhone = table.Column<string>(type: "text", nullable: true),
                     PaymentCategory = table.Column<int>(type: "integer", nullable: true),
-                    AdmissionTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    AdmissionTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     AdmissionType = table.Column<int>(type: "integer", nullable: true),
                     ReferralSource = table.Column<int>(type: "integer", nullable: true),
                     AdmissionCount = table.Column<string>(type: "text", nullable: true, defaultValue: "1"),
                     HospitalTransferType = table.Column<int>(type: "integer", nullable: true),
                     HospitalTransferDestination = table.Column<string>(type: "text", nullable: true),
-                    DischargeTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    DischargeTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     DischargeType = table.Column<int>(type: "integer", nullable: true),
                     TotalTreatmentDays = table.Column<string>(type: "text", nullable: true),
                     ReferralDiagnosis = table.Column<string>(type: "text", nullable: true),
@@ -225,7 +225,7 @@ namespace Infrastructure.Migrations
                     HasAutopsy = table.Column<bool>(type: "boolean", nullable: false),
                     DiagnosisAutopsy = table.Column<string>(type: "text", nullable: true),
                     DiagnosisCode = table.Column<int>(type: "integer", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -252,7 +252,7 @@ namespace Infrastructure.Migrations
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     MedicalRecordId = table.Column<int>(type: "integer", nullable: false),
                     Name = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
-                    AdmissionTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    AdmissionTime = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
                     TransferType = table.Column<int>(type: "integer", nullable: true),
                     TreatmentDays = table.Column<string>(type: "character varying(5)", maxLength: 5, nullable: true)
                 },
@@ -450,7 +450,7 @@ namespace Infrastructure.Migrations
                     UpdatedById = table.Column<int>(type: "integer", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     DepartmentName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -501,7 +501,7 @@ namespace Infrastructure.Migrations
                     UpdatedById = table.Column<int>(type: "integer", nullable: false),
                     Status = table.Column<int>(type: "integer", nullable: false),
                     DepartmentName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false)
                 },
                 constraints: table =>
                 {
