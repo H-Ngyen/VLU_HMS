@@ -6,10 +6,10 @@ public class XRayDto
 {
     public int Id { get; set; }
     // Foreign Key
-    public string? DepartmentOfHealth { get; set; }
-    public string? HospitalName { get; set; }
-    public string? FormNumber { get; set; }
-    public string? RoomNumber { get; set; }
+    public required string DepartmentOfHealth { get; set; }
+    public required string HospitalName { get; set; }
+    public required string FormNumber { get; set; }
+    public required string RoomNumber { get; set; }
     // public string? BedNumber { get; set; }
 
     public int MedicalRecordId { get; set; }
