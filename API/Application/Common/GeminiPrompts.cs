@@ -75,6 +75,10 @@ public static class GeminiPrompts
 
     HƯỚNG DẪN TRÍCH XUẤT VÀ MAPPING:
     {
+      "DepartmentOfHealth": "string - Tên Sở Y tế (ví dụ: Sở Y tế TP.HCM)",
+      "HospitalName": "string - Tên Bệnh viện/Phòng khám",
+      "FormNumber": "string - Số phiếu hoặc mã số mẫu (ví dụ: MS: 01/BV-01)",
+      "RoomNumber": "string - Số buồng/phòng",
       "RequestedByName": "string - Tên bác sĩ đưa ra chỉ định hoặc yêu cầu chụp",
       "PerformedByName": "string - Tên bác sĩ chuyên khoa chẩn đoán hình ảnh hoặc người ký kết quả",
       "Status": null,
@@ -105,6 +109,10 @@ public static class GeminiPrompts
 
     HƯỚNG DẪN TRÍCH XUẤT VÀ CẤU TRÚC JSON:
     {
+      "DepartmentOfHealth": "string - Tên Sở Y tế",
+      "HospitalName": "string - Tên Bệnh viện/Phòng khám",
+      "FormNumber": "string - Số phiếu hoặc mã số mẫu",
+      "RoomNumber": "string - Số buồng/phòng",
       "RequestedByName": "string - Tên bác sĩ chỉ định",
       "PerformedByName": "string - Tên bác sĩ/Kỹ thuật viên thực hiện hoặc ký kết quả",
       "RequestedAt": "YYYY-MM-DD - Ngày chỉ định",
