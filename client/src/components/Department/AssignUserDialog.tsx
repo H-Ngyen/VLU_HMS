@@ -37,6 +37,7 @@ export const AssignUserDialog = ({
   const fetchUsers = async () => {
     setLoading(true);
     try {
+      // Backend now allows Teacher/Head roles to read user list
       const [usersData, departmentsData] = await Promise.all([
         api.identities.getAllUsers(),
         api.departments.getAll()
@@ -56,7 +57,7 @@ export const AssignUserDialog = ({
       setUsers(enrichedUsers);
     } catch (error) {
       console.error("Failed to fetch users:", error);
-      toast.error("Không thể tải danh sách người dùng");
+      toast.error("Không thể tải danh sách người dùng. Vui lòng kiểm tra quyền hạn.");
     } finally {
       setLoading(false);
     }
@@ -83,7 +84,7 @@ export const AssignUserDialog = ({
         toast.success("Phân công trưởng khoa thành công");
       } else {
         await api.departments.assignUser(departmentId, userId);
-        toast.success("Phân công nhân viên vào khoa thành công");
+        toast.success("Thêm thành viên vào khoa thành công");
       }
       onSuccess();
       onOpenChange(false);

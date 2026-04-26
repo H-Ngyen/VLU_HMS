@@ -46,7 +46,12 @@ export const DepartmentTableRow = ({ department, onRefresh }: DepartmentTableRow
   const [isAssignDialogOpen, setIsAssignDialogOpen] = useState(false);
   const [isViewMembersOpen, setIsViewMembersOpen] = useState(false);
 
-  const isHeadOfThisDept = department.headUserId === currentUser?.id;
+  const isHeadOfThisDept = Boolean(
+    currentUser?.id && (
+      department.headUserId === currentUser.id || 
+      department.headUser?.id === currentUser.id
+    )
+  );
   const canAssignUser = isAdmin || isHeadOfThisDept;
   const [assignMode, setAssignMode] = useState<"member" | "head">("member");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
