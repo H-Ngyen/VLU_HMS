@@ -235,7 +235,7 @@ export const DashboardPage = () => {
       <div className="pt-10 mt-10 border-t-2 border-dashed border-gray-200">
         <div className="flex items-center gap-2 mb-6">
           <Users className="h-6 w-5 text-green-600" />
-          <h2 className="text-xl font-bold text-gray-800">Thống kê nhân sự hệ thống</h2>
+          <h2 className="text-xl font-bold text-gray-800">Thống kê người dùng hệ thống</h2>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
