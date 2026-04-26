@@ -267,8 +267,7 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
                                             }`}>
                                                 {doc.data.status === 0 ? "Chưa nhận mẫu" :
                                                  doc.data.status === 1 ? "Đã nhận mẫu" :
-                                                 doc.data.status === 2 ? "Đang chạy" : "Đã có kết quả"}
-                                            </span>
+                                                 doc.data.status === 2 ? "Đang chạy kết quả" : "Đã có kết quả"}                                            </span>
                                         )}
                                     </div>
                                 </td>
@@ -395,6 +394,7 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         }}
         readOnly={!!viewingHematologyDoc || readOnly} 
         recordId={formData.numericId}
+        existingDocs={formData.documents}
       />
     </div>
   );

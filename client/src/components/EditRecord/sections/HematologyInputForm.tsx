@@ -19,13 +19,13 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
-import { Check, ChevronsUpDown, CheckCircle2, Circle, Loader2 } from "lucide-react";
+import { Check, ChevronsUpDown, CheckCircle2, Circle, Loader2, FileUp } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
 import { api } from "@/services/api";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Department } from "@/types";
+import type { Department, Document } from "@/types";
 
 interface HematologyStatusLog {
   status: number;
@@ -42,6 +42,7 @@ export interface HematologyData {
   healthDept: string;
   hospital: string;
   testNumber: string;
+  times: string;
   isEmergency: boolean;
   
   patientName: string;
@@ -95,6 +96,7 @@ interface HematologyInputFormProps {
   readOnly?: boolean;
   recordId?: number;
   onSaved?: (data: HematologyData) => void;
+  existingDocs?: Document[];
 }
 
 const parseDate = (dateStr?: string) => {
@@ -168,18 +170,159 @@ export const HematologyInputForm = ({
   initialData,
   readOnly = false,
   recordId,
-  onSaved
+  onSaved,
+  existingDocs = []
 }: HematologyInputFormProps) => {  const { currentUser } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
-  
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [isImportMode, setIsImportMode] = useState(false);
+
+  const handleImportPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !recordId) return;
+
+    if (file.type !== "application/pdf") {
+      toast.error("Vui lòng chọn file PDF");
+      return;
+    }
+
+    setIsImporting(true);
+    const toastId = toast.loading("Đang xử lý PDF Huyết học...");
+
+    try {
+      const result = await api.hematologies.importPdf(recordId, file);
+
+      const reqDate = result.requestedAt ? new Date(result.requestedAt) : new Date();
+      const resDate = result.completedAt ? new Date(result.completedAt) : new Date();
+
+      setFormData(prev => ({
+        ...prev,
+        healthDept: result.departmentOfHealth || prev.healthDept,
+        hospital: result.hospitalName || prev.hospital,
+        testNumber: result.formNumber || prev.testNumber,
+        room: result.roomNumber || prev.room,
+        diagnosis: result.requestDescription || prev.diagnosis,
+        rbc: result.redBloodCellCount?.toString() || "",
+        wbc: result.whiteBloodCellCount?.toString() || "",
+        hgb: result.hemoglobin?.toString() || "",
+        hct: result.hematocrit?.toString() || "",
+        mcv: result.mcv?.toString() || "",
+        mch: result.mch?.toString() || "",
+        mchc: result.mchc?.toString() || "",
+        reticulocytes: result.reticulocyteCount?.toString() || "",
+        plt: result.plateletCount?.toString() || "",
+        neutrophils: result.neutrophil?.toString() || "",
+        eosinophils: result.eosinophil?.toString() || "",
+        basophils: result.basophil?.toString() || "",
+        monocytes: result.monocyte?.toString() || "",
+        lymphocytes: result.lymphocyte?.toString() || "",
+        nrbc: result.nucleatedRedBloodCell || "",
+        abnormalCells: result.abnormalCells || "",
+        malaria: result.malariaParasite || "",
+        esr1: result.esr1h?.toString() || "",
+        esr2: result.esr2h?.toString() || "",
+        bleedingTime: result.bleedingTime?.toString() || "",
+        clottingTime: result.clottingTime?.toString() || "",
+        bloodGroupABO: result.bloodTypeAbo?.toString() || "",
+        bloodGroupRh: result.bloodTypeRh?.toString() || "",
+        doctor: result.requestedByName || prev.doctor,
+        technician: result.performedByName || prev.technician,
+        requestDateDay: reqDate.getDate().toString(),
+        requestDateMonth: (reqDate.getMonth() + 1).toString(),
+        requestDateYear: reqDate.getFullYear().toString(),
+        resultDateDay: resDate.getDate().toString(),
+        resultDateMonth: (resDate.getMonth() + 1).toString(),
+        resultDateYear: resDate.getFullYear().toString(),
+        // Checkboxes based on data
+        check_rbc: result.redBloodCellCount != null,
+        check_wbc: result.whiteBloodCellCount != null,
+        check_hgb: result.hemoglobin != null,
+        check_hct: result.hematocrit != null,
+        check_mcv: result.mcv != null,
+        check_mch: result.mch != null,
+        check_mchc: result.mchc != null,
+        check_reticulocytes: result.reticulocyteCount != null,
+        check_plt: result.plateletCount != null,
+        check_neutrophils: result.neutrophil != null,
+        check_eosinophils: result.eosinophil != null,
+        check_basophils: result.basophil != null,
+        check_monocytes: result.monocyte != null,
+        check_lymphocytes: result.lymphocyte != null,
+        check_nrbc: !!result.nucleatedRedRedCell,
+        check_abnormalCells: !!result.abnormalCells,
+        check_malaria: !!result.malariaParasite,
+        check_esr: result.esr1h != null || result.esr2h != null,
+        check_bleedingTime: result.bleedingTime != null,
+        check_clottingTime: result.clottingTime != null,
+        check_bloodGroupABO: !!result.bloodTypeAbo,
+        check_bloodGroupRh: !!result.bloodTypeRh,
+      }));
+
+      setIsImportMode(true);
+      toast.success("Trích xuất dữ liệu Huyết học thành công", { id: toastId });
+    } catch (error: any) {
+      console.error("Hematology PDF Import error:", error);
+      toast.error(error.message || "Lỗi khi import PDF", { id: toastId });
+    } finally {
+      setIsImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const calculateHematologyOrder = (currentId?: number) => {
+    const hemaDocs = existingDocs
+      .filter(doc => doc.type === "XN-HuyetHoc")
+      .map(doc => {
+        const d = doc.data as HematologyData;
+        const firstLog = d?.hematologyStatusLogs && d.hematologyStatusLogs.length > 0 
+          ? new Date(d.hematologyStatusLogs[0].createdAt).getTime()
+          : 0;
+
+        let requestedTime = 0;
+        if (d?.requestDateYear && d?.requestDateMonth && d?.requestDateDay) {
+          requestedTime = new Date(
+            parseInt(d.requestDateYear), 
+            parseInt(d.requestDateMonth) - 1, 
+            parseInt(d.requestDateDay)
+          ).getTime();
+        }
+
+        return {
+          id: d?.id || 0,
+          timestamp: firstLog || requestedTime || 0
+        };
+      });
+
+    const otherHemas = currentId ? hemaDocs.filter(x => x.id !== currentId) : hemaDocs;
+
+    if (!currentId) {
+      return (otherHemas.length + 1).toString();
+    }
+
+    const allSorted = [...otherHemas];
+    const current = hemaDocs.find(x => x.id === currentId);
+    if (current) {
+        allSorted.push(current);
+    }
+
+    allSorted.sort((a, b) => {
+      if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
+      return a.id - b.id;
+    });
+
+    const index = allSorted.findIndex(x => x.id === currentId);
+    return (index >= 0 ? index + 1 : otherHemas.length + 1).toString();
+  };
+
   const defaultState: HematologyData = {
     id: undefined,
     status: 0,
     hematologyStatusLogs: [],
-
     healthDept: "",
     hospital: "",
     testNumber: "",
+    times: calculateHematologyOrder(),
     isEmergency: false,
     
     patientName: "",
@@ -230,10 +373,11 @@ export const HematologyInputForm = ({
         const data: HematologyData = {
             ...defaultState,
             ...initialData,
-            patientName: defaultPatientName,
-            gender: defaultGender,
-            address: defaultAddress,
-            insuranceNumber: defaultInsuranceNumber,
+            times: initialData.times || calculateHematologyOrder(initialData.id),
+            patientName: defaultPatientName || initialData.patientName,
+            gender: defaultGender || initialData.gender,
+            address: defaultAddress || initialData.address,
+            insuranceNumber: defaultInsuranceNumber || initialData.insuranceNumber,
             department: initialData.department || defaultDepartment || "",
             bed: initialData.bed || defaultBedCode || "",
             diagnosis: initialData.diagnosis || defaultDiagnosis || "",
@@ -279,7 +423,6 @@ export const HematologyInputForm = ({
 
   const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
   const [departmentInput, setDepartmentInput] = useState("");
-  const [openConfirmCombobox, setOpenConfirmCombobox] = useState(false);
   const [ccDepartmentInputs, setCcDepartmentInputs] = useState<string[]>([]);
   const [openCcCombobox, setOpenCcCombobox] = useState(false);
   const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "FAST_TRACK" | "PDF">("SAVE");
@@ -538,17 +681,23 @@ export const HematologyInputForm = ({
       handleGeneratePDF(formData);
       return;
     }
-    
-    // Only show department selection dialog for completely new requests
+
+    // If importing from PDF, skip notification dialog and save directly
+    if (isImportMode) {
+      handleConfirmDepartmentDirect(action, formData.department || defaultDepartment || "");
+      return;
+    }
+
+    // Only show department selection dialog for completely new requests (non-import)
     if (!formData.id) {
       setDepartmentInput("");
+      setCcDepartmentInputs([]); // Reset CC selections
       setIsDeptDialogOpen(true);
     } else {
       // For existing requests, proceed directly using the existing department
       handleConfirmDepartmentDirect(action, formData.department || "");
     }
   };
-
   const handleConfirmDepartmentDirect = async (action: "SAVE" | "NEXT" | "FAST_TRACK", deptName: string) => {
     if (!recordId) {
         toast.error("Vui lòng lưu hồ sơ bệnh án trước.");
@@ -557,11 +706,59 @@ export const HematologyInputForm = ({
 
     setIsSubmitting(true);
     try {
+        if (isImportMode && (action === "SAVE" || action === "NEXT")) {
+            const completedAt = `${formData.resultDateYear}-${formData.resultDateMonth.padStart(2, '0')}-${formData.resultDateDay.padStart(2, '0')}`;
+            const requestedAt = `${formData.requestDateYear}-${formData.requestDateMonth.padStart(2, '0')}-${formData.requestDateDay.padStart(2, '0')}`;
+
+            const importPayload = {
+                medicalRecordId: recordId,
+                departmentOfHealth: formData.healthDept,
+                hospitalName: formData.hospital,
+                formNumber: formData.testNumber,
+                roomNumber: formData.room,
+                isEmergency: formData.isEmergency,
+                requestedAt: requestedAt,
+                completedAt: completedAt,
+                requestDescription: formData.diagnosis,
+                requestDepartmentName: formData.department || defaultDepartment,
+                performDepartmentName: deptName || "Khoa Xét nghiệm",
+                redBloodCellCount: formData.rbc ? parseFloat(formData.rbc) : 0,
+                whiteBloodCellCount: formData.wbc ? parseFloat(formData.wbc) : 0,
+                hemoglobin: formData.hgb ? parseFloat(formData.hgb) : 0,
+                hematocrit: formData.hct ? (parseFloat(formData.hct) > 1 ? parseFloat(formData.hct) / 100 : parseFloat(formData.hct)) : 0,
+                mcv: formData.mcv ? parseFloat(formData.mcv) : 0,
+                mch: formData.mch ? parseFloat(formData.mch) : 0,
+                mchc: formData.mchc ? parseFloat(formData.mchc) : 0,
+                reticulocyteCount: formData.reticulocytes ? parseFloat(formData.reticulocytes) : 0,
+                plateletCount: formData.plt ? parseFloat(formData.plt) : 0,
+                neutrophil: formData.neutrophils ? parseFloat(formData.neutrophils) : 0,
+                eosinophil: formData.eosinophils ? parseFloat(formData.eosinophils) : 0,
+                basophil: formData.basophils ? parseFloat(formData.basophils) : 0,
+                monocyte: formData.monocytes ? parseFloat(formData.monocytes) : 0,
+                lymphocyte: formData.lymphocytes ? parseFloat(formData.lymphocytes) : 0,
+                nucleatedRedBloodCell: formData.nrbc,
+                abnormalCells: formData.abnormalCells,
+                malariaParasite: formData.malaria,
+                esr1h: formData.esr1 ? parseFloat(formData.esr1) : 0,
+                esr2h: formData.esr2 ? parseFloat(formData.esr2) : 0,
+                bleedingTime: formData.bleedingTime ? parseInt(formData.bleedingTime, 10) : 0,
+                clottingTime: formData.clottingTime ? parseInt(formData.clottingTime, 10) : 0,
+                bloodTypeAbo: formData.bloodGroupABO ? parseInt(formData.bloodGroupABO, 10) : 0,
+                bloodTypeRh: formData.bloodGroupRh ? parseInt(formData.bloodGroupRh, 10) : 0
+            };
+
+            await api.hematologies.importCompleted(recordId, importPayload);
+            toast.success("Đã nhập hồ sơ Huyết học từ PDF thành công");
+            if (onSaved) setTimeout(() => onSaved(formData), 0);
+            // Refresh the page to show imported data
+            setTimeout(() => { window.location.search = "?tab=forms"; }, 1000);
+            return;
+        }
+
         let currentHematologyId = formData.id;
         const requestedAt = getRequestDateString(formData);
-        
-        if (!currentHematologyId) {
-            // Find department ID from name
+
+        if (!currentHematologyId) {            // Find department ID from name
             const selectedDept = departmentsList.find(d => d.name === deptName);
             const deptIds = selectedDept ? [selectedDept.id] : [];
 
@@ -696,11 +893,21 @@ export const HematologyInputForm = ({
           <DialogTitle>Phiếu Xét Nghiệm Huyết Học</DialogTitle>
           <DialogDescription>Xem hoặc nhập kết quả xét nghiệm huyết học</DialogDescription>
         </DialogHeader>
-        
-        {isGenerating ? (
+
+        <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept=".pdf"
+            onChange={handleImportPdf}
+        />
+
+        {isGenerating || isImporting ? (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <Loader2 className="w-10 h-10 animate-spin text-vlu-red" />
-                <p className="text-lg font-medium text-gray-600">Đang chuẩn bị bản in PDF...</p>
+                <p className="text-lg font-medium text-gray-600">
+                    {isGenerating ? "Đang chuẩn bị bản in PDF..." : "Đang trích xuất dữ liệu từ PDF Huyết học..."}
+                </p>
             </div>
         ) : (
         <div className="space-y-6 py-4">
@@ -743,6 +950,11 @@ export const HematologyInputForm = ({
             <div className="text-center">
               <h2 className="text-sm font-bold uppercase">Phiếu xét nghiệm</h2>
               <h3 className="text-base font-bold uppercase text-vlu-red">Huyết học</h3>
+              <div className="flex justify-center items-center gap-1">
+                <span className="text-xs italic">(lần thứ</span>
+                <Input name="times" value={formData.times} onChange={handleChange} className="w-10 h-5 p-0 text-center text-xs border-b border-x-0 border-t-0 rounded-none bg-transparent" disabled={true} />
+                <span className="text-xs italic">)</span>
+              </div>
             </div>
             <div className="text-right text-xs">
               <p className="font-bold">MS: 17/BV-02</p>
@@ -834,7 +1046,7 @@ export const HematologyInputForm = ({
               {!showResultSection && (
                   <div className="absolute inset-0 bg-white/60 backdrop-blur-[1px] z-10 flex items-center justify-center rounded-lg border border-dashed border-gray-300">
                       <div className="bg-white px-4 py-2 rounded-full shadow-sm text-sm font-medium text-gray-500 border border-gray-200">
-                          {formData.status === 0 ? "Chưa nhận mẫu xét nghiệm" : "Đã nhận mẫu. Chuyển sang 'Đang chạy' để nhập KQ."}
+                          {formData.status === 0 ? "Chưa nhận mẫu xét nghiệm" : "Đã nhận mẫu. Chuyển sang 'Đang chạy kết quả' để nhập KQ."}
                       </div>
                   </div>
               )}
@@ -951,6 +1163,7 @@ export const HematologyInputForm = ({
                     <div style={{ width: '40%', textAlign: 'center' }}>
                         <h1 style={{ fontSize: '13pt', fontWeight: 'bold', textTransform: 'uppercase', margin: 0 }}>Phiếu Xét Nghiệm</h1>
                         <h2 style={{ fontSize: '13pt', fontWeight: 'bold', textTransform: 'uppercase', margin: 0 }}>Huyết Học</h2>
+                        <p style={{ fontStyle: 'italic', margin: 0, fontSize: '10pt' }}>(lần thứ: {formData.times})</p>
                     </div>
                     <div style={{ width: '30%', textAlign: 'right' }}>
                          <p style={{ margin: 0, fontWeight: 'bold' }}>MS: 17/BV-02</p>
@@ -1177,35 +1390,53 @@ export const HematologyInputForm = ({
 
         <DialogFooter className="mt-6 border-t pt-4">
           <div className="flex justify-between w-full items-center">
-            <div></div>
+            <div>
+              {!readOnly && !initialData && !isImportMode && (
+                <Button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="flex items-center gap-2 bg-vlu-red text-white shadow-sm hover:bg-red-800"
+                >
+                  <FileUp size={18} />
+                  Import PDF
+                </Button>
+              )}
+            </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={onClose}>Đóng</Button>
               {!readOnly && (
                 <>
-                  {formData.status === 0 && (
-                    initialData ? (
-                      <Button disabled={isSubmitting} onClick={() => handleActionClick("FAST_TRACK")} className="bg-orange-500 text-white shadow-sm">
+                  {isImportMode ? (
+                    <Button disabled={isSubmitting} onClick={() => handleActionClick("SAVE")} className="bg-vlu-red text-white shadow-sm">
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Tiếp Nhận & Thực Hiện Ngay (Chuyển TT2)
-                      </Button>
-                    ) : (
-                      <Button disabled={isSubmitting} onClick={() => handleActionClick("SAVE")} className="bg-vlu-red text-white shadow-sm">
-                        {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Lưu Chỉ Định (Tạo Yêu Cầu)
-                      </Button>
-                    )
-                  )}
-                  {formData.status === 1 && (
-                    <Button disabled={isSubmitting} onClick={() => handleActionClick("NEXT")} className="bg-orange-500 text-white shadow-sm">
-                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Bắt Đầu Chạy (Chuyển TT2)
+                        Hoàn thành
                     </Button>
-                  )}
-                  {formData.status === 2 && (
-                    <Button disabled={isSubmitting} onClick={() => handleActionClick("NEXT")} className="bg-vlu-red text-white shadow-sm">
-                      {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Hoàn Thành Kết Quả
-                    </Button>
+                  ) : (
+                    <>
+                      {formData.status === 0 && (
+                        initialData ? (
+                          <Button disabled={isSubmitting} onClick={() => handleActionClick("FAST_TRACK")} className="bg-orange-500 text-white shadow-sm">
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Tiếp nhận                          </Button>
+                        ) : (
+                          <Button disabled={isSubmitting} onClick={() => handleActionClick("SAVE")} className="bg-vlu-red text-white shadow-sm">
+                            {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Gửi đi                          </Button>
+                        )
+                      )}
+                      {formData.status === 1 && (
+                        <Button disabled={isSubmitting} onClick={() => handleActionClick("NEXT")} className="bg-orange-500 text-white shadow-sm">
+                          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Bắt Đầu Chạy (Chuyển TT2)
+                        </Button>
+                      )}
+                      {formData.status === 2 && (
+                        <Button disabled={isSubmitting} onClick={() => handleActionClick("NEXT")} className="bg-vlu-red text-white shadow-sm">
+                          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Gửi kết quả
+                        </Button>
+                      )}
+                    </>
                   )}
                 </>
               )}
@@ -1217,123 +1448,66 @@ export const HematologyInputForm = ({
 
     {/* Dialog xác nhận đơn vị thực hiện */}
     <Dialog open={isDeptDialogOpen} onOpenChange={setIsDeptDialogOpen}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
-          <DialogTitle>Xác nhận đơn vị thực hiện</DialogTitle>
-          <DialogDescription>
-            Vui lòng chọn khoa/phòng sẽ thực hiện chỉ định này.
-          </DialogDescription>
+          <DialogTitle>Gửi thông báo</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="dept" className="text-right">
-              Khoa/Phòng
-            </Label>
-            <div className="col-span-3">
-              <Popover open={openConfirmCombobox} onOpenChange={setOpenConfirmCombobox}>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="dept"
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={openConfirmCombobox}
-                    className="w-full justify-between font-normal"
-                  >
-                    {departmentInput || "Chọn khoa thực hiện..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[380px] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Tìm khoa..." />
-                    <CommandList>
-                      <CommandEmpty>Không tìm thấy khoa phù hợp.</CommandEmpty>
-                      <CommandGroup>
-                        {departmentsList.map((d) => (
-                          <CommandItem
-                            key={d.id}
-                            value={d.name}
-                            onSelect={(currentValue) => {
-                              setDepartmentInput(currentValue);
-                              setOpenConfirmCombobox(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                departmentInput === d.name ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {d.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="cc-dept" className="text-right">
-              Đồng gửi (CC)
-            </Label>
-            <div className="col-span-3">
-              <Popover open={openCcCombobox} onOpenChange={setOpenCcCombobox}>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="cc-dept"
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={openCcCombobox}
-                    className="w-full justify-between font-normal text-left h-auto min-h-9 py-2 px-4 whitespace-normal"
-                  >
-                    <span className="flex-1 break-words">
-                      {ccDepartmentInputs.length > 0
-                        ? ccDepartmentInputs.join(", ")
-                        : "Chọn thêm khoa nhận thông báo..."}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[380px] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Tìm khoa..." />
-                    <CommandList>
-                      <CommandEmpty>Không tìm thấy khoa phù hợp.</CommandEmpty>
-                      <CommandGroup>
-                        {departmentsList.filter(d => d.name !== departmentInput).map((d) => (
-                          <CommandItem
-                            key={d.id}
-                            value={d.name}
-                            onSelect={(currentValue) => {
-                              setCcDepartmentInputs(prev => 
-                                prev.includes(currentValue) 
-                                  ? prev.filter(name => name !== currentValue)
-                                  : [...prev, currentValue]
-                              );
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                ccDepartmentInputs.includes(d.name) ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {d.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+        <div className="py-4">
+          <div className="w-full">
+            <Popover open={openCcCombobox} onOpenChange={setOpenCcCombobox}>
+              <PopoverTrigger asChild>
+                <Button
+                  id="cc-dept"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openCcCombobox}
+                  className="w-full justify-between font-normal text-left h-auto min-h-10 py-2 px-4 whitespace-normal"
+                >
+                  <span className="flex-1 break-words">
+                    {ccDepartmentInputs.length > 0
+                      ? ccDepartmentInputs.join(", ")
+                      : "Chọn các khoa nhận thông báo..."}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[380px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Tìm khoa..." />
+                  <CommandList>
+                    <CommandEmpty>Không tìm thấy khoa phù hợp.</CommandEmpty>
+                    <CommandGroup>
+                      {departmentsList.map((d) => (
+                        <CommandItem
+                          key={d.id}
+                          value={d.name}
+                          onSelect={(currentValue) => {
+                            setCcDepartmentInputs(prev => 
+                              prev.includes(currentValue) 
+                                ? prev.filter(name => name !== currentValue)
+                                : [...prev, currentValue]
+                            );
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              ccDepartmentInputs.includes(d.name) ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {d.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsDeptDialogOpen(false)} disabled={isSubmitting}>Hủy</Button>
-          <Button type="button" onClick={handleConfirmDepartment} className="bg-vlu-red text-white hover:bg-vlu-red/90" disabled={!departmentInput || departmentInput === "none" || isSubmitting}>
+          <Button type="button" onClick={handleConfirmDepartment} className="bg-vlu-red text-white hover:bg-vlu-red/90" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Xác nhận
           </Button>

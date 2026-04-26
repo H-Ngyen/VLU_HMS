@@ -113,7 +113,7 @@ const calculateAgeAtDate = (dobString?: string, refDateString?: string) => {
 const STEPS = [
   "Chưa nhận mẫu",
   "Đã nhận mẫu",
-  "Đang chạy",
+  "Đang chạy kết quả",
   "Đã có kết quả"
 ];
 
@@ -290,7 +290,6 @@ export const XRayInputForm = ({
   });
   const [isDeptDialogOpen, setIsDeptDialogOpen] = useState(false);
   const [departmentInput, setDepartmentInput] = useState("");
-  const [openConfirmCombobox, setOpenConfirmCombobox] = useState(false);
   const [ccDepartmentInputs, setCcDepartmentInputs] = useState<string[]>([]);
   const [openCcCombobox, setOpenCcCombobox] = useState(false);
   const [targetAction, setTargetAction] = useState<"SAVE" | "NEXT" | "PDF" | "FAST_TRACK" | null>(null);
@@ -520,8 +519,16 @@ export const XRayInputForm = ({
       return;
     }
     
-    if (!formData.id || isImportMode) {
+    // If importing from PDF, skip notification dialog and save directly
+    if (isImportMode) {
+      handleConfirmDepartmentDirect(action, formData.department || defaultDepartment || "");
+      return;
+    }
+
+    // Only show notification dialog for completely new requests (non-import)
+    if (!formData.id) {
       setDepartmentInput("");
+      setCcDepartmentInputs([]); 
       setIsDeptDialogOpen(true);
     } else {
       handleConfirmDepartmentDirect(action, formData.department || "");
@@ -557,8 +564,9 @@ export const XRayInputForm = ({
             await api.xRays.importCompleted(recordId, importPayload);
             toast.success("Đã nhập hồ sơ X-Quang từ PDF thành công");
             if (onSaved) setTimeout(() => onSaved(formData), 0);
-            return;
-        }
+            // Refresh the page to show imported data
+            setTimeout(() => { window.location.search = "?tab=forms"; }, 1000);
+            return;        }
 
         let currentXrayId = formData.id;
         const requestedAt = getRequestDateString(formData);
@@ -960,21 +968,18 @@ export const XRayInputForm = ({
                   {isImportMode ? (
                     <Button disabled={isSubmitting} onClick={() => handleActionClick("SAVE")} className="bg-vlu-red text-white shadow-sm">
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Lưu & Hoàn Tất Import
-                    </Button>
+                        Hoàn thành                    </Button>
                   ) : (
                     <>
                       {formData.status === 0 && (
                         initialData ? (
                           <Button disabled={isSubmitting} onClick={() => handleActionClick("FAST_TRACK")} className="bg-orange-500 text-white shadow-sm">
                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Tiếp Nhận & Thực Hiện Ngay (Chuyển TT2)
-                          </Button>
+                            Tiếp nhận                          </Button>
                         ) : (
                           <Button disabled={isSubmitting} onClick={() => handleActionClick("SAVE")} className="bg-vlu-red text-white shadow-sm">
                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Lưu Chỉ Định (Tạo Yêu Cầu)
-                          </Button>
+                            Gửi đi                          </Button>
                         )
                       )}
                       {formData.status === 1 && (
@@ -986,8 +991,7 @@ export const XRayInputForm = ({
                       {formData.status === 2 && (
                         <Button disabled={isSubmitting} onClick={() => handleActionClick("NEXT")} className="bg-vlu-red text-white shadow-sm">
                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Hoàn Thành & Ký Số
-                        </Button>
+                            Gửi kết quả                        </Button>
                       )}
                     </>
                   )}
@@ -1001,123 +1005,66 @@ export const XRayInputForm = ({
 
     {/* Dialog xác nhận đơn vị thực hiện */}
     <Dialog open={isDeptDialogOpen} onOpenChange={setIsDeptDialogOpen}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
-          <DialogTitle>Xác nhận đơn vị thực hiện</DialogTitle>
-          <DialogDescription>
-            Vui lòng chọn khoa/phòng sẽ thực hiện chỉ định này.
-          </DialogDescription>
+          <DialogTitle>Gửi thông báo</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="dept" className="text-right">
-              Khoa/Phòng
-            </Label>
-            <div className="col-span-3">
-              <Popover open={openConfirmCombobox} onOpenChange={setOpenConfirmCombobox}>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="dept"
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={openConfirmCombobox}
-                    className="w-full justify-between font-normal"
-                  >
-                    {departmentInput || "Chọn khoa thực hiện..."}
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[380px] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Tìm khoa..." />
-                    <CommandList>
-                      <CommandEmpty>Không tìm thấy khoa phù hợp.</CommandEmpty>
-                      <CommandGroup>
-                        {departmentsList.map((d) => (
-                          <CommandItem
-                            key={d.id}
-                            value={d.name}
-                            onSelect={(currentValue) => {
-                              setDepartmentInput(currentValue);
-                              setOpenConfirmCombobox(false);
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                departmentInput === d.name ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {d.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="cc-dept" className="text-right">
-              Đồng gửi (CC)
-            </Label>
-            <div className="col-span-3">
-              <Popover open={openCcCombobox} onOpenChange={setOpenCcCombobox}>
-                <PopoverTrigger asChild>
-                  <Button
-                    id="cc-dept"
-                    variant="outline"
-                    role="combobox"
-                    aria-expanded={openCcCombobox}
-                    className="w-full justify-between font-normal text-left h-auto min-h-9 py-2 px-4 whitespace-normal"
-                  >
-                    <span className="flex-1 break-words">
-                      {ccDepartmentInputs.length > 0
-                        ? ccDepartmentInputs.join(", ")
-                        : "Chọn thêm khoa nhận thông báo..."}
-                    </span>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[380px] p-0" align="start">
-                  <Command>
-                    <CommandInput placeholder="Tìm khoa..." />
-                    <CommandList>
-                      <CommandEmpty>Không tìm thấy khoa phù hợp.</CommandEmpty>
-                      <CommandGroup>
-                        {departmentsList.filter(d => d.name !== departmentInput).map((d) => (
-                          <CommandItem
-                            key={d.id}
-                            value={d.name}
-                            onSelect={(currentValue) => {
-                              setCcDepartmentInputs(prev => 
-                                prev.includes(currentValue) 
-                                  ? prev.filter(name => name !== currentValue)
-                                  : [...prev, currentValue]
-                              );
-                            }}
-                          >
-                            <Check
-                              className={cn(
-                                "mr-2 h-4 w-4",
-                                ccDepartmentInputs.includes(d.name) ? "opacity-100" : "opacity-0"
-                              )}
-                            />
-                            {d.name}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
+        <div className="py-4">
+          <div className="w-full">
+            <Popover open={openCcCombobox} onOpenChange={setOpenCcCombobox}>
+              <PopoverTrigger asChild>
+                <Button
+                  id="cc-dept"
+                  variant="outline"
+                  role="combobox"
+                  aria-expanded={openCcCombobox}
+                  className="w-full justify-between font-normal text-left h-auto min-h-10 py-2 px-4 whitespace-normal"
+                >
+                  <span className="flex-1 break-words">
+                    {ccDepartmentInputs.length > 0
+                      ? ccDepartmentInputs.join(", ")
+                      : "Chọn các khoa nhận thông báo..."}
+                  </span>
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[380px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Tìm khoa..." />
+                  <CommandList>
+                    <CommandEmpty>Không tìm thấy khoa phù hợp.</CommandEmpty>
+                    <CommandGroup>
+                      {departmentsList.map((d) => (
+                        <CommandItem
+                          key={d.id}
+                          value={d.name}
+                          onSelect={(currentValue) => {
+                            setCcDepartmentInputs(prev => 
+                              prev.includes(currentValue) 
+                                ? prev.filter(name => name !== currentValue)
+                                : [...prev, currentValue]
+                            );
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              ccDepartmentInputs.includes(d.name) ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {d.name}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsDeptDialogOpen(false)} disabled={isSubmitting}>Hủy</Button>
-          <Button type="button" onClick={handleConfirmDepartment} className="bg-vlu-red text-white hover:bg-vlu-red/90" disabled={!departmentInput || departmentInput === "none" || isSubmitting}>
+          <Button type="button" onClick={handleConfirmDepartment} className="bg-vlu-red text-white hover:bg-vlu-red/90" disabled={isSubmitting}>
             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Xác nhận
           </Button>

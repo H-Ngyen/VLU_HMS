@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Save, Plus, FileText, User, Activity, LogOut, ClipboardList, Thermometer, Pill, ChevronDown, ChevronRight, Download as DownloadIcon, FileUp, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, Save, Plus, FileText, User, Activity, LogOut, ClipboardList, Thermometer, Pill, ChevronDown, ChevronRight, Download as DownloadIcon, FileUp, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -700,12 +700,9 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
       {(isImporting || importStatus.type) && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-[1px] rounded-xl">
           <div className="bg-white p-6 rounded-xl shadow-2xl border border-gray-200 flex flex-col items-center gap-4 max-w-sm w-full animate-in fade-in zoom-in duration-200">
-            <div className="relative">
+            <div className="relative flex items-center justify-center">
               {isImporting ? (
-                <>
-                  <div className="w-12 h-12 border-4 border-vlu-red/20 border-t-vlu-red rounded-full animate-spin"></div>
-                  <FileUp className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-vlu-red" size={20} />
-                </>
+                <Loader2 className="w-12 h-12 animate-spin text-vlu-red" />
               ) : importStatus.type === 'success' ? (
                 <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-green-600 animate-in zoom-in duration-300">
                    <CheckCircle size={28} />
@@ -958,14 +955,7 @@ export const RecordForm = ({ record, patient, mode, initialType = "internal", on
                     <Button type="button" variant="outline" onClick={() => handleTabChange("forms")}>
                       <ArrowLeft size={16} className="mr-2" /> Quay lại
                     </Button>
-                    {!readOnly && (
-                        <Button type="button" onClick={() => handleSubmit()} className="bg-red-700 hover:bg-red-800 text-white min-w-[150px]">
-                            {isCreate ? <Plus size={18} className="mr-2" /> : <Save size={18} className="mr-2" />}
-                            {isCreate ? "Hoàn tất & Tạo" : "Lưu Thay Đổi"}
-                        </Button>
-                    )}
-                </div>
-            </div>
+                </div>            </div>
         </TabsContent>
       </Tabs>
     </form>

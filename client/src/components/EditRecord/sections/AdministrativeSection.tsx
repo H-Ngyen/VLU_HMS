@@ -172,7 +172,7 @@ export const AdministrativeSection = ({ patient, setPatient, record, setRecord, 
           </div>
           
           <div className="mt-4 p-3 bg-blue-50/50 rounded-md border border-blue-100">
-             <Label className="text-[10px] uppercase text-blue-600 font-bold mb-1 block">Xem trước địa chỉ gộp</Label>
+             <Label className="text-[10px] uppercase text-blue-600 font-bold mb-1 block">Địa chỉ đầy đủ</Label>
              <p className="text-sm font-medium text-blue-900 italic">
                 {patient.address || "Chưa nhập địa chỉ"}
              </p>

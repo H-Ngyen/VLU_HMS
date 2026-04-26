@@ -22,7 +22,7 @@ public class HematologyDto
     public bool IsEmergency { get; set; } // Thường = false, Cấp cứu = true
     public DateOnly? RequestedAt { get; set; }
     public DateOnly? CompletedAt { get; set; }
-    public MedicalStatus Status { get; set; }
+    public MedicalStatus? Status { get; set; }
     public string? RequestDescription { get; set; }
 
     // --- Nhóm 1: Tế bào máu ngoại vi (Lưu dạng float để có số thập phân) ---
