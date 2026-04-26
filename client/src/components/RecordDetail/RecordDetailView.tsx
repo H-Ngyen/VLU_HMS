@@ -36,6 +36,10 @@ interface XRayStatusLogDto {
 interface XRayDto {
   id: number;
   status: number;
+  departmentOfHealth?: string;
+  hospitalName?: string;
+  formNumber?: string;
+  roomNumber?: string;
   departmentName: string;
   requestDescription: string;
   resultDescription: string;
@@ -57,6 +61,10 @@ interface HematologyStatusLogDto {
 interface HematologyDto {
   id: number;
   status: number;
+  departmentOfHealth?: string;
+  hospitalName?: string;
+  formNumber?: string;
+  roomNumber?: string;
   departmentName: string;
   requestDescription: string;
   requestedByName: string;
@@ -385,6 +393,10 @@ const mapDtoToRecord = (dto: MedicalRecordDto): MedicalRecord => {
         data: {
           id: x.id,
           status: x.status,
+          healthDept: x.departmentOfHealth || "",
+          hospital: x.hospitalName || "",
+          xrayNumber: x.formNumber || "",
+          room: x.roomNumber || "",
           department: x.departmentName || "",
           request: x.requestDescription || "",
           result: x.resultDescription || "",
@@ -416,6 +428,10 @@ const mapDtoToRecord = (dto: MedicalRecordDto): MedicalRecord => {
         data: {
           id: h.id,
           status: h.status,
+          healthDept: h.departmentOfHealth || "",
+          hospital: h.hospitalName || "",
+          testNumber: h.formNumber || "",
+          room: h.roomNumber || "",
           diagnosis: h.requestDescription || "",
           department: h.departmentName || "",
           doctor: h.requestedByName || "",

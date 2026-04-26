@@ -352,6 +352,7 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         }}
         readOnly={!!viewingXRayDoc || readOnly} 
         recordId={formData.numericId}
+        existingDocs={formData.documents}
       />
 
        <HematologyInputForm 

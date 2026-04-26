@@ -264,7 +264,7 @@ export const api = {
          throw new Error(`Failed to update X-Ray status: ${errorText}`);
       }
     },
-    complete: async (recordId: number, id: number, data: { resultDescription?: string, doctorAdvice?: string, completedAt?: string }) => {
+    complete: async (recordId: number, id: number, data: any) => {
       const response = await fetch(`${API_BASE_URL}/medical-records/${recordId}/clinicals/x-rays/${id}/complete`, {
         method: 'PUT',
         headers: getHeaders(null, { 'Content-Type': 'application/json' }),

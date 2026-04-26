@@ -387,6 +387,12 @@ export const HematologyInputForm = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+
+    // Only allow numeric characters for testNumber
+    if (name === "testNumber" && value !== "" && !/^\d+$/.test(value)) {
+        return;
+    }
+
     setFormData(prev => {
         const newData = { ...prev, [name]: value };
         if (["requestDateDay", "requestDateMonth", "requestDateYear"].includes(name) && defaultDob && !readOnly) {
@@ -404,6 +410,44 @@ export const HematologyInputForm = ({
   }
 
   const validateForm = (action: "SAVE" | "NEXT" | "FAST_TRACK") => {
+    // New location fields validation
+    if (!formData.healthDept?.trim()) {
+        toast.error("Vui lòng nhập 'Sở Y tế'.");
+        return false;
+    }
+    if (formData.healthDept.length > 255) {
+        toast.error("'Sở Y tế' không được vượt quá 255 ký tự.");
+        return false;
+    }
+    if (!formData.hospital?.trim()) {
+        toast.error("Vui lòng nhập 'Bệnh viện'.");
+        return false;
+    }
+    if (formData.hospital.length > 255) {
+        toast.error("'Tên bệnh viện' không được vượt quá 255 ký tự.");
+        return false;
+    }
+    if (!formData.testNumber?.trim()) {
+        toast.error("Vui lòng nhập 'Số'.");
+        return false;
+    }
+    if (formData.testNumber.length > 50) {
+        toast.error("'Số' không được vượt quá 50 ký tự.");
+        return false;
+    }
+    if (!/^\d+$/.test(formData.testNumber)) {
+        toast.error("'Số' phải là định dạng số.");
+        return false;
+    }
+    if (!formData.room?.trim()) {
+        toast.error("Vui lòng nhập 'Số buồng'.");
+        return false;
+    }
+    if (formData.room.length > 50) {
+        toast.error("'Số buồng' không được vượt quá 50 ký tự.");
+        return false;
+    }
+
     if (!formData.diagnosis?.trim()) {
         toast.error("Vui lòng nhập 'Chẩn đoán'.");
         return false;
@@ -524,7 +568,11 @@ export const HematologyInputForm = ({
             const createPayload = {
                 listDepartmentId: deptIds,
                 requestDescription: formData.diagnosis || "Yêu cầu xét nghiệm Huyết học",
-                requestedAt: requestedAt
+                requestedAt: requestedAt,
+                departmentOfHealth: formData.healthDept,
+                hospitalName: formData.hospital,
+                formNumber: formData.testNumber,
+                roomNumber: formData.room
             };
             const newIdStr = await api.hematologies.create(recordId, createPayload);
             currentHematologyId = parseInt(newIdStr, 10);
@@ -553,6 +601,10 @@ export const HematologyInputForm = ({
                          id: currentHematologyId,
                          medicalRecordId: recordId,
                          completedAt: completedAt,
+                         departmentOfHealth: formData.healthDept,
+                         hospitalName: formData.hospital,
+                         formNumber: formData.testNumber,
+                         roomNumber: formData.room,
                          redBloodCellCount: formData.rbc ? parseFloat(formData.rbc) : null,
                          whiteBloodCellCount: formData.wbc ? parseFloat(formData.wbc) : null,
                          hemoglobin: formData.hgb ? parseFloat(formData.hgb) : null,
@@ -680,11 +732,11 @@ export const HematologyInputForm = ({
           <div className="grid grid-cols-3 gap-4 items-start border-b pb-4">
             <div className="space-y-2 text-xs">
               <div className="flex items-center gap-2">
-                <Label className="w-20 shrink-0">Sở Y tế:</Label>
+                <Label className="w-20 shrink-0">Sở Y tế: <span className="text-red-500">*</span></Label>
                 <Input name="healthDept" value={formData.healthDept} onChange={handleChange} className="h-7 border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={isRequestReadOnly} />
               </div>
               <div className="flex items-center gap-2">
-                <Label className="w-20 shrink-0">Bệnh viện:</Label>
+                <Label className="w-20 shrink-0">Bệnh viện: <span className="text-red-500">*</span></Label>
                 <Input name="hospital" value={formData.hospital} onChange={handleChange} className="h-7 border-b border-t-0 border-x-0 rounded-none px-0 focus-visible:ring-0" disabled={isRequestReadOnly} />
               </div>
             </div>
@@ -695,7 +747,7 @@ export const HematologyInputForm = ({
             <div className="text-right text-xs">
               <p className="font-bold">MS: 17/BV-02</p>
               <div className="flex items-center justify-end gap-2">
-                <Label className="shrink-0">Số:</Label>
+                <Label className="shrink-0">Số: <span className="text-red-500">*</span></Label>
                 <Input name="testNumber" value={formData.testNumber} onChange={handleChange} className="w-24 h-7 border-b border-t-0 border-x-0 rounded-none text-right focus-visible:ring-0" disabled={isRequestReadOnly} />
               </div>
             </div>
@@ -742,8 +794,8 @@ export const HematologyInputForm = ({
                 <Label className="shrink-0">Khoa:</Label>
                 <Input name="department" value={formData.department} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
               </div>
-              <div className="w-32 flex items-end gap-2">
-                <Label className="shrink-0">Buồng:</Label>
+              <div className="flex items-center gap-1">
+                <Label className="shrink-0">Buồng: <span className="text-red-500">*</span></Label>
                 <Input name="room" value={formData.room} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
               </div>
               <div className="w-32 flex items-end gap-2">

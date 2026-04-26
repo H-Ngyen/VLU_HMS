@@ -24,7 +24,7 @@ import html2canvas from "html2canvas-pro";
 import { api } from "@/services/api";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Department } from "@/types";
+import type { Department, Document } from "@/types";
 
 interface XRayStatusLog {
   status: number;
@@ -79,6 +79,7 @@ interface XRayInputFormProps {
   readOnly?: boolean;
   recordId?: number;
   onSaved?: (data: XRayData) => void;
+  existingDocs?: Document[];
 }
 
 const parseDate = (dateStr?: string) => {
@@ -151,12 +152,60 @@ export const XRayInputForm = ({
   initialData,
   readOnly = false,
   recordId,
-  onSaved
+  onSaved,
+  existingDocs = []
 }: XRayInputFormProps) => {  const { currentUser } = useAuth();
   const printRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [isImportMode, setIsImportMode] = useState(false);
+
+  const calculateXRayOrder = (currentId?: number) => {
+    const xrayDocs = existingDocs
+      .filter(doc => doc.type === "X-Quang")
+      .map(doc => {
+        const d = doc.data as XRayData;
+        const firstLog = d?.xRayStatusLogs && d.xRayStatusLogs.length > 0 
+          ? new Date(d.xRayStatusLogs[0].createdAt).getTime()
+          : 0;
+        
+        let requestedTime = 0;
+        if (d?.requestDateYear && d?.requestDateMonth && d?.requestDateDay) {
+          requestedTime = new Date(
+            parseInt(d.requestDateYear), 
+            parseInt(d.requestDateMonth) - 1, 
+            parseInt(d.requestDateDay)
+          ).getTime();
+        }
+
+        return {
+          id: d?.id || 0,
+          timestamp: firstLog || requestedTime || 0
+        };
+      });
+
+    // Filter out potential duplicates if current is already in existingDocs
+    const otherXrays = currentId ? xrayDocs.filter(x => x.id !== currentId) : xrayDocs;
+    
+    if (!currentId) {
+      return (otherXrays.length + 1).toString();
+    }
+
+    // Add current one back if it has timestamp
+    const allSorted = [...otherXrays];
+    const current = xrayDocs.find(x => x.id === currentId);
+    if (current) {
+        allSorted.push(current);
+    }
+    
+    allSorted.sort((a, b) => {
+      if (a.timestamp !== b.timestamp) return a.timestamp - b.timestamp;
+      return a.id - b.id;
+    });
+
+    const index = allSorted.findIndex(x => x.id === currentId);
+    return (index >= 0 ? index + 1 : otherXrays.length + 1).toString();
+  };
   
   const defaultState: XRayData = {
     id: undefined,
@@ -164,7 +213,7 @@ export const XRayInputForm = ({
     healthDept: "",
     hospital: "",
     xrayNumber: "",
-    times: "", 
+    times: calculateXRayOrder(), 
     patientName: "",
     age: "",
     gender: "",
@@ -200,6 +249,7 @@ export const XRayInputForm = ({
         const data: XRayData = {
             ...defaultState,
             ...initialData,
+            times: initialData.times || calculateXRayOrder(initialData.id),
             patientName: defaultPatientName,
             gender: defaultGender,
             address: defaultAddress,
@@ -368,6 +418,12 @@ export const XRayInputForm = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+
+    // Only allow numeric characters for xrayNumber
+    if (name === "xrayNumber" && value !== "" && !/^\d+$/.test(value)) {
+        return;
+    }
+
     setFormData(prev => {
         const newData = { ...prev, [name]: value };
         if (["requestDateDay", "requestDateMonth", "requestDateYear"].includes(name) && defaultDob && !readOnly) {
@@ -381,6 +437,44 @@ export const XRayInputForm = ({
   };
 
   const validateForm = (action: "SAVE" | "NEXT" | "FAST_TRACK") => {
+    // New location fields validation
+    if (!formData.healthDept?.trim()) {
+        toast.error("Vui lòng nhập 'Sở Y tế'.");
+        return false;
+    }
+    if (formData.healthDept.length > 255) {
+        toast.error("'Sở Y tế' không được vượt quá 255 ký tự.");
+        return false;
+    }
+    if (!formData.hospital?.trim()) {
+        toast.error("Vui lòng nhập 'Bệnh viện'.");
+        return false;
+    }
+    if (formData.hospital.length > 255) {
+        toast.error("'Tên bệnh viện' không được vượt quá 255 ký tự.");
+        return false;
+    }
+    if (!formData.xrayNumber?.trim()) {
+        toast.error("Vui lòng nhập 'Số'.");
+        return false;
+    }
+    if (formData.xrayNumber.length > 50) {
+        toast.error("'Số' không được vượt quá 50 ký tự.");
+        return false;
+    }
+    if (!/^\d+$/.test(formData.xrayNumber)) {
+        toast.error("'Số' phải là định dạng số.");
+        return false;
+    }
+    if (!formData.room?.trim()) {
+        toast.error("Vui lòng nhập 'Số buồng'.");
+        return false;
+    }
+    if (formData.room.length > 50) {
+        toast.error("'Số buồng' không được vượt quá 50 ký tự.");
+        return false;
+    }
+
     if (!formData.request?.trim()) {
         toast.error("Vui lòng nhập 'Yêu cầu chiếu/ chụp'.");
         return false;
@@ -454,7 +548,11 @@ export const XRayInputForm = ({
                 requestedAt: requestedAt,
                 resultDescription: formData.result,
                 doctorAdvice: formData.advice,
-                completedAt: completedAt
+                completedAt: completedAt,
+                departmentOfHealth: formData.healthDept,
+                hospitalName: formData.hospital,
+                formNumber: formData.xrayNumber,
+                roomNumber: formData.room
             };
             await api.xRays.importCompleted(recordId, importPayload);
             toast.success("Đã nhập hồ sơ X-Quang từ PDF thành công");
@@ -481,7 +579,11 @@ export const XRayInputForm = ({
             const createPayload = {
                 listDepartmentId: deptIds,
                 requestDescription: formData.request || "Yêu cầu chụp X-Quang",
-                requestedAt: requestedAt
+                requestedAt: requestedAt,
+                departmentOfHealth: formData.healthDept,
+                hospitalName: formData.hospital,
+                formNumber: formData.xrayNumber,
+                roomNumber: formData.room
             };
             const newIdStr = await api.xRays.create(recordId, createPayload);
             currentXrayId = parseInt(newIdStr, 10);
@@ -508,7 +610,11 @@ export const XRayInputForm = ({
                      await api.xRays.complete(recordId, currentXrayId, {
                          resultDescription: formData.result,
                          doctorAdvice: formData.advice,
-                         completedAt: completedAt
+                         completedAt: completedAt,
+                         departmentOfHealth: formData.healthDept,
+                         hospitalName: formData.hospital,
+                         formNumber: formData.xrayNumber,
+                         roomNumber: formData.room
                      });
                      await api.xRays.changeStatus(recordId, currentXrayId, {
                          status: 3,
@@ -640,11 +746,11 @@ export const XRayInputForm = ({
           <div className="grid grid-cols-3 gap-4 items-start border-b pb-4">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Label className="w-20 shrink-0 text-xs">Sở Y tế:</Label>
+                <Label className="w-20 shrink-0 text-xs">Sở Y tế: <span className="text-red-500">*</span></Label>
                 <Input name="healthDept" value={formData.healthDept} onChange={handleChange} className="h-7 text-xs border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
               </div>
               <div className="flex items-center gap-2">
-                <Label className="w-20 shrink-0 text-xs">Bệnh viện:</Label>
+                <Label className="w-20 shrink-0 text-xs">Bệnh viện: <span className="text-red-500">*</span></Label>
                 <Input name="hospital" value={formData.hospital} onChange={handleChange} className="h-7 text-xs border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
               </div>
             </div>
@@ -652,14 +758,14 @@ export const XRayInputForm = ({
               <h2 className="text-sm font-bold uppercase text-vlu-red">Phiếu chiếu/ chụp X-Quang</h2>
               <div className="flex justify-center items-center gap-1">
                 <span className="text-xs italic">(lần thứ</span>
-                <Input name="times" value={formData.times} onChange={handleChange} className="w-10 h-5 p-0 text-center text-xs border-b border-x-0 border-t-0 rounded-none bg-transparent" disabled={isRequestReadOnly} />
+                <Input name="times" value={formData.times} onChange={handleChange} className="w-10 h-5 p-0 text-center text-xs border-b border-x-0 border-t-0 rounded-none bg-transparent" disabled={true} />
                 <span className="text-xs italic">)</span>
               </div>
             </div>
             <div className="text-right">
               <p className="text-xs font-bold">MS: 08/BV-02</p>
               <div className="flex items-center justify-end gap-2">
-                <Label className="shrink-0 text-xs">Số:</Label>
+                <Label className="shrink-0 text-xs">Số: <span className="text-red-500">*</span></Label>
                 <Input name="xrayNumber" value={formData.xrayNumber} onChange={handleChange} className="w-24 h-7 text-xs border-b border-t-0 border-x-0 rounded-none text-right" disabled={isRequestReadOnly} />
               </div>
             </div>
@@ -689,8 +795,8 @@ export const XRayInputForm = ({
                 <Label className="shrink-0">Khoa: <span className="text-red-500">*</span></Label>
                 <Input name="department" value={formData.department} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
               </div>
-              <div className="w-32 flex items-end gap-2">
-                <Label className="shrink-0">Buồng:</Label>
+              <div className="flex items-center gap-1">
+                <Label className="shrink-0">Buồng: <span className="text-red-500">*</span></Label>
                 <Input name="room" value={formData.room} onChange={handleChange} className="border-b border-t-0 border-x-0 rounded-none px-0" disabled={isRequestReadOnly} />
               </div>
               <div className="w-32 flex items-end gap-2">
