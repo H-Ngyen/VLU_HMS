@@ -9,9 +9,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { NotificationCenter } from "./NotificationCenter";
 
 const navs = [
+  { href: "/dashboard", label: "Thống kê" },
   { href: "/", label: "Bệnh án" },
   { href: "/patients", label: "Bệnh nhân" },
-  { href: "/dashboard", label: "Thống kê" },
   { href: "/account", label: "Tài khoản" },
   { href: "/departments", label: "Khoa" },
 ];

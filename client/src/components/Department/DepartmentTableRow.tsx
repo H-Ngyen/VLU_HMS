@@ -56,11 +56,11 @@ export const DepartmentTableRow = ({ department, onRefresh }: DepartmentTableRow
     setDeleting(true);
     try {
       await api.departments.delete(department.id);
-      toast.success("Xóa khoa thành công");
+      toast.success("Xóa bỏ khoa thành công");
       onRefresh();
     } catch (error: any) {
       console.error("Failed to delete department:", error);
-      toast.error(error.message || "Lỗi khi xóa khoa");
+      toast.error(error.message || "Lỗi khi xóa bỏ khoa");
     } finally {
       setDeleting(false);
       setIsDeleteDialogOpen(false);
@@ -80,15 +80,15 @@ export const DepartmentTableRow = ({ department, onRefresh }: DepartmentTableRow
   const handleUnassignHead = async () => {
     const headId = department.headUser?.id || department.headUserId;
     if (!headId) return;
-    if (!window.confirm(`Bạn có chắc chắn muốn hủy gán trưởng khoa cho ${department.headUser?.name}?`)) return;
+    if (!window.confirm(`Bạn có chắc chắn muốn gỡ bỏ vai trò trưởng khoa cho ${department.headUser?.name}?`)) return;
     
     try {
       await api.departments.unassignHead(department.id, headId);
-      toast.success("Hủy gán trưởng khoa thành công");
+      toast.success("Gỡ bỏ vai trò trưởng khoa thành công");
       onRefresh();
     } catch (error: any) {
       console.error("Failed to unassign head:", error);
-      toast.error(error.message || "Lỗi khi hủy gán trưởng khoa");
+      toast.error(error.message || "Lỗi khi gỡ bỏ vai trò trưởng khoa");
     }
   };
 
@@ -135,7 +135,7 @@ export const DepartmentTableRow = ({ department, onRefresh }: DepartmentTableRow
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={openAssignMember}>
-                    <UserPlus size={14} className="mr-2" /> Thêm nhân viên
+                    <UserPlus size={14} className="mr-2" /> Thêm thành viên
                   </DropdownMenuItem>
                 </>
               )}
@@ -144,16 +144,16 @@ export const DepartmentTableRow = ({ department, onRefresh }: DepartmentTableRow
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
-                    <Edit size={14} className="mr-2" /> Chỉnh sửa tên
+                    <Edit size={14} className="mr-2" /> Chỉnh sửa thông tin khoa
                   </DropdownMenuItem>
                   {!department.headUser?.id && !department.headUserId && (
                     <DropdownMenuItem onClick={openAssignHead}>
-                      <UserCheck size={14} className="mr-2" /> Gán trưởng khoa
+                      <UserCheck size={14} className="mr-2" /> Phân công trưởng khoa
                     </DropdownMenuItem>
                   )}
                   {(department.headUser?.id || department.headUserId) && (
                     <DropdownMenuItem onClick={handleUnassignHead} className="text-orange-600 focus:text-orange-600">
-                      <FlagOff size={14} className="mr-2" /> Hủy gán trưởng khoa
+                      <FlagOff size={14} className="mr-2" /> Gỡ bỏ vai trò trưởng khoa
                     </DropdownMenuItem>
                   )}
                   <DropdownMenuSeparator />
@@ -161,7 +161,7 @@ export const DepartmentTableRow = ({ department, onRefresh }: DepartmentTableRow
                     className="text-red-600 focus:text-red-600"
                     onClick={() => setIsDeleteDialogOpen(true)}
                   >
-                    <Trash2 size={14} className="mr-2" /> Xóa khoa
+                    <Trash2 size={14} className="mr-2" /> Xóa bỏ khoa
                   </DropdownMenuItem>
                 </>
               )}
@@ -195,7 +195,7 @@ export const DepartmentTableRow = ({ department, onRefresh }: DepartmentTableRow
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xác nhận xóa khoa?</AlertDialogTitle>
+            <AlertDialogTitle>Xác nhận xóa bỏ khoa?</AlertDialogTitle>
             <AlertDialogDescription>
               Hành động này không thể hoàn tác. Khoa <strong>{department.name}</strong> sẽ bị xóa khỏi hệ thống.
               Các nhân viên thuộc khoa này sẽ chuyển về trạng thái không thuộc khoa nào.

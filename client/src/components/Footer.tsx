@@ -1,4 +1,4 @@
-import { HeartPulse, Shield, HelpCircle } from "lucide-react";
+import { HeartPulse, Globe, HelpCircle } from "lucide-react";
 
 export function Footer() {
   return (
@@ -14,26 +14,30 @@ export function Footer() {
               <span className="font-bold text-gray-700 block sm:inline mr-1">
                 Hồ sơ bệnh án điện tử
               </span>
-              <span>&copy; 2025 Nhóm Anh Em văn phòng (AEVP).</span>
+              <span>&copy; 2026 Nhóm 03 - Nhóm Anh Em văn phòng (Khóa luận tốt nghiệp HK252).</span>
             </div>
           </div>
 
           {/* Right: Links & Info */}
           <div className="flex items-center space-x-4 text-xs font-medium text-gray-500">
             <a
-              href="#"
+              href="https://www.vlu.edu.vn/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hover:text-red-600 transition-colors flex items-center"
             >
-              <Shield size={14} className="mr-1" /> Bảo mật
+              <Globe size={14} className="mr-1" /> Trang chủ
             </a>
             <a
-              href="#"
+              href="https://www.vlu.edu.vn/life-at-vlu/center/trung-tam-ho-tro-sinh-vien"
+              target="_blank"
+              rel="noopener noreferrer"
               className="hover:text-red-600 transition-colors flex items-center"
             >
               <HelpCircle size={14} className="mr-1" /> Hỗ trợ
             </a>
             <div className="h-4 w-px bg-gray-200"></div>
-            <span className="font-mono text-gray-400">v1.0.2-beta</span>
+            <span className="font-mono text-gray-400">v1.0-Alpha</span>
           </div>
         </div>
       </div>

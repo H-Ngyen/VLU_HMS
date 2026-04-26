@@ -80,10 +80,10 @@ export const AssignUserDialog = ({
     try {
       if (mode === "head") {
         await api.departments.assignHead(departmentId, userId);
-        toast.success("Gán trưởng khoa thành công");
+        toast.success("Phân công trưởng khoa thành công");
       } else {
         await api.departments.assignUser(departmentId, userId);
-        toast.success("Thêm nhân viên vào khoa thành công");
+        toast.success("Phân công nhân viên vào khoa thành công");
       }
       onSuccess();
       onOpenChange(false);
@@ -100,7 +100,7 @@ export const AssignUserDialog = ({
       <DialogContent className="sm:max-w-[500px] flex flex-col h-[80vh]">
         <DialogHeader>
           <DialogTitle>
-            {mode === "head" ? "Chọn Trưởng Khoa" : "Thêm Nhân Viên Vào Khoa"}
+            {mode === "head" ? "Phân công Trưởng Khoa" : "Thêm Thành Viên"}
           </DialogTitle>
           <DialogDescription>
             {mode === "head" ? "Chọn một người dùng để làm trưởng khoa." : "Chọn nhân viên để thêm vào khoa."}

@@ -3,7 +3,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { User as UserIcon, UserMinus, Loader2, Search, FlagOff } from "lucide-react";
@@ -76,16 +75,16 @@ export const ViewMembersDialog = ({
   };
 
   const handleUnassignHead = async (userId: number) => {
-    if (!window.confirm("Bạn có chắc chắn muốn hủy gán trưởng khoa?")) return;
+    if (!window.confirm("Bạn có chắc chắn muốn gỡ bỏ vai trò trưởng khoa?")) return;
     
     setUnassigningHeadId(userId);
     try {
       await api.departments.unassignHead(department.id, userId);
-      toast.success("Đã hủy gán trưởng khoa thành công");
+      toast.success("Đã gỡ bỏ vai trò trưởng khoa thành công");
       onRefresh();
     } catch (error: any) {
       console.error(error);
-      toast.error("Lỗi khi hủy gán trưởng khoa");
+      toast.error("Lỗi khi gỡ bỏ vai trò trưởng khoa");
     } finally {
       setUnassigningHeadId(null);
     }
@@ -105,9 +104,6 @@ export const ViewMembersDialog = ({
                 {members.length} nhân sự
               </span>
             </DialogTitle>
-            <DialogDescription>
-              Quản lý danh sách nhân viên, giảng viên và sinh viên trực thuộc {department.name}.
-            </DialogDescription>
           </DialogHeader>
 
           <div className="relative w-full max-w-md">
@@ -184,14 +180,14 @@ export const ViewMembersDialog = ({
                           {canManageMembers && (
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-1">
-                                {isHead ? (
+                                {isHead && isAdmin && (
                                   <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleUnassignHead(user.id)}
-                                    disabled={unassigningHeadId !== null}
-                                    className="h-8 w-8 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                    title="Hủy gán trưởng khoa"
+                                    disabled={unassigningHeadId !== null || removingId !== null}
+                                    className="h-8 w-8 text-orange-500 hover:text-orange-700 hover:bg-orange-50"
+                                    title="Gỡ bỏ vai trò trưởng khoa"
                                   >
                                     {unassigningHeadId === user.id ? (
                                       <Loader2 size={16} className="animate-spin" />
@@ -199,12 +195,14 @@ export const ViewMembersDialog = ({
                                       <FlagOff size={16} />
                                     )}
                                   </Button>
-                                ) : (
+                                )}
+
+                                {(isAdmin || (isHeadOfThisDept && !isHead)) && (
                                   <Button
                                     variant="ghost"
                                     size="icon"
                                     onClick={() => handleRemoveMember(user.id)}
-                                    disabled={removingId !== null}
+                                    disabled={removingId !== null || unassigningHeadId !== null}
                                     className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
                                     title="Gỡ khỏi khoa"
                                   >

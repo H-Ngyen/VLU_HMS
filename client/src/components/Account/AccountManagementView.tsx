@@ -63,9 +63,6 @@ export const AccountManagementView = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Quản Lý Tài Khoản</h1>
-          <p className="text-gray-500">
-            Quản lý danh sách người dùng, phân quyền và trạng thái hoạt động.
-          </p>
         </div>
 
         <div className="relative w-full md:w-72">

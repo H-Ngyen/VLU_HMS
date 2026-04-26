@@ -56,9 +56,6 @@ export const DepartmentManagementView = () => {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight text-gray-900">Quản Lý Khoa</h1>
-          <p className="text-gray-500">
-            Quản lý danh sách các khoa, trưởng khoa và nhân viên thuộc khoa.
-          </p>
         </div>
 
         <div className="flex items-center gap-3 w-full md:w-auto">

@@ -46,19 +46,24 @@ export const DepartmentFormDialog = ({
   const [headUserId, setHeadUserId] = useState<string>("");
   const [openCombobox, setOpenCombobox] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
-      const fetchUsers = async () => {
+      const fetchData = async () => {
         try {
-          const data = await api.identities.getAllUsers();
-          setUsers(data);
+          const [usersData, deptsData] = await Promise.all([
+            api.identities.getAllUsers(),
+            api.departments.getAll()
+          ]);
+          setUsers(usersData);
+          setDepartments(deptsData);
         } catch (error) {
-          console.error("Failed to fetch users:", error);
+          console.error("Failed to fetch users or departments:", error);
         }
       };
-      fetchUsers();
+      fetchData();
     }
   }, [open]);
 
@@ -92,7 +97,7 @@ export const DepartmentFormDialog = ({
       } else {
         const newId = await api.departments.create(name);
         await api.departments.assignHead(newId, parseInt(headUserId));
-        toast.success("Thêm khoa mới và gán Trưởng khoa thành công.");
+        toast.success("Thêm khoa mới và phân công Trưởng khoa thành công.");
         onSuccess();
       }
       onOpenChange(false);
@@ -106,16 +111,27 @@ export const DepartmentFormDialog = ({
 
   const selectedUser = users.find((user) => user.id.toString() === headUserId);
 
+  // Filter out users who already belong to a department
+  const availableUsers = users.filter(user => {
+    const isAssigned = departments.some(dept => 
+      dept.headUserId === user.id || 
+      dept.users?.some((u: User) => u.id === user.id)
+    );
+    // If we are editing, we should still show the current head
+    if (department && user.id === department.headUserId) return true;
+    return !isAssigned;
+  });
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-fit min-w-[450px] max-w-[95vw] sm:max-w-none">
         <DialogHeader>
           <DialogTitle>{department ? "Chỉnh sửa Khoa" : "Thêm Khoa Mới"}</DialogTitle>
           <DialogDescription>
             {department ? "Sửa thông tin của khoa đang chọn." : "Điền thông tin để tạo khoa mới."}
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4 py-4 min-w-max">
           <div className="space-y-2">
             <Label htmlFor="name">Tên Khoa <span className="text-red-500">*</span></Label>
             <Input
@@ -151,7 +167,7 @@ export const DepartmentFormDialog = ({
                     <CommandList>
                     <CommandEmpty>Không tìm thấy nhân sự phù hợp.</CommandEmpty>
                     <CommandGroup>
-                      {users.map((user) => (
+                      {availableUsers.map((user) => (
                         <CommandItem
                           key={user.id}
                           value={`${user.name} ${user.email}`}
