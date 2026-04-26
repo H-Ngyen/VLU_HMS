@@ -37,15 +37,21 @@ public class UserAuthorizationService(ILogger<UserAuthorizationService> logger,
             return true;
         }
 
-        if (resource != null)
+        if (resourceOperation == ResourceOperation.Read && UserRoles.IsTeacher(user.Role))
         {
-            if (resourceOperation == ResourceOperation.Read &&
-                resource.Id == user.Id && UserRoles.IsInRoles(resource.Role.Name))
-            {
-                logger.LogInformation("Read operation - successful authorization");
-                return true;
-            }
+            logger.LogInformation("Read operation - successful authorization");
+            return true;
         }
+
+        // if (resource != null)
+        // {
+        //     if (resourceOperation == ResourceOperation.Read &&
+        //         resource.Id == user.Id && UserRoles.IsInRoles(resource.Role.Name))
+        //     {
+        //         logger.LogInformation("Read operation - successful authorization");
+        //         return true;
+        //     }
+        // }
 
         return false;
     }
