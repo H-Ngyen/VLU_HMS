@@ -1036,7 +1036,7 @@ export const HematologyInputForm = ({
                       </div>
                       <p className="font-bold uppercase not-italic">Bác sĩ điều trị</p>
                       <div className="pt-12">
-                          <Input name="doctor" value={formData.doctor} onChange={handleChange} placeholder="Họ tên bác sĩ" className="text-center border-b border-t-0 border-x-0 font-bold uppercase h-7 px-0" disabled={isRequestReadOnly} />
+                          <div className="h-7 border-b border-gray-300 w-full"></div>
                       </div>
                   </div>
             </div>
@@ -1125,7 +1125,7 @@ export const HematologyInputForm = ({
                           </div>
                           <p className="font-bold uppercase not-italic">Trưởng khoa xét nghiệm</p>
                           <div className="pt-12">
-                              <Input name="technician" value={formData.technician} onChange={handleChange} placeholder="Họ tên" className="text-center border-b border-t-0 border-x-0 font-bold uppercase h-7 px-0" disabled={isResultReadOnly} />
+                              <div className="h-7 border-b border-gray-300 w-full"></div>
                           </div>
                       </div>
                 </div>
@@ -1157,8 +1157,8 @@ export const HematologyInputForm = ({
                  {/* Header */}
                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
                     <div style={{ width: '30%' }}>
-                        <p style={{ margin: 0 }}>Sở Y tế: {formData.healthDept}</p>
-                        <p style={{ margin: 0 }}>BV: {formData.hospital}</p>
+                        <p style={{ margin: 0, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '8pt' }}>Sở Y tế: {formData.healthDept}</p>
+                        <p style={{ margin: 0, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '8pt' }}>Bệnh viện: {formData.hospital}</p>
                     </div>
                     <div style={{ width: '40%', textAlign: 'center' }}>
                         <h1 style={{ fontSize: '13pt', fontWeight: 'bold', textTransform: 'uppercase', margin: 0 }}>Phiếu Xét Nghiệm</h1>
@@ -1366,13 +1366,13 @@ export const HematologyInputForm = ({
                         <div>Ngày {formData.requestDateDay} tháng {formData.requestDateMonth} năm {formData.requestDateYear}</div>
                         <div style={{ fontWeight: 'bold', textTransform: 'uppercase', marginTop: '5px' }}>Bác sĩ điều trị</div>
                         <div style={{ height: '25mm' }}></div>
-                        <div style={{ fontWeight: 'bold' }}>{formData.doctor}</div>
+                        <div style={{ fontWeight: 'bold' }}></div>
                     </div>
                     <div style={{ textAlign: 'center', width: '45%' }}>
                         <div>Ngày {formData.resultDateDay} tháng {formData.resultDateMonth} năm {formData.resultDateYear}</div>
                         <div style={{ fontWeight: 'bold', textTransform: 'uppercase', marginTop: '5px' }}>Trưởng khoa xét nghiệm</div>
                         <div style={{ height: '25mm' }}></div>
-                        <div style={{ fontWeight: 'bold' }}>{formData.technician}</div>
+                        <div style={{ fontWeight: 'bold' }}></div>
                     </div>
                 </div>
 

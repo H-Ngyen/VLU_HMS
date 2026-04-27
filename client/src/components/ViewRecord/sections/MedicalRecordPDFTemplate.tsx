@@ -93,8 +93,8 @@ export const MedicalRecordPDFTemplate: React.FC<Props> = ({ record, patient, att
       <div style={pageStyle}>
         <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "5px" }}>
           <div style={{ width: "45%" }}>
-            <div style={{ fontSize: "9pt", textTransform: "uppercase", fontWeight: "bold" }}>SỞ Y TẾ TPHCM: ........................................</div>
-            <div style={{ fontWeight: "bold", fontSize: "10pt", textTransform: "uppercase" }}>BỆNH VIỆN: .................................</div>
+            <div style={{ fontSize: "8pt", textTransform: "uppercase", fontWeight: "bold" }}>SỞ Y TẾ: {record.healthDept || "........................................"}</div>
+            <div style={{ fontWeight: "bold", fontSize: "8pt", textTransform: "uppercase" }}>BỆNH VIỆN: {record.hospital || "................................."}</div>
             <div style={{ fontSize: "10pt" }}>Khoa: {record.department} <span style={{marginLeft: "20px"}}>Giường: {record.bedCode || "........."}</span></div>
           </div>
           <div style={{ width: "35%", textAlign: "right", fontSize: "9pt" }}>

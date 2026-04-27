@@ -36,11 +36,14 @@ const formatAddress = (address: string) => {
 export const XRayPaper = ({ data }: { data: XRayData }) => {
     const showResultSection = data.status >= 2 || data.status === 3;
     return (
-        <div className="w-full max-w-[800px] bg-white shadow-md p-[10mm] text-black font-serif text-[10pt] leading-[1.4] border border-gray-200 mx-auto">
+        <div 
+            className="w-full max-w-[800px] bg-white shadow-md p-[10mm] text-black leading-[1.4] border border-gray-200 mx-auto"
+            style={{ fontFamily: 'Times New Roman, serif' }}
+        >
             <div className="flex justify-between items-start mb-5">
                 <div className="w-[30%]">
-                    <p className="m-0">Sở Y tế: {data.healthDept || "..................."}</p>
-                    <p className="m-0">BV: {data.hospital || "..................."}</p>
+                    <p className="m-0 font-bold uppercase text-[8pt]">Sở Y tế: {data.healthDept || "..................."}</p>
+                    <p className="m-0 font-bold uppercase text-[8pt]">Bệnh viện: {data.hospital || "..................."}</p>
                 </div>
                 <div className="w-[40%] text-center">
                     <h1 className="text-[10pt] font-bold uppercase m-0">Phiếu chiếu/ chụp X-Quang</h1>
@@ -83,7 +86,7 @@ export const XRayPaper = ({ data }: { data: XRayData }) => {
                     <p className="italic m-0">Ngày {data.requestDateDay} tháng {data.requestDateMonth} năm {data.requestDateYear}</p>
                     <p className="font-bold mt-1 mb-0 uppercase">Bác sĩ điều trị</p>
                     <div className="h-[20mm]"></div>
-                    <p className="m-0 font-bold uppercase">{data.doctor}</p>
+                    <p className="m-0 font-bold uppercase"></p>
                 </div>
             </div>
 
@@ -103,7 +106,7 @@ export const XRayPaper = ({ data }: { data: XRayData }) => {
                         <p className="italic m-0">Ngày {data.resultDateDay} tháng {data.resultDateMonth} năm {data.resultDateYear}</p>
                         <p className="font-bold mt-1 mb-0 uppercase">Bác sĩ chuyên khoa</p>
                         <div className="h-[20mm]"></div>
-                        <p className="m-0 font-bold uppercase">{data.specialist}</p>
+                        <p className="m-0 font-bold uppercase"></p>
                     </div>
                 </div>
               </>
@@ -114,12 +117,15 @@ export const XRayPaper = ({ data }: { data: XRayData }) => {
 
 export const HematologyPaper = ({ data }: { data: HematologyData }) => {
   return (
-    <div className="w-full max-w-[800px] bg-white shadow-md p-[10mm] text-black font-serif text-[11pt] leading-[1.2] border border-gray-200 mx-auto">
+    <div 
+        className="w-full max-w-[800px] bg-white shadow-md p-[10mm] text-black leading-[1.2] border border-gray-200 mx-auto"
+        style={{ fontFamily: 'Times New Roman, serif' }}
+    >
         {/* Header */}
          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
             <div style={{ width: '30%' }}>
-                <p style={{ margin: 0 }}>Sở Y tế: {data.healthDept || "..................."}</p>
-                <p style={{ margin: 0 }}>BV: {data.hospital || "..................."}</p>
+                <p style={{ margin: 0, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '8pt' }}>Sở Y tế: {data.healthDept || "..................."}</p>
+                <p style={{ margin: 0, fontWeight: 'bold', textTransform: 'uppercase', fontSize: '8pt' }}>Bệnh viện: {data.hospital || "..................."}</p>
             </div>
             <div style={{ width: '40%', textAlign: 'center' }}>
                 <h1 style={{ fontSize: '13pt', fontWeight: 'bold', textTransform: 'uppercase', margin: 0 }}>Phiếu Xét Nghiệm</h1>
@@ -328,13 +334,13 @@ export const HematologyPaper = ({ data }: { data: HematologyData }) => {
                 <div>Ngày {data.requestDateDay} tháng {data.requestDateMonth} năm {data.requestDateYear}</div>
                 <div style={{ fontWeight: 'bold', textTransform: 'uppercase', marginTop: '5px' }}>Bác sĩ điều trị</div>
                 <div style={{ height: '25mm' }}></div>
-                <div style={{ fontWeight: 'bold' }}>{data.doctor}</div>
+                <div style={{ fontWeight: 'bold' }}></div>
             </div>
             <div style={{ textAlign: 'center', width: '45%' }}>
                 <div>Ngày {data.resultDateDay} tháng {data.resultDateMonth} năm {data.resultDateYear}</div>
                 <div style={{ fontWeight: 'bold', textTransform: 'uppercase', marginTop: '5px' }}>Trưởng khoa xét nghiệm</div>
                 <div style={{ height: '25mm' }}></div>
-                <div style={{ fontWeight: 'bold' }}>{data.technician}</div>
+                <div style={{ fontWeight: 'bold' }}></div>
             </div>
         </div>
 

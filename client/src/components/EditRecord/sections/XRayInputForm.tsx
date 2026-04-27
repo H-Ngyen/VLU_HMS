@@ -840,7 +840,7 @@ export const XRayInputForm = ({
                     </div>
                     <p className="font-bold not-italic uppercase text-xs">Bác sĩ điều trị</p>
                     <div className="pt-12">
-                        <Input name="doctor" value={formData.doctor} onChange={handleChange} placeholder="Họ tên" className="text-center border-b border-t-0 border-x-0 font-bold uppercase h-7 px-0" disabled={isRequestReadOnly} />
+                        <div className="h-7 border-b border-gray-300 w-full"></div>
                     </div>
                 </div>
           </div>
@@ -867,7 +867,7 @@ export const XRayInputForm = ({
                       </div>
                       <p className="font-bold not-italic uppercase text-xs">Bác sĩ chuyên khoa</p>
                       <div className="pt-12">
-                          <Input name="specialist" value={formData.specialist} onChange={handleChange} placeholder="Họ tên" className="text-center border-b border-t-0 border-x-0 font-bold uppercase h-7 px-0" disabled={isResultReadOnly} />
+                          <div className="h-7 border-b border-gray-300 w-full"></div>
                       </div>
                   </div>
               </div>
@@ -878,12 +878,13 @@ export const XRayInputForm = ({
 
         <div 
             ref={printRef} 
-            className="fixed left-[-10000px] top-0 w-[210mm] p-[10mm] bg-white text-black font-sans text-[10pt] leading-[1.4]"
+            className="fixed left-[-10000px] top-0 w-[210mm] p-[10mm] bg-white text-black text-[10pt] leading-[1.4]"
+            style={{ fontFamily: 'Times New Roman, serif' }}
         >
             <div className="flex justify-between items-start mb-5">
                 <div className="w-[30%]">
-                    <p className="m-0">Sở Y tế: {formData.healthDept || "..................."}</p>
-                    <p className="m-0">BV: {formData.hospital || "..................."}</p>
+                    <p className="m-0 font-bold uppercase text-[8pt]">Sở Y tế: {formData.healthDept || "..................."}</p>
+                    <p className="m-0 font-bold uppercase text-[8pt]">Bệnh viện: {formData.hospital || "..................."}</p>
                 </div>
                 <div className="w-[40%] text-center">
                     <h1 className="text-[10pt] font-bold uppercase m-0">Phiếu chiếu/ chụp X-Quang</h1>
@@ -920,7 +921,7 @@ export const XRayInputForm = ({
                     <p className="italic m-0">Ngày {formData.requestDateDay} tháng {formData.requestDateMonth} năm {formData.requestDateYear}</p>
                     <p className="font-bold mt-1 mb-0 uppercase">Bác sĩ điều trị</p>
                     <div className="h-[20mm]"></div>
-                    <p className="m-0 font-bold uppercase">{formData.doctor}</p>
+                    <p className="m-0 font-bold uppercase"></p>
                 </div>
             </div>
 
@@ -940,7 +941,7 @@ export const XRayInputForm = ({
                         <p className="italic m-0">Ngày {formData.resultDateDay} tháng {formData.resultDateMonth} năm {formData.resultDateYear}</p>
                         <p className="font-bold mt-1 mb-0 uppercase">Bác sĩ chuyên khoa</p>
                         <div className="h-[20mm]"></div>
-                        <p className="m-0 font-bold uppercase">{formData.specialist}</p>
+                        <p className="m-0 font-bold uppercase"></p>
                     </div>
                 </div>
               </>
