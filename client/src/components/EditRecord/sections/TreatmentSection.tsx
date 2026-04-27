@@ -12,7 +12,7 @@ interface TreatmentSectionProps {
 export const TreatmentSection = ({ formData, setFormData, readOnly = false }: TreatmentSectionProps) => {
   const content = formData.medicalRecordContent;
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: string | boolean | "indeterminate" | number | null | undefined) => {
     if (readOnly) return;
     setFormData((prev) => {
       if (!prev) return null;
@@ -26,12 +26,11 @@ export const TreatmentSection = ({ formData, setFormData, readOnly = false }: Tr
     });
   };
 
-  const handleNestedChange = (parent: string, field: string, value: any) => {
+  const handleNestedChange = (parent: string, field: string, value: string | boolean | "indeterminate" | number | null | undefined) => {
     if (readOnly) return;
     setFormData((prev) => {
       if (!prev) return null;
-      // @ts-ignore
-      const parentObj = prev.medicalRecordContent[parent] || {};
+      const parentObj = prev.medicalRecordContent[parent as keyof typeof prev.medicalRecordContent] || {};
       
       return {
         ...prev,

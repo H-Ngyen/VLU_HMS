@@ -18,6 +18,13 @@ internal class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(
     internal DbSet<XRay> XRays { get; set; }
     internal DbSet<Hematology> Hematologies { get; set; }
 
+    internal DbSet<XRayStatusLog> XRayStatusLogs { get; set; }
+    internal DbSet<HematologyStatusLog> HematologyStatusLogs { get; set; }
+
+    internal DbSet<Department> Departments { get; set; }
+    internal DbSet<Notification> Notification { get; set; }
+    internal DbSet<UserNotification> UserNotifications { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

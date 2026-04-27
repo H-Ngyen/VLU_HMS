@@ -7,17 +7,21 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { FileText, Eye, Edit2, Trash2 } from "lucide-react";
-import type { Record, Document } from "@/types";
+import type { Record as MedicalRecord, Document } from "@/types";
 import { XRayInputForm } from "./XRayInputForm";
 import { HematologyInputForm } from "./HematologyInputForm";
+import { api } from "@/services/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface PhieuYSectionProps {
-  formData: Record;
-  setFormData: React.Dispatch<React.SetStateAction<Record | null>>;
+  formData: MedicalRecord;
+  setFormData: React.Dispatch<React.SetStateAction<MedicalRecord | null>>;
   readOnly?: boolean;
 }
 
 export const PhieuYSection = ({ formData, setFormData, readOnly = false }: PhieuYSectionProps) => {
+  const { isAdmin } = useAuth();
   const [activeFormType, setActiveFormType] = useState<string | null>(null);
   
   // XRay State
@@ -31,83 +35,43 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
   const [viewingHematologyDoc, setViewingHematologyDoc] = useState<Document | null>(null);
 
 
-  const handleXRaySave = (file: File, xrayData?: any) => {
-    if (readOnly) return;
-    if (editingXRayDoc) {
-        setFormData((prev) => {
-            if (!prev) return null;
-            const updatedDocs = prev.documents.map((d) => 
-              d.id === editingXRayDoc.id ? { 
-                  ...d, 
-                  fileName: file.name, 
-                  url: URL.createObjectURL(file),
-                  data: xrayData 
-              } : d
-            );
-            return { ...prev, documents: updatedDocs };
-        });
-        setEditingXRayDoc(null);
-    } else {
-        const newDoc: Document = {
-            id: `DOC${Date.now()}`,
-            name: "Phiếu X-Quang",
-            type: "X-Quang",
-            fileName: file.name,
-            date: new Date().toISOString().split("T")[0],
-            url: URL.createObjectURL(file),
-            data: xrayData
-        };
-        setFormData((prev) => {
-            if (!prev) return null;
-            return {
-                ...prev,
-                documents: [...(prev.documents || []), newDoc],
-            };
-        });
-    }
-    setIsXRayFormOpen(false); 
-  };
-
-  const handleHematologySave = (file: File, data?: any) => {
-    if (readOnly) return;
-    if (editingHematologyDoc) {
-        setFormData((prev) => {
-            if (!prev) return null;
-            const updatedDocs = prev.documents.map((d) => 
-              d.id === editingHematologyDoc.id ? { 
-                  ...d, 
-                  fileName: file.name, 
-                  url: URL.createObjectURL(file),
-                  data: data 
-              } : d
-            );
-            return { ...prev, documents: updatedDocs };
-        });
-        setEditingHematologyDoc(null);
-    } else {
-        const newDoc: Document = {
-            id: `DOC${Date.now()}`,
-            name: "Phiếu XN Huyết Học",
-            type: "XN-HuyetHoc",
-            fileName: file.name,
-            date: new Date().toISOString().split("T")[0],
-            url: URL.createObjectURL(file),
-            data: data
-        };
-        setFormData((prev) => {
-            if (!prev) return null;
-            return {
-                ...prev,
-                documents: [...(prev.documents || []), newDoc],
-            };
-        });
-    }
-    setIsHematologyFormOpen(false); 
-  };
-
-  const handleDelete = (docId: string) => {
+  const handleDelete = async (docId: string) => {
     if (readOnly) return;
     if (!window.confirm("Bạn có chắc chắn muốn xóa phiếu này?")) return;
+
+    if (docId.startsWith("XRAY_") || docId.startsWith("HEMA_")) {
+      const isXRay = docId.startsWith("XRAY_");
+      const id = parseInt(docId.split("_")[1]);
+      const recordId = formData.numericId;
+
+      if (!recordId || isNaN(id)) {
+        toast.error("Không thể xác định mã bệnh án hoặc phiếu");
+        return;
+      }
+
+      try {
+        if (isXRay) {
+          await api.xRays.delete(recordId, id);
+        } else {
+          await api.hematologies.delete(recordId, id);
+        }
+        
+        toast.success("Xóa phiếu thành công");
+        
+        setFormData((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            documents: prev.documents.filter((d) => d.id !== docId),
+          };
+        });
+      } catch (error: any) {
+        console.error("Lỗi khi xóa phiếu:", error);
+        toast.error(error.message || "Lỗi khi xóa phiếu");
+      }
+      return;
+    }
+
     setFormData((prev) => {
       if (!prev) return null;
       return {
@@ -141,6 +105,8 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
         setIsHematologyFormOpen(true);
     }
   };
+
+  const phieuYDocuments = (formData.documents || []).filter(doc => doc.type === "X-Quang" || doc.type === "XN-HuyetHoc");
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-full overflow-hidden">
@@ -282,17 +248,39 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                    {formData.documents && formData.documents.length > 0 ? (
-                        formData.documents.map((doc, index) => (
+                    {phieuYDocuments.length > 0 ? (
+                        phieuYDocuments.map((doc, index) => (
                             <tr key={doc.id} className="hover:bg-gray-50">
                                 <td className="px-4 py-3 text-center text-gray-500">{index + 1}</td>
                                 <td className="px-4 py-3 font-medium text-gray-800">{doc.name}</td>
                                 <td className="px-4 py-3">
-                                    <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
-                                        {doc.type === "X-Quang" ? "X-Quang" : doc.type === "XN-HuyetHoc" ? "Huyết học" : doc.type}
-                                    </span>
+                                    <div className="flex flex-col gap-1 items-start">
+                                        <span className="px-2 py-1 rounded-full bg-gray-100 text-gray-600 text-xs font-medium">
+                                            {doc.type === "X-Quang" ? "X-Quang" : doc.type === "XN-HuyetHoc" ? "Huyết học" : doc.type}
+                                        </span>
+                                        {(doc.type === "X-Quang" || doc.type === "XN-HuyetHoc") && doc.data?.status !== undefined && (
+                                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                                doc.data.status === 0 ? "bg-gray-100 text-gray-600" :
+                                                doc.data.status === 1 ? "bg-blue-100 text-blue-600" :
+                                                doc.data.status === 2 ? "bg-orange-100 text-orange-600" :
+                                                "bg-green-100 text-green-600"
+                                            }`}>
+                                                {doc.data.status === 0 ? "Chưa nhận mẫu" :
+                                                 doc.data.status === 1 ? "Đã nhận mẫu" :
+                                                 doc.data.status === 2 ? "Đang chạy kết quả" : "Đã có kết quả"}                                            </span>
+                                        )}
+                                    </div>
                                 </td>
-                                <td className="px-4 py-3 text-gray-500">{doc.date}</td>
+                                <td className="px-4 py-3 text-gray-500">
+                                    {(() => {
+                                        if (!doc.date) return "";
+                                        const parts = doc.date.split('-');
+                                        if (parts.length === 3) {
+                                            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                        }
+                                        return doc.date;
+                                    })()}
+                                </td>
                                 <td className="px-4 py-3 text-right flex justify-end gap-2">
                                     <Button type="button" size="icon-sm" variant="ghost" onClick={() => handleView(doc)} className="text-blue-600 bg-blue-50 hover:bg-blue-100">
                                         <Eye size={16} />
@@ -302,9 +290,11 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
                                             <Button type="button" size="icon-sm" variant="ghost" onClick={() => handleEdit(doc)} className="text-orange-600 bg-orange-50 hover:bg-orange-100">
                                                 <Edit2 size={16} />
                                             </Button>
-                                            <Button type="button" size="icon-sm" variant="ghost" onClick={() => handleDelete(doc.id)} className="text-red-600 bg-red-50 hover:bg-red-100">
-                                                <Trash2 size={16} />
-                                            </Button>
+                                            {isAdmin && (
+                                                <Button type="button" size="icon-sm" variant="ghost" onClick={() => handleDelete(doc.id)} className="text-red-600 bg-red-50 hover:bg-red-100">
+                                                    <Trash2 size={16} />
+                                                </Button>
+                                            )}
                                         </>
                                     )}
                                 </td>
@@ -323,33 +313,88 @@ export const PhieuYSection = ({ formData, setFormData, readOnly = false }: Phieu
       </div>
 
       <XRayInputForm 
+        key={isXRayFormOpen ? (editingXRayDoc?.id || viewingXRayDoc?.id || 'new_xray') : 'closed_xray'}
         isOpen={isXRayFormOpen}
         onClose={() => {
             setIsXRayFormOpen(false);
             setEditingXRayDoc(null);
             setViewingXRayDoc(null);
         }}
-        onSave={handleXRaySave}
         defaultPatientName={formData.patientName}
         defaultAge={formData.age}
+        defaultDob={formData.dob}
         defaultGender={formData.gender}
+        defaultAddress={formData.address}
+        defaultDepartment={formData.department}
+        defaultDiagnosis={formData.medicalRecordContent?.admissionDiagnosis?.mainDisease || formData.diagnosisInfo?.deptDiagnosis?.name || formData.diagnosisInfo?.kkbDiagnosis?.name || ""}
+        defaultBedCode={formData.bedCode || ""}
         initialData={editingXRayDoc?.data || viewingXRayDoc?.data}
+        onSaved={(updatedData) => {
+            setFormData(prev => {
+                if (!prev) return prev;
+                const newDocs = [...prev.documents];
+                const docIndex = newDocs.findIndex(d => d.id === `XRAY_${updatedData.id}`);
+                if (docIndex >= 0) {
+                    newDocs[docIndex] = { ...newDocs[docIndex], data: updatedData };
+                } else {
+                    newDocs.unshift({
+                        id: `XRAY_${updatedData.id}`,
+                        name: "Phiếu X-Quang",
+                        type: "X-Quang",
+                        fileName: "X-Quang.pdf",
+                        date: new Date().toISOString().split('T')[0],
+                        data: updatedData
+                    });
+                }
+                return { ...prev, documents: newDocs };
+            });
+        }}
         readOnly={!!viewingXRayDoc || readOnly} 
+        recordId={formData.numericId}
+        existingDocs={formData.documents}
       />
 
        <HematologyInputForm 
+        key={isHematologyFormOpen ? (editingHematologyDoc?.id || viewingHematologyDoc?.id || 'new_hema') : 'closed_hema'}
         isOpen={isHematologyFormOpen}
         onClose={() => {
             setIsHematologyFormOpen(false);
             setEditingHematologyDoc(null);
             setViewingHematologyDoc(null);
         }}
-        onSave={handleHematologySave}
         defaultPatientName={formData.patientName}
         defaultAge={formData.age}
+        defaultDob={formData.dob}
         defaultGender={formData.gender}
+        defaultAddress={formData.address}
+        defaultDepartment={formData.department}
+        defaultDiagnosis={formData.medicalRecordContent?.admissionDiagnosis?.mainDisease || formData.diagnosisInfo?.deptDiagnosis?.name || formData.diagnosisInfo?.kkbDiagnosis?.name || ""}
+        defaultInsuranceNumber={formData.insuranceNumber}
+        defaultBedCode={formData.bedCode || ""}
         initialData={editingHematologyDoc?.data || viewingHematologyDoc?.data}
+        onSaved={(updatedData) => {
+            setFormData(prev => {
+                if (!prev) return prev;
+                const newDocs = [...prev.documents];
+                const docIndex = newDocs.findIndex(d => d.id === `HEMA_${updatedData.id}`);
+                if (docIndex >= 0) {
+                    newDocs[docIndex] = { ...newDocs[docIndex], data: updatedData };
+                } else {
+                    newDocs.unshift({
+                        id: `HEMA_${updatedData.id}`,
+                        name: "Phiếu Huyết học",
+                        type: "XN-HuyetHoc",
+                        fileName: "HuyetHoc.pdf",
+                        date: new Date().toISOString().split('T')[0],
+                        data: updatedData
+                    });
+                }
+                return { ...prev, documents: newDocs };
+            });
+        }}
         readOnly={!!viewingHematologyDoc || readOnly} 
+        recordId={formData.numericId}
+        existingDocs={formData.documents}
       />
     </div>
   );

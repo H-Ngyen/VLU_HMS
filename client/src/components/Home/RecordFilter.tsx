@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RECORD_TYPES } from "@/mockData";
+import { RECORD_TYPES } from "@/constants/recordTypes";
 
 interface RecordFilterProps {
   inputValue: string;

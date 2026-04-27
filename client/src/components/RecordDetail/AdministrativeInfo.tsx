@@ -17,7 +17,7 @@ export const AdministrativeInfo = ({ patient, record }: AdministrativeInfoProps)
             <InfoRow label="2. Sinh ngày (Tuổi)" value={`${patient.dob} (${patient.age || record.age} tuổi)`} />
             <InfoRow label="3. Giới tính" value={patient.gender} />
             <InfoRow label="4. Nghề nghiệp" value={`${patient.job || ""} (Mã: ${patient.jobCode || ""})`} />
-            <InfoRow label="5. Dân tộc" value={patient.ethnicity} />
+            <InfoRow label="5. Dân tộc" value={typeof patient.ethnicity === 'object' ? patient.ethnicity.name : patient.ethnicity} />
             <InfoRow label="6. Ngoại kiều" value={patient.nationality} />
             <InfoRow label="7. Địa chỉ" value={patient.address} />
             <InfoRow label="8. Nơi làm việc" value={patient.workplace} />

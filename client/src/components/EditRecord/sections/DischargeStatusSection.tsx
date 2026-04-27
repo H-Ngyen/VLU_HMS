@@ -21,19 +21,18 @@ interface DischargeStatusSectionProps {
 export const DischargeStatusSection = ({ formData, setFormData, readOnly = false }: DischargeStatusSectionProps) => {
   const dischargeStatusInfo = formData.dischargeStatusInfo;
 
-  const handleChange = (path: string[], value: any) => {
+  const handleChange = (path: string[], value: string | boolean | "indeterminate") => {
     if (readOnly) return;
     setFormData((prev) => {
       if (!prev) return null;
       
       const newDischargeStatusInfo = JSON.parse(JSON.stringify(prev.dischargeStatusInfo));
-      
+
       let current = newDischargeStatusInfo;
       for (let i = 0; i < path.length - 1; i++) {
         current = current[path[i]];
       }
       current[path[path.length - 1]] = value;
-
       return {
         ...prev,
         dischargeStatusInfo: newDischargeStatusInfo,

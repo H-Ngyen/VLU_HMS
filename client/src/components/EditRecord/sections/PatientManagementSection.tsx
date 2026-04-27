@@ -16,7 +16,7 @@ interface PatientManagementSectionProps {
 export const PatientManagementSection = ({ formData, setFormData, readOnly = false }: PatientManagementSectionProps) => {
   const managementData = formData.managementData;
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = <K extends keyof typeof managementData>(field: K, value: (typeof managementData)[K]) => {
     if (readOnly) return;
     setFormData((prev) => {
       if (!prev) return null;
@@ -30,15 +30,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
     });
   };
 
-  const handleRootChange = (field: keyof Record, value: any) => {
-      if (readOnly) return;
-      setFormData((prev) => {
-          if (!prev) return null;
-          return { ...prev, [field]: value };
-      });
-  };
-
-  const handleTransferChange = (index: number, field: keyof Transfer, value: any) => {
+  const handleTransferChange = <K extends keyof Transfer>(index: number, field: K, value: Transfer[K]) => {
     if (readOnly) return;
     const newTransfers = [...managementData.transfers];
     newTransfers[index] = { ...newTransfers[index], [field]: value };
@@ -47,7 +39,15 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
 
   const addTransfer = () => {
     if (readOnly) return;
-    const newTransfer: Transfer = { department: "", date: "", days: 0, time: "" };
+    // transfers[0] là "Vào khoa" (Admission), transfers[1+] là "Chuyển khoa" (DepartmentTransfer)
+    const nextIndex = managementData.transfers.length;
+    const newTransfer: Transfer = {
+      department: "",
+      date: "",
+      days: 0,
+      time: "",
+      transferType: nextIndex === 0 ? 1 : 2,
+    };
     handleChange("transfers", [...managementData.transfers, newTransfer]);
   };
 
@@ -73,12 +73,59 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
           },
         };
       });
+    } else {
+      setFormData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          admissionDate: "",
+          managementData: {
+            ...prev.managementData,
+            admissionTime: "",
+          },
+        };
+      });
     }
   };
 
-  // Combine date and time for input value
+  const handleDischargeDateTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (readOnly) return;
+    const val = e.target.value;
+    if (val) {
+      const [date, time] = val.split('T');
+      setFormData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          dischargeDate: date,
+          managementData: {
+            ...prev.managementData,
+            dischargeTime: time,
+          },
+        };
+      });
+    } else {
+      setFormData((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          dischargeDate: "",
+          managementData: {
+            ...prev.managementData,
+            dischargeTime: "",
+          },
+        };
+      });
+    }
+  };
+
+  // Combine date and time for input values
   const dateTimeValue = formData.admissionDate && managementData.admissionTime 
     ? `${formData.admissionDate}T${managementData.admissionTime}` 
+    : "";
+
+  const dischargeDateTimeValue = formData.dischargeDate && managementData.dischargeTime 
+    ? `${formData.dischargeDate}T${managementData.dischargeTime}` 
     : "";
 
   return (
@@ -89,6 +136,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
             <Label>12. Vào viện lúc</Label>
             <Input
               type="datetime-local"
+              max={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
               value={dateTimeValue}
               onChange={handleDateTimeChange}
               disabled={readOnly}
@@ -167,6 +215,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
                        <Label className="text-xs">Giờ</Label>
                        <Input
                         type="time"
+                        max={managementData.transfers[0]?.date === new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0] ? new Date().toTimeString().slice(0, 5) : undefined}
                         value={managementData.transfers[0]?.time || ""}
                         onChange={(e) => handleTransferChange(0, "time", e.target.value)}
                         className="h-9 bg-white"
@@ -216,6 +265,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
                        <Label className="text-xs">Ngày đến</Label>
                        <Input
                         type="date"
+                        max={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0]}
                         value={transfer.date}
                         onChange={(e) => handleTransferChange(realIndex, "date", e.target.value)}
                         className="h-9 bg-white"
@@ -226,6 +276,7 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
                        <Label className="text-xs">Giờ</Label>
                        <Input
                         type="time"
+                        max={transfer.date === new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split("T")[0] ? new Date().toTimeString().slice(0, 5) : undefined}
                         value={transfer.time || ""}
                         onChange={(e) => handleTransferChange(realIndex, "time", e.target.value)}
                         className="h-9 bg-white"
@@ -287,11 +338,13 @@ export const PatientManagementSection = ({ formData, setFormData, readOnly = fal
          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
              <div className="space-y-3">
                 <Label>18. Ra viện</Label>
-                 <Input
-                  type="date"
-                  value={formData.dischargeDate || ""}
-                  onChange={(e) => handleRootChange("dischargeDate", e.target.value)}
+                <Input
+                  type="datetime-local"
+                  max={new Date(new Date().getTime() - new Date().getTimezoneOffset() * 60000).toISOString().split(".")[0].slice(0, 16)}
+                  value={dischargeDateTimeValue}
+                  onChange={handleDischargeDateTimeChange}
                   disabled={readOnly}
+                  className="h-9"
                 />
                 <RadioGroup 
                     value={managementData.dischargeType || ""} 

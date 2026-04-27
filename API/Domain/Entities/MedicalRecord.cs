@@ -1,4 +1,4 @@
-using Domain.Constants;
+using Domain.Enums;
 
 namespace Domain.Entities;
 
@@ -41,7 +41,7 @@ public class MedicalRecord
     // Transfer & Discharge
     public HospitalTransferType? HospitalTransferType { get; set; }
     public string? HospitalTransferDestination { get; set; }
-    public string? DischargeDescription { get; set; }
+    public DateTime? DischargeTime { get; set; }
     public DischargeType? DischargeType { get; set; }
     public string? TotalTreatmentDays { get; set; }
 
@@ -66,6 +66,7 @@ public class MedicalRecord
     public PathologyResult? PathologyResult { get; set; }
     public DeathCause? DeathCause { get; set; }
     public DeathTimeGroup? DeathTimeGroup { get; set; }
+    public string? DeathReason { get; set; }
     public string? DeathMainReason { get; set; }
     public int? DeathMainCode { get; set; }
     public bool HasAutopsy { get; set; }

@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  # api:
+  #   build:
+  #     context: ./API/AppHost
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - "5000:80"
+  #   environment:
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #   depends_on:
+  #     - minio
+
+  minio:
+    image: minio/minio
+    container_name: minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    env_file: ./API/AppHost/.env
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+
+volumes:
+  minio-data:

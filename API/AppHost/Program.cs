@@ -1,15 +1,19 @@
 using AppHost.Extensions;
 using AppHost.Middlewares;
 using Application.Extensions;
+using Application.Notifications;
 using Infrastructure.Extensions;
 using Infrastructure.Seeders;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.LoadEnv();
 
 // Add services to the container.
 var config = builder.Configuration;
 
-builder.AddPresentation();
+builder.AddPresentation(config);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(config);
 
@@ -23,9 +27,26 @@ await seeder.Seed();
 // Configure the HTTP request pipeline. 
 app.UseMiddleware<ErrorHandlingMiddleware>();
 
+app.UseMiddleware<RequestTimeLoggingMiddleware>();
+
+app.UseSerilogRequestLogging();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
 app.UseHttpsRedirection();
 
+// Enable CORS
+app.UseCors("AllowReactApp");
+
+app.UseAuthentication();
+
 app.UseAuthorization();
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.MapControllers();
 

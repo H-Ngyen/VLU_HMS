@@ -14,7 +14,7 @@ export const RecordContent = ({ record, patient }: RecordContentProps) => {
   return (
     <div
       className="bg-white rounded-none shadow-lg border border-gray-200 p-8 md:p-12 printable-content max-w-4xl mx-auto min-h-[1123px] relative text-sm leading-relaxed text-gray-800"
-      style={{ fontFamily: '"Times New Roman", Times, serif' }}
+      style={{ fontFamily: 'Times New Roman, serif' }}
     >
       {/* Header */}
       <div className="text-center border-b-2 border-gray-800 pb-4 mb-8">
@@ -38,7 +38,7 @@ export const RecordContent = ({ record, patient }: RecordContentProps) => {
             Ngày {new Date().getDate()} tháng {new Date().getMonth() + 1} năm {new Date().getFullYear()}
           </p>
           <p className="font-bold uppercase text-sm mb-12">Bác sĩ điều trị</p>
-          <p className="font-bold text-lg">Ký tên</p>
+          <div className="h-10"></div>
         </div>
       </div>
     </div>

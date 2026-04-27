@@ -1,9 +1,12 @@
+using Domain.Constants;
 using Domain.Entities;
+using Domain.Interfaces;
 using Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace Infrastructure.Seeders;
 
-internal class Seeder(AppDbContext dbContext) : ISeeder
+internal class Seeder(AppDbContext dbContext, IDateTimeProvider dateTimeProvider) : ISeeder
 {
     /// <summary>
     /// Seeds initial master data to the database if tables are empty.
@@ -34,16 +37,33 @@ internal class Seeder(AppDbContext dbContext) : ISeeder
 
             if (!dbContext.Users.Any())
             {
-                var users = GetUserAdmin();
+                var roleAdmin = await dbContext.Roles.FirstOrDefaultAsync(r => r.Name == UserRoles.Admin);
+                var users = GetUserAdmin(roleAdmin!.Id);
                 dbContext.Users.AddRange(users);
+                await dbContext.SaveChangesAsync();
+            }
+            if (!dbContext.Departments.Any())
+            {
+                var departments = GetDepartment();
+                dbContext.Departments.AddRange(departments);
                 await dbContext.SaveChangesAsync();
             }
         }
     }
-    private IEnumerable<User> GetUserAdmin()
+
+    private IEnumerable<Department> GetDepartment()
+    {
+        IEnumerable<Department> departments = [
+            new() { Name = "Khoa xét nghiệm", CreatedAt = dateTimeProvider.Now},
+            new() { Name = "Khoa chẩn đoán hình ảnh", CreatedAt = dateTimeProvider.Now}
+        ];
+        return departments;
+    }
+
+    private IEnumerable<User> GetUserAdmin(int adminId)
     {
         List<User> users = [
-            new() { Auth0Id = "something", Email = "admin@gmail.com", RoleId = 1, CreateAt = DateTime.UtcNow },
+            new() { Auth0Id = "something",Email = "admin@gmail.com", RoleId = adminId, CreateAt = dateTimeProvider.Now , Name = "admin", PictureUrl = "https://s.gravatar.com/avatar/efdf581ced25e337030ad1e8586d937b?s=480&r=pg&d=https%3A%2F%2Fcdn.auth0.com%2Favatars%2F2c.png", UpdateAt = dateTimeProvider.Now},
         ];
         return users;
     }
@@ -54,9 +74,9 @@ internal class Seeder(AppDbContext dbContext) : ISeeder
     private IEnumerable<Role> GetRoles()
     {
         List<Role> roles = [
-            new() { Id = 1, Name = "Admin" },
-            new() { Id = 2, Name = "Teacher" },
-            new() { Id = 3, Name = "Student" }
+            new() { Id = 1, Name = UserRoles.Admin },
+            new() { Id = 2, Name = UserRoles.Teacher },
+            new() { Id = 3, Name = UserRoles.Student }
         ];
         return roles;
     }

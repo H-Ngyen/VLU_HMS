@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Table,
@@ -14,16 +14,18 @@ import { PatientTableRow } from "./PatientTableRow";
 
 interface PatientTableProps {
   patients: Patient[];
+  onPatientDeleted: () => void;
 }
 
-export const PatientTable = ({ patients }: PatientTableProps) => {
+export const PatientTable = ({ patients, onPatientDeleted }: PatientTableProps) => {
   const [currentPage, setCurrentPage] = useState(1);
+  const [prevPatientsCount, setPrevPatientsCount] = useState(patients.length);
   const itemsPerPage = 10;
 
-  // Reset to page 1 when data changes (e.g. search)
-  useEffect(() => {
+  if (patients.length !== prevPatientsCount) {
+    setPrevPatientsCount(patients.length);
     setCurrentPage(1);
-  }, [patients.length]);
+  }
 
   const totalPages = Math.ceil(patients.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -38,22 +40,21 @@ export const PatientTable = ({ patients }: PatientTableProps) => {
             <TableRow className="bg-gray-50 hover:bg-gray-50">
               <TableHead className="w-24 font-semibold text-gray-700">Mã BN</TableHead>
               <TableHead className="font-semibold text-gray-700">Họ và Tên</TableHead>
-              <TableHead className="font-semibold text-gray-700">Số CCCD</TableHead>
               <TableHead className="font-semibold text-gray-700">Ngày Sinh</TableHead>
               <TableHead className="font-semibold text-gray-700">Tuổi / Giới</TableHead>
-              <TableHead className="font-semibold text-gray-700">Địa chỉ</TableHead>
-              <TableHead className="font-semibold text-gray-700">Đối tượng</TableHead>
+              <TableHead className="font-semibold text-gray-700">Dân tộc</TableHead>
+              <TableHead className="font-semibold text-gray-700">Số BHYT</TableHead>
               <TableHead className="text-right font-semibold text-gray-700">Thao tác</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {patients.length > 0 ? (
               currentPatients.map((patient) => (
-                <PatientTableRow key={patient.id} patient={patient} />
+                <PatientTableRow key={patient.id} patient={patient} onDelete={onPatientDeleted} />
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={8} className="h-32 text-center">
+                <TableCell colSpan={7} className="h-32 text-center">
                   <div className="flex flex-col items-center justify-center text-gray-500">
                     <FileText size={48} className="text-gray-300 mb-4" />
                     <span className="text-lg font-medium text-gray-600">

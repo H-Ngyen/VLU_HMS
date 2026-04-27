@@ -11,4 +11,5 @@ public interface IPatientsRepository
     public Task<(IEnumerable<Patient>, int)> GetAllMatchingAsync(string? searchPhrase, int pageSize, int pageNumber);
     public Task<bool> ExistHealthInsuranceNumber(string healthInsuranceNumber);
     public Task SaveChanges();
+    public Task DeleteAsync(Patient patient);
 }

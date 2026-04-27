@@ -1,4 +1,4 @@
-using Domain.Constants;
+using Domain.Enums;
 
 namespace Domain.Entities;
 
@@ -6,17 +6,22 @@ public class Hematology
 {
     public int Id { get; set; }
     // Foreign key
-    public required int MedicalRecordId { get; set; }
+    public int MedicalRecordId { get; set; }
     public int RequestedById { get; set; }
     public int? PerformedById { get; set; }
 
     // Props
     // --- Thông tin chung ---
-    public bool IsEmergency { get; set; } // Thường = false, Cấp cứu = true
+    // public bool IsEmergency { get; set; } // Thường = false, Cấp cứu = true
+    public string? DepartmentOfHealth { get; set; }
+    public string? HospitalName { get; set; }
+    public string? FormNumber { get; set; }
+    public string? RoomNumber { get; set; }
 
-    public required DateTime RequestedAt { get; set; }
-
-    public DateTime? CompletedAt { get; set; }
+    public DateOnly? RequestedAt { get; set; }
+    public DateOnly? CompletedAt { get; set; }
+    public MedicalStatus Status { get; set; }
+    public string? RequestDescription { get; set; }
 
     // --- Nhóm 1: Tế bào máu ngoại vi (Lưu dạng float để có số thập phân) ---
     // Hồng cầu (RBC) & Bạch cầu (WBC) & Tiểu cầu (PLT)
@@ -54,9 +59,37 @@ public class Hematology
     public BloodTypeAbo? BloodTypeAbo { get; set; }
     public BloodTypeRh? BloodTypeRh { get; set; }
 
-    
+
     // Navigation Property
+    public ICollection<HematologyStatusLog> HematologyStatusLogs { get; set; } = [];
     public MedicalRecord MedicalRecord { get; set; } = null!;
     public User? RequestedBy { get; set; } // Bác sĩ điều trị
     public User? PerformedBy { get; set; } // Trưởng khoa xét nghiệm
+
+    public bool IsCompleted()
+    {
+        // ignore
+        var metadataProps = new[]
+        {
+            nameof(Id),
+        };
+
+        var properties = GetType().GetProperties();
+
+        foreach (var prop in properties)
+        {
+            // ignore metadata, navigation (collection, class)
+            if (metadataProps.Contains(prop.Name) ||
+                prop.PropertyType.IsGenericType ||
+                (prop.PropertyType.IsClass && prop.PropertyType != typeof(string)))
+                continue;
+
+            var value = prop.GetValue(this);
+
+            if (value == null) return false;
+            if (value is string s && string.IsNullOrWhiteSpace(s)) return false;
+        }
+
+        return true;
+    }
 }

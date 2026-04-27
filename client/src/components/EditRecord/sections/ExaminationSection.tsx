@@ -13,7 +13,7 @@ interface ExaminationSectionProps {
 export const ExaminationSection = ({ formData, setFormData, readOnly = false }: ExaminationSectionProps) => {
   const content = formData.medicalRecordContent;
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = <K extends keyof typeof content>(field: K, value: (typeof content)[K]) => {
     if (readOnly) return;
     setFormData((prev) => {
       if (!prev) return null;
@@ -27,12 +27,15 @@ export const ExaminationSection = ({ formData, setFormData, readOnly = false }: 
     });
   };
 
-  const handleNestedChange = (parent: string, field: string, value: any) => {
+  const handleNestedChange = <P extends 'vitalSigns' | 'organs', K extends keyof (typeof content)[P]>(
+    parent: P, 
+    field: K, 
+    value: string
+  ) => {
     if (readOnly) return;
     setFormData((prev) => {
       if (!prev) return null;
-      // @ts-ignore
-      const parentObj = prev.medicalRecordContent[parent] || {};
+      const parentObj = prev.medicalRecordContent[parent];
       
       return {
         ...prev,

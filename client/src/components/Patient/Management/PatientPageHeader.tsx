@@ -18,9 +18,6 @@ export const PatientPageHeader = ({
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Bệnh Nhân</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Bệnh nhân và thông tin chi tiết
-        </p>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">

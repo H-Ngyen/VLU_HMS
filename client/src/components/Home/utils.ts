@@ -1,4 +1,4 @@
-import { RECORD_TYPES } from "@/mockData";
+import { RECORD_TYPES } from "@/constants/recordTypes";
 import type { Record } from "@/types";
 
 export const getTypeName = (typeId: string) => {
