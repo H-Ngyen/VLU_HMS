@@ -10,6 +10,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.LoadEnv();
 
+// Ép Kestrel sử dụng URL từ biến môi trường
+var urls = Environment.GetEnvironmentVariable("ASPNETCORE_URLS");
+if (!string.IsNullOrEmpty(urls))
+{
+    builder.WebHost.UseUrls(urls.Split(';'));
+}
+
 // Add services to the container.
 var config = builder.Configuration;
 
