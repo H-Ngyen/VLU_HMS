@@ -172,6 +172,8 @@ export interface Record {
   numericId?: number;
   bedCode?: string;
   storageCode?: string;
+  healthDept?: string;
+  hospital?: string;
   patientId: string;
   patientName: string;
   cccd: string;
