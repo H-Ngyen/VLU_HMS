@@ -108,7 +108,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<ISeeder, Seeder>();
 
         // add services
-        services.AddSingleton<IFileStorageService, FileStorageService>();
+        // services.AddSingleton<IFileStorageService, FileStorageService>(); // Cũ (MinIO)
+        services.AddSingleton<IFileStorageService, S3StorageService>(); // Mới (AWS S3 / S3-Compatible)
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<IGenerateIdService, GenerateIdService>();
         services.AddScoped<IPdfProcessorService, PdfProcessorService>();
