@@ -21,7 +21,7 @@ public static class WebApplicationBuilderExtensions
         {
             options.AddPolicy("AllowReactApp", policy =>
             {
-                policy.WithOrigins(BASE_CLIENT_URL)
+                policy.SetIsOriginAllowed(origin => true) // Cho phép tất cả origin
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials();
