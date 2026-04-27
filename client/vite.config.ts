@@ -14,7 +14,6 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), tailwindcss(), basicSsl()],
     server: {
-      https: true,
       host: true,
       proxy: {
         '/api': {
