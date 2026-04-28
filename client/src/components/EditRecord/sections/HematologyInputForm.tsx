@@ -767,6 +767,16 @@ export const HematologyInputForm = ({
         if (!currentHematologyId) {            // Find department ID from name
             const selectedDept = departmentsList.find(d => d.name === deptName);
             const deptIds = selectedDept ? [selectedDept.id] : [];
+            
+            // Gộp danh sách các khoa CC
+            if (ccDepartmentInputs && ccDepartmentInputs.length > 0) {
+              ccDepartmentInputs.forEach(ccName => {
+                const ccDept = departmentsList.find(d => d.name === ccName);
+                if (ccDept && !deptIds.includes(ccDept.id)) {
+                  deptIds.push(ccDept.id);
+                }
+              });
+            }
 
             const createPayload = {
                 listDepartmentId: deptIds,
