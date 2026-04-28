@@ -255,10 +255,15 @@ export const XRayInputForm = ({
             address: defaultAddress,
             department: initialData.department || defaultDepartment,
             bed: initialData.bed || defaultBedCode || "",
+            room: initialData.room || "",
             diagnosis: initialData.diagnosis || defaultDiagnosis || "",
             status: initialData.status !== undefined ? initialData.status : 0,
             xRayStatusLogs: initialData.xRayStatusLogs || []
         };
+        
+        // Ensure default location fields if missing in initialData
+        if (!data.healthDept) data.healthDept = "";
+        if (!data.hospital) data.hospital = "";
         
         // Ensure result date is populated if missing
         const now = new Date();

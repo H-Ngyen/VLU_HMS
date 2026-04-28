@@ -380,10 +380,16 @@ export const HematologyInputForm = ({
             insuranceNumber: defaultInsuranceNumber || initialData.insuranceNumber,
             department: initialData.department || defaultDepartment || "",
             bed: initialData.bed || defaultBedCode || "",
+            room: initialData.room || "",
             diagnosis: initialData.diagnosis || defaultDiagnosis || "",
             status: initialData.status !== undefined ? initialData.status : 0,
             hematologyStatusLogs: initialData.hematologyStatusLogs || []
         };
+        
+        // Ensure default location fields if missing
+        if (!data.healthDept) data.healthDept = "";
+        if (!data.hospital) data.hospital = "";
+        
         const calculatedAge = calculateAgeAtDate(defaultDob, getRequestDateString(data));
         data.age = (calculatedAge === "" && defaultAge && defaultAge > 0) ? defaultAge.toString() : calculatedAge;
 
