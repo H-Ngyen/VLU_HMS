@@ -49,18 +49,38 @@ export const ClinicalRecordPage = ({ type }: { type: "xray" | "hematology" }) =>
           address: dto.address || "",
           department: dto.recordType === 1 ? "Nội Khoa" : "Ngoại Khoa",
           insuranceNumber: dto.patient?.healthInsuranceNumber || "",
+          admissionDate: dto.admissionTime,
+          dischargeDate: dto.dischargeTime,
+          bedCode: dto.bedCode || "",
+          diagnosisInfo: {
+            deptDiagnosis: { name: dto.departmentDiagnosis, code: dto.departmentCode },
+            kkbDiagnosis: { name: dto.referralDiagnosis, code: dto.referralCode },
+            dischargeDiagnosis: {
+              mainDisease: { name: dto.dischargeMainDiagnosis, code: dto.dischargeMainCode },
+              comorbidities: { name: dto.dischargeSubDiagnosis, code: dto.dischargeSubCode }
+            }
+          },
+          managementData: {
+            admissionTime: dto.admissionTime,
+            dischargeTime: dto.dischargeTime,
+            transfers: (dto.departmentTransfers || []).map((t: any) => ({
+              department: t.departmentName,
+              date: t.transferDate,
+              days: t.treatmentDays
+            }))
+          },
           documents: [
             ...(dto.xRays || []).map((x: any) => ({
               id: `XRAY_${x.id}`,
               data: {
                 id: x.id,
                 status: x.status || 0,
-                healthDept: x.healthDept || "",
-                hospital: x.hospital || "",
-                xrayNumber: x.xrayNumber || "",
+                healthDept: x.healthDept || x.departmentOfHealth || "",
+                hospital: x.hospital || x.hospitalName || "",
+                xrayNumber: x.xrayNumber || x.formNumber || "",
                 times: x.times || "",
                 department: x.departmentName || "",
-                room: x.room || "",
+                room: x.room || x.roomNumber || "",
                 bed: x.bed || "",
                 diagnosis: x.diagnosis || "",
                 request: x.requestDescription || "",
@@ -82,14 +102,14 @@ export const ClinicalRecordPage = ({ type }: { type: "xray" | "hematology" }) =>
               data: {
                 id: h.id,
                 status: h.status || 0,
-                healthDept: h.departmentOfHealth || "",
-                hospital: h.hospitalName || "",
-                testNumber: h.formNumber || "",
+                healthDept: h.healthDept || h.departmentOfHealth || "",
+                hospital: h.hospital || h.hospitalName || "",
+                testNumber: h.testNumber || h.formNumber || "",
                 isEmergency: h.isEmergency || false,
                 department: h.departmentName || "",
-                room: h.roomNumber || "",
+                room: h.room || h.roomNumber || "",
                 bed: "",
-                diagnosis: h.requestDescription || "",
+                diagnosis: h.diagnosis || h.requestDescription || "",
                 doctor: h.requestedByName || "",
                 technician: h.performedByName || "",
                 hematologyStatusLogs: h.hematologyStatusLogs || [],
@@ -186,6 +206,8 @@ export const ClinicalRecordPage = ({ type }: { type: "xray" | "hematology" }) =>
           defaultGender={record.gender}
           defaultAddress={record.address}
           defaultDepartment={record.department}
+          defaultDiagnosis={record.diagnosisInfo?.deptDiagnosis?.name || record.diagnosisInfo?.kkbDiagnosis?.name}
+          defaultBedCode={record.bedCode}
           readOnly={false}
           recordId={record.numericId}
         />
@@ -202,6 +224,7 @@ export const ClinicalRecordPage = ({ type }: { type: "xray" | "hematology" }) =>
           defaultGender={record.gender}
           defaultAddress={record.address}
           defaultDepartment={record.department}
+          defaultDiagnosis={record.diagnosisInfo?.deptDiagnosis?.name || record.diagnosisInfo?.kkbDiagnosis?.name}
           readOnly={false}
           recordId={record.numericId}
         />
