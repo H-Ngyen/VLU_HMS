@@ -16,18 +16,17 @@ export default defineConfig(({ mode }) => {
     server: {
       host: true,
       proxy: {
-        '/api': {
-          target: proxyTarget,
-          changeOrigin: true,
-          secure: false,
-        },
-        '/hubs': {
-          target: proxyTarget,
-          changeOrigin: true,
-          secure: false,
-          ws: true,
-        },
+      '/api': {
+        target: proxyTarget,
+        changeOrigin: true,
+        secure: false,
       },
+      '/hubs/notifications': {
+        target: proxyTarget,
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+      },      },
     },
     resolve: {
       alias: {
