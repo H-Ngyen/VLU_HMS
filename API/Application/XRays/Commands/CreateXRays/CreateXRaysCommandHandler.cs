@@ -38,21 +38,12 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
         var currentUserDepartment = departments!.FirstOrDefault(d => d.Id == user.DepartmentId)
             ?? throw new BadRequestException($"Bạn chưa thuộc về quyền quản lý của bất kỳ khoa nào");
 
-        var xray = mapper.Map<XRay>(request);
-        xray.Status = MedicalStatus.Inital;
-        xray.RequestedById = creatorId;
-        xray.XRayStatusLogs.Add(new XRayStatusLog
-        {
-            Status = xray.Status,
-            DepartmentName = currentUserDepartment.Name,
-            UpdatedById = creatorId,
-            CreatedAt = dateTimeProvider.Now
-        });
+        var newXray = CreateNewXray(request, user, departments);
 
-        if (!xrayAuthorizationService.Authorize(user, xray, ResourceOperation.Create))
+        if (!xrayAuthorizationService.Authorize(user, newXray, ResourceOperation.Create))
             throw new ForbidException();
 
-        var id = await xRayRepository.CreateAsync(xray);
+        var id = await xRayRepository.CreateAsync(newXray);
         await PublishNotification(id, request, departments);
     }
     private async Task PublishNotification(int xrayId, CreateXRaysCommand request, IEnumerable<Department> departments)
@@ -75,7 +66,23 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
         {
             ClinicalType = ClinicalsType.Xray,
             NotificattionType = NotificationType.XrayInitial,
-            ListUserId = listUserId
+            ListUserId = listUserId.Distinct()
         });
+    }
+
+    private XRay CreateNewXray(CreateXRaysCommand command, CurrentUser currentUser, IEnumerable<Department> department)
+    {
+        var requestUserDepartment = department.FirstOrDefault(d => d.Id == currentUser.DepartmentId);
+        var xray = mapper.Map<XRay>(command);
+        xray.Status = MedicalStatus.Inital;
+        xray.RequestedById = currentUser.Id;
+        xray.XRayStatusLogs.Add(new XRayStatusLog
+        {
+            Status = xray.Status,
+            DepartmentName = requestUserDepartment?.Name,
+            UpdatedById = currentUser.Id,
+            CreatedAt = dateTimeProvider.Now
+        });
+        return xray;
     }
 }

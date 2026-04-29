@@ -68,7 +68,7 @@ public class CreateHematologyCommandHandler(ILogger<CreateHematologyCommandHandl
         {
             ClinicalType = ClinicalsType.Hematology,
             NotificattionType = NotificationType.HematologyInitial,
-            ListUserId = listUserId
+            ListUserId = listUserId.Distinct()
         });
     }
 
