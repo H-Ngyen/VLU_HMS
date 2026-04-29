@@ -19,6 +19,7 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
     IDepartmentRepository departmentRepository,
     IMapper mapper,
     IXRayRepository xRayRepository,
+    IUserRepository userRepository,
     IDateTimeProvider dateTimeProvider,
     IMediator mediator) : IRequestHandler<CreateXRaysCommand>
 {
@@ -32,9 +33,9 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
         if (!medicalRecord)
             throw new BadRequestException(nameof(MedicalRecord), $"{request.MedicalRecordId}");
 
-        var departments = await departmentRepository.GetAllAsync() 
+        var departments = await departmentRepository.GetAllAsync()
             ?? throw new InvalidOperationException($"Hệ thống chưa có khoa nào");
-        var currentUserDepartment = departments!.FirstOrDefault(d => d.Id == user.DepartmentId) 
+        var currentUserDepartment = departments!.FirstOrDefault(d => d.Id == user.DepartmentId)
             ?? throw new BadRequestException($"Bạn chưa thuộc về quyền quản lý của bất kỳ khoa nào");
 
         var xray = mapper.Map<XRay>(request);
@@ -60,6 +61,15 @@ public class CreateXRaysCommandHandler(ILogger<CreateXRaysCommandHandler> logger
             .Where(d => request.ListDepartmentId.Contains(d.Id) && d.HeadUserId != null)
             .Select(d => d.HeadUserId!.Value)
             .ToList();
+
+        var additionalUser = await userRepository.GetListByIdsAsync(request.AdditionalUserIds ?? []);
+
+        foreach (var user in additionalUser)
+        {
+            if (user.DepartmentId == null || !request.ListDepartmentId.Contains(user.DepartmentId.Value))
+                throw new BadRequestException($"{user.Email} không thuộc về một trong các khoa được chỉ định");
+            listUserId.Add(user.Id);
+        }
 
         var isSuccess = await mediator.Send(new PublishNotificationCommand(xrayId)
         {
