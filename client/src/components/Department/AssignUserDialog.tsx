@@ -98,8 +98,8 @@ export const AssignUserDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] flex flex-col h-[80vh]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[500px] flex flex-col h-auto max-h-[85vh]">
+        <DialogHeader className="shrink-0">
           <DialogTitle>
             {mode === "head" ? "Phân công Trưởng Khoa" : "Thêm Thành Viên"}
           </DialogTitle>
@@ -108,7 +108,7 @@ export const AssignUserDialog = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="relative my-4">
+        <div className="relative my-4 shrink-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <Input
             placeholder="Tìm theo tên hoặc email..."
@@ -118,7 +118,7 @@ export const AssignUserDialog = ({
           />
         </div>
 
-        <ScrollArea className="flex-1 pr-4">
+        <ScrollArea className="h-[400px] w-full pr-4 border rounded-md p-2">
           {loading ? (
             <div className="flex justify-center py-8">
               <Loader2 className="animate-spin text-vlu-red" />
