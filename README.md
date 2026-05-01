@@ -77,6 +77,3 @@ The React application will be accessible at `http://localhost:5173`.
 - **Backend**: C#, ASP.NET Core, Entity Framework Core, SignalR.
 - **Frontend**: React, TypeScript, Vite, Tailwind CSS (assumed based on `components.json`/shadcn), React Router.
 - **Storage**: Relational DB, MinIO (S3 Compatible).
-
-## 📄 License
-[Add License Information Here]
