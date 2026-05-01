@@ -1,6 +1,6 @@
-# VLU Hospital Management System (HMS)
+# Hospital Management System (HMS)
 
-A comprehensive Hospital Management System (HMS) developed for VLU, featuring a modern, clean architecture backend with .NET and a responsive frontend built with React and Vite.
+A comprehensive Hospital Management System (HMS) developed for Van Lang University, featuring a modern, clean architecture backend with .NET and a responsive frontend built with React and Vite.
 
 ## 🏗️ Architecture
 
