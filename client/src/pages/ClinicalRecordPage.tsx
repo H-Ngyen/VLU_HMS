@@ -53,8 +53,8 @@ export const ClinicalRecordPage = ({ type }: { type: "xray" | "hematology" }) =>
           dischargeDate: dto.dischargeTime,
           bedCode: dto.bedCode || "",
           diagnosisInfo: {
-            deptDiagnosis: { name: dto.departmentDiagnosis, code: dto.departmentCode },
-            kkbDiagnosis: { name: dto.referralDiagnosis, code: dto.referralCode },
+            deptDiagnosis: { name: dto.detail?.diagnosisMain || dto.departmentDiagnosis, code: dto.departmentCode },
+            kkbDiagnosis: { name: dto.admissionDiagnosis, code: dto.admissionCode },
             dischargeDiagnosis: {
               mainDisease: { name: dto.dischargeMainDiagnosis, code: dto.dischargeMainCode },
               comorbidities: { name: dto.dischargeSubDiagnosis, code: dto.dischargeSubCode }
