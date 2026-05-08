@@ -8,7 +8,7 @@ internal class DepartmentTransferConfiguration : IEntityTypeConfiguration<Depart
 {
     public void Configure(EntityTypeBuilder<DepartmentTransfer> builder)
     {
-        builder.Property(d => d.Name).HasMaxLength(20);
+        builder.Property(d => d.Name).HasMaxLength(100);
         builder.Property(d => d.TreatmentDays).HasMaxLength(5);
 
         builder.HasOne(d => d.MedicalRecord)

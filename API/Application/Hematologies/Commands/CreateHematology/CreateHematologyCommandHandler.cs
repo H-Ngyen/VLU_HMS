@@ -20,6 +20,7 @@ public class CreateHematologyCommandHandler(ILogger<CreateHematologyCommandHandl
     IMedicalRecordsRepository recordsRepository,
     IHematologyRepository hematologyRepository,
     IDepartmentRepository departmentRepository,
+    IUserRepository userRepository,
     IMediator mediator) : IRequestHandler<CreateHematologyCommand>
 {
     public async Task Handle(CreateHematologyCommand request, CancellationToken cancellationToken)
@@ -54,11 +55,20 @@ public class CreateHematologyCommandHandler(ILogger<CreateHematologyCommandHandl
             .Select(d => d.HeadUserId!.Value)
             .ToList();
 
+        var additionalUser = await userRepository.GetListByIdsAsync(request.AdditionalUserIds ?? []);
+
+        foreach (var user in additionalUser)
+        {
+            if (user.DepartmentId == null || !request.ListDepartmentId.Contains(user.DepartmentId.Value))
+                throw new BadRequestException($"{user.Email} không thuộc về một trong các khoa được chỉ định");
+            listUserId.Add(user.Id);
+        }
+
         var isSuccess = await mediator.Send(new PublishNotificationCommand(hematologyId)
         {
             ClinicalType = ClinicalsType.Hematology,
             NotificattionType = NotificationType.HematologyInitial,
-            ListUserId = listUserId
+            ListUserId = listUserId.Distinct()
         });
     }
 

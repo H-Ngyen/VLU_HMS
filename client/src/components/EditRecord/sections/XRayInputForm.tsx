@@ -24,7 +24,8 @@ import html2canvas from "html2canvas-pro";
 import { api } from "@/services/api";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import type { Department, Document } from "@/types";
+import type { Department, Document, User } from "@/types";
+import { MultiSelect } from "@/components/ui/multi-select";
 
 interface XRayStatusLog {
   status: number;
@@ -36,6 +37,7 @@ interface XRayStatusLog {
 export interface XRayData {
   id?: number;
   status: number;
+  additionalUserIds?: string[];
   healthDept: string;
   hospital: string;
   xrayNumber: string;
@@ -213,7 +215,8 @@ export const XRayInputForm = ({
     healthDept: "",
     hospital: "",
     xrayNumber: "",
-    times: calculateXRayOrder(), 
+    times: calculateXRayOrder(),
+    additionalUserIds: [], 
     patientName: "",
     age: "",
     gender: "",
@@ -302,18 +305,23 @@ export const XRayInputForm = ({
   const [isGenerating, setIsGenerating] = useState(!!(isOpen && initialData && readOnly));
 
   const [departmentsList, setDepartmentsList] = useState<Department[]>([]);
+  const [usersList, setUsersList] = useState<User[]>([]);
 
   useEffect(() => {
     if (isDeptDialogOpen) {
-      const fetchDepts = async () => {
+      const fetchDeptsAndUsers = async () => {
         try {
-          const data = await api.departments.getAll();
-          setDepartmentsList(data);
+          const [depts, users] = await Promise.all([
+            api.departments.getAll(),
+            api.identities.getAllUsers()
+          ]);
+          setDepartmentsList(depts);
+          setUsersList(users);
         } catch (error) {
-          console.error("Failed to fetch departments", error);
+          console.error("Failed to fetch departments or users", error);
         }
       };
-      fetchDepts();
+      fetchDeptsAndUsers();
     }
   }, [isDeptDialogOpen]);
 
@@ -596,7 +604,8 @@ export const XRayInputForm = ({
                 departmentOfHealth: formData.healthDept,
                 hospitalName: formData.hospital,
                 formNumber: formData.xrayNumber,
-                roomNumber: formData.room
+                roomNumber: formData.room,
+                additionalUserIds: formData.additionalUserIds?.map(id => parseInt(id, 10)) || []
             };
             const newIdStr = await api.xRays.create(recordId, createPayload);
             currentXrayId = parseInt(newIdStr, 10);
@@ -1011,12 +1020,12 @@ export const XRayInputForm = ({
 
     {/* Dialog xác nhận đơn vị thực hiện */}
     <Dialog open={isDeptDialogOpen} onOpenChange={setIsDeptDialogOpen}>
-      <DialogContent className="sm:max-w-[450px]">
+      <DialogContent className="sm:max-w-[450px] md:max-w-[600px] lg:max-w-[700px]">
         <DialogHeader>
           <DialogTitle>Gửi thông báo</DialogTitle>
         </DialogHeader>
         <div className="py-4">
-          <div className="w-full">
+          <div className="w-full flex flex-col gap-2">
             <Popover open={openCcCombobox} onOpenChange={setOpenCcCombobox}>
               <PopoverTrigger asChild>
                 <Button
@@ -1034,31 +1043,31 @@ export const XRayInputForm = ({
                   <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[380px] p-0" align="start">
+              <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
                 <Command>
                   <CommandInput placeholder="Tìm khoa..." />
                   <CommandList>
                     <CommandEmpty>Không tìm thấy khoa phù hợp.</CommandEmpty>
-                    <CommandGroup>
+                    <CommandGroup className="max-h-48 overflow-y-auto">
                       {departmentsList.map((d) => (
                         <CommandItem
                           key={d.id}
                           value={d.name}
-                          onSelect={(currentValue) => {
+                          onSelect={() => {
                             setCcDepartmentInputs(prev => 
-                              prev.includes(currentValue) 
-                                ? prev.filter(name => name !== currentValue)
-                                : [...prev, currentValue]
+                              prev.includes(d.name) 
+                                ? prev.filter(name => name !== d.name)
+                                : [...prev, d.name]
                             );
                           }}
                         >
                           <Check
                             className={cn(
-                              "mr-2 h-4 w-4",
+                              "mr-2 h-4 w-4 shrink-0",
                               ccDepartmentInputs.includes(d.name) ? "opacity-100" : "opacity-0"
                             )}
                           />
-                          {d.name}
+                          <span className="truncate">{d.name}</span>
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -1067,6 +1076,29 @@ export const XRayInputForm = ({
               </PopoverContent>
             </Popover>
           </div>
+          
+          {ccDepartmentInputs.length > 0 && (
+            <div className="w-full mt-4">
+              <Label className="mb-2 block text-sm font-medium">Thêm người nhận thông báo (Tuỳ chọn)</Label>
+              <MultiSelect
+                options={usersList
+                  .filter((u: User) => {
+                    const userDept = departmentsList.find((d: Department) => 
+                      d.users?.some((deptUser: User) => deptUser.id === u.id) || d.headUser?.id === u.id
+                    );
+                    // Hiển thị user nếu họ thuộc một trong các khoa đang chọn, VÀ họ không phải là trưởng khoa của khoa đó
+                    return userDept && ccDepartmentInputs.includes(userDept.name) && userDept.headUser?.id !== u.id;
+                  })
+                  .map((u: User) => ({ label: `${u.name} (${u.email})`, value: u.id.toString() }))
+                }
+                selected={formData.additionalUserIds || []}
+                onChange={(newSelected: any) => {
+                   setFormData(prev => ({ ...prev, additionalUserIds: Array.isArray(newSelected) ? newSelected : newSelected(prev.additionalUserIds || []) }));
+                }}
+                placeholder="Chọn người dùng..."
+              />
+            </div>
+          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsDeptDialogOpen(false)} disabled={isSubmitting}>Hủy</Button>

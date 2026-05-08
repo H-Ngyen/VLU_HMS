@@ -20,4 +20,5 @@ public class CreateXRaysCommand : IRequest
     public required string RequestDescription { get; set; }
     public required DateOnly RequestedAt { get; set; }
     public required IEnumerable<int> ListDepartmentId { get; set; }
+    public required IEnumerable<int>? AdditionalUserIds { get; set; }
 }

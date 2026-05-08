@@ -14,7 +14,7 @@ public class CreateMedicalAttachmentCommandValidator : AbstractValidator<CreateM
             .NotNull().WithMessage("Thiếu tệp đính kèm")
             .Must(file => file != null && (file.ContentType == "application/pdf" || file.FileName.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase)))
             .WithMessage("Chỉ cho phép tải lên định dạng file PDF.")
-            .Must(file => file != null && file.Length <= 10 * 1024 * 1024)
-            .WithMessage("Dung lượng file không được vượt quá 10MB.");
+            .Must(file => file != null && file.Length <= 50 * 1024 * 1024)
+            .WithMessage("Dung lượng file không được vượt quá 50MB.");
     }
 }

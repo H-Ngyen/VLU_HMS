@@ -15,4 +15,5 @@ public class CreateHematologyCommand : IRequest
     public required string FormNumber { get; set; }
     public required string RoomNumber { get; set; }
     public required IEnumerable<int> ListDepartmentId { get; set; }
+    public required IEnumerable<int>? AdditionalUserIds { get; set; }
 }
