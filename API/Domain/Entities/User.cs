@@ -22,6 +22,8 @@ public class User
 
     public bool Active { get; set; }
 
+    public bool IsReceivedEmail { get; set; }
+
     // Navigation Properties
     public Role Role { get; set; } = null!;
     public Department? Department { get; set; }

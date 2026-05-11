@@ -62,6 +62,7 @@ public class CreateCurrentUserCommandHandler(ILogger<CreateCurrentUserCommandHan
         user.CreateAt = dateTimeProvider.Now;
         user.UpdateAt = dateTimeProvider.ConvertToVietnamTime(request.UpdateAt);
         user.Active = true;
+        user.IsReceivedEmail = true;
 
         return user;
     }

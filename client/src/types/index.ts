@@ -209,6 +209,7 @@ export interface User {
   departmentId?: number;
   departmentName?: string;
   createAt: string;
+  isReceivedEmail?: boolean;
 }
 
 export interface Department {

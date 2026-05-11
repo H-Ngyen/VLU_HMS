@@ -23,7 +23,7 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
             .Where(m => m.StorageCode != null && m.StorageCode.StartsWith(yearPrefix + "."))
             .MaxAsync(m => m.StorageCode);
 
-    public async Task<(IEnumerable<MedicalRecord>, int)> GetAllMatchingAsync(string? searchPhrase, int pageSize, int pageNumber, RecordType? recordType)
+    public async Task<(IEnumerable<MedicalRecord>, int)> GetAllMatchingAsync(string? searchPhrase, int pageSize, int pageNumber, RecordType? recordType, DateOnly? FromDay, DateOnly? ToDay)
     {
         var searchPhraseLower = searchPhrase?.ToLower();
 
@@ -31,13 +31,15 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
             .Include(m => m.Patient)
             .Where(r =>
                 (recordType == null || r.RecordType == recordType) &&
+                (FromDay == null || DateOnly.FromDateTime(r.CreatedAt) >= FromDay) &&
+                (ToDay == null || DateOnly.FromDateTime(r.CreatedAt) <= ToDay) &&
                 (searchPhraseLower == null || (r.StorageCode != null && r.StorageCode.ToLower().Contains(searchPhraseLower))
                                                     || r.Patient.Name.ToLower().Contains(searchPhraseLower)
                                                     || r.Patient.HealthInsuranceNumber.ToLower().Contains(searchPhraseLower)));
 
         var totalCount = await baseQuery.CountAsync();
         var records = await baseQuery
-            .OrderByDescending(m => m.AdmissionTime)
+            .OrderByDescending(m => m.CreatedAt)
             .Skip(pageSize * (pageNumber - 1))
             .Take(pageSize)
             .ToListAsync();
@@ -70,7 +72,7 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
                 .ThenInclude(x => x.RequestedBy)
             .Include(m => m.Hematologies)
                 .ThenInclude(x => x.PerformedBy)
-            .AsSplitQuery() 
+            .AsSplitQuery()
             .FirstOrDefaultAsync(m => m.Id == id);
 
     public async Task<bool> ExistAsync(int id)

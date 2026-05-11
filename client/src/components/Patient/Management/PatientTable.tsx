@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import {
   Table,
@@ -15,22 +14,25 @@ import { PatientTableRow } from "./PatientTableRow";
 interface PatientTableProps {
   patients: Patient[];
   onPatientDeleted: () => void;
+  currentPage: number;
+  totalPages: number;
+  totalCount: number;
+  onPageChange: (page: number) => void;
+  itemsPerPage: number;
 }
 
-export const PatientTable = ({ patients, onPatientDeleted }: PatientTableProps) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [prevPatientsCount, setPrevPatientsCount] = useState(patients.length);
-  const itemsPerPage = 10;
-
-  if (patients.length !== prevPatientsCount) {
-    setPrevPatientsCount(patients.length);
-    setCurrentPage(1);
-  }
-
-  const totalPages = Math.ceil(patients.length / itemsPerPage);
+export const PatientTable = ({ 
+  patients, 
+  onPatientDeleted,
+  currentPage,
+  totalPages,
+  totalCount,
+  onPageChange,
+  itemsPerPage
+}: PatientTableProps) => {
+  
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentPatients = patients.slice(startIndex, endIndex);
+  const endIndex = Math.min(startIndex + itemsPerPage, totalCount);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex flex-col">
@@ -49,7 +51,7 @@ export const PatientTable = ({ patients, onPatientDeleted }: PatientTableProps) 
           </TableHeader>
           <TableBody>
             {patients.length > 0 ? (
-              currentPatients.map((patient) => (
+              patients.map((patient) => (
                 <PatientTableRow key={patient.id} patient={patient} onDelete={onPatientDeleted} />
               ))
             ) : (
@@ -73,7 +75,7 @@ export const PatientTable = ({ patients, onPatientDeleted }: PatientTableProps) 
       {patients.length > 0 && (
         <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex items-center justify-between">
           <div className="text-xs text-gray-500">
-            Hiển thị <span className="font-medium">{startIndex + 1}</span> đến <span className="font-medium">{Math.min(endIndex, patients.length)}</span> trên tổng số <span className="font-medium">{patients.length}</span> bản ghi
+            Hiển thị <span className="font-medium">{startIndex + 1}</span> đến <span className="font-medium">{endIndex}</span> trên tổng số <span className="font-medium">{totalCount}</span> bản ghi
           </div>
           <div className="flex items-center space-x-2">
             <Button 
@@ -81,7 +83,7 @@ export const PatientTable = ({ patients, onPatientDeleted }: PatientTableProps) 
               size="icon" 
               className="h-8 w-8" 
               disabled={currentPage === 1}
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              onClick={() => onPageChange(Math.max(1, currentPage - 1))}
             >
               <ChevronLeft className="size-4" />
             </Button>
@@ -91,7 +93,7 @@ export const PatientTable = ({ patients, onPatientDeleted }: PatientTableProps) 
               size="icon" 
               className="h-8 w-8"
               disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
             >
               <ChevronRight className="size-4" />
             </Button>

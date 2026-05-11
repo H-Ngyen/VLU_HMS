@@ -8,7 +8,12 @@ using MediatR;
 
 namespace Application.Statistics.Queries.GetDashboard;
 
-public record GetDashboardQuery : IRequest<DashboardDto>;
+public class GetDashboardQuery : IRequest<DashboardDto>
+{
+    public DateOnly? FromDay { get; set; }
+    public DateOnly? ToDay { get; set; }
+    public RecordType? RecordType { get; set; }
+}
 
 public class GetDashboardQueryHandler(
     IMedicalRecordsRepository medicalRecordsRepository,
@@ -27,20 +32,40 @@ public class GetDashboardQueryHandler(
 
         // 1. Get Clinical Data using getAllAsync
         var allRecordsList = await medicalRecordsRepository.GetAllAsync();
-        var allRecords = allRecordsList.Select(m => new { 
-                m.CreatedAt, 
-                m.HasSurgery, 
-                m.HasProcedure, 
-                m.AdmissionType, 
-                m.TreatmentResult, 
-                m.ReferralSource,
-                m.DeathTimeGroup,
-                m.HasAutopsy,
-                m.DischargeTime
-            }).ToList();
+        var queryableRecords = allRecordsList.AsQueryable();
+
+        // 1. Lọc theo mốc ngày
+        if (request.FromDay.HasValue)
+        {
+            var fromDateTime = request.FromDay.Value.ToDateTime(TimeOnly.MinValue);
+            queryableRecords = queryableRecords.Where(x => x.CreatedAt >= fromDateTime);
+        }
+        if (request.ToDay.HasValue)
+        {
+            var toDateTime = request.ToDay.Value.ToDateTime(TimeOnly.MaxValue);
+            queryableRecords = queryableRecords.Where(x => x.CreatedAt <= toDateTime);
+        }
+
+        // 2. Lọc theo loại hồ sơ
+        if (request.RecordType.HasValue)
+        {
+            queryableRecords = queryableRecords.Where(x => x.RecordType == request.RecordType.Value);
+        }
+        var allRecords = queryableRecords.Select(m => new
+        {
+            m.CreatedAt,
+            m.HasSurgery,
+            m.HasProcedure,
+            m.AdmissionType,
+            m.TreatmentResult,
+            m.ReferralSource,
+            m.DeathTimeGroup,
+            m.HasAutopsy,
+            m.DischargeTime
+        }).ToList();
 
         var total = allRecords.Count;
-        
+
         // 2. Summary
         var summary = new SummaryDto
         {
@@ -56,7 +81,7 @@ public class GetDashboardQueryHandler(
 
         var usersThisMonth = users.Count(u => u.CreateAt >= startOfThisMonth);
         var usersLastMonth = users.Count(u => u.CreateAt >= startOfLastMonth && u.CreateAt < startOfThisMonth);
-        
+
         double growth = 0;
         if (usersLastMonth > 0)
             growth = Math.Round((double)(usersThisMonth - usersLastMonth) / usersLastMonth * 100, 1);
@@ -77,28 +102,32 @@ public class GetDashboardQueryHandler(
         {
             var monthDate = startOfThisMonth.AddMonths(-i);
             var label = monthDate.ToString("MM/yyyy");
-            
-            trends.MedicalRecords.Add(new DataPointDto { 
-                Label = label, 
-                Value = allRecords.Count(r => r.CreatedAt.Year == monthDate.Year && r.CreatedAt.Month == monthDate.Month) 
+
+            trends.MedicalRecords.Add(new DataPointDto
+            {
+                Label = label,
+                Value = allRecords.Count(r => r.CreatedAt.Year == monthDate.Year && r.CreatedAt.Month == monthDate.Month)
             });
-            
-            trends.UserOnboarding.Add(new DataPointDto { 
-                Label = label, 
-                Value = users.Count(u => u.CreateAt.Year == monthDate.Year && u.CreateAt.Month == monthDate.Month) 
+
+            trends.UserOnboarding.Add(new DataPointDto
+            {
+                Label = label,
+                Value = users.Count(u => u.CreateAt.Year == monthDate.Year && u.CreateAt.Month == monthDate.Month)
             });
         }
 
         // 5. Distributions
         var outcomeDistribution = Enum.GetValues<TreatmentResult>()
-            .Select(e => new DataPointDto {
+            .Select(e => new DataPointDto
+            {
                 Label = e.ToString(),
                 Value = allRecords.Count(r => r.TreatmentResult == e),
                 Percentage = total == 0 ? 0 : Math.Round((double)allRecords.Count(r => r.TreatmentResult == e) / total * 100, 1)
             }).ToList();
 
         var admissionDistribution = Enum.GetValues<AdmissionType>()
-            .Select(e => new DataPointDto {
+            .Select(e => new DataPointDto
+            {
                 Label = e.ToString(),
                 Value = allRecords.Count(r => r.AdmissionType == e)
             }).ToList();

@@ -11,9 +11,9 @@ namespace AppHost.Controllers;
 public class StatisticsController(IMediator mediator) : ControllerBase
 {
     [HttpGet("dashboard")]
-    public async Task<IActionResult> GetDashboard()
+    public async Task<IActionResult> GetDashboard([FromQuery] GetDashboardQuery query)
     {
-        var result = await mediator.Send(new GetDashboardQuery());
+        var result = await mediator.Send(query);
         return Ok(result);
     }
 }

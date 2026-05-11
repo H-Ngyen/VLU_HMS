@@ -6,8 +6,12 @@ import {
   LineChart, Line, PieChart, Pie, Cell, Legend
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, HeartPulse, FileText, ArrowUpRight, ArrowDownRight, AlertCircle, Skull } from "lucide-react";
+import { Users, HeartPulse, FileText, ArrowUpRight, ArrowDownRight, AlertCircle, Skull, Filter } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
@@ -30,32 +34,45 @@ export const DashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchDashboard = async () => {
-      try {
-        const result = await api.statistics.getDashboard();
-        // Map labels for outcome distribution
-        if (result.outcomeDistribution) {
-          result.outcomeDistribution = result.outcomeDistribution.map((d: any) => ({
-            ...d,
-            label: OUTCOME_LABELS[d.label] || d.label
-          }));
-        }
-        // Map labels for admission type distribution
-        if (result.admissionTypeDistribution) {
-          result.admissionTypeDistribution = result.admissionTypeDistribution.map((d: any) => ({
-            ...d,
-            label: ADMISSION_LABELS[d.label] || d.label
-          }));
-        }
-        setData(result);
-      } catch (err: any) {
-        setError(err.message || "Failed to load dashboard data");
-      } finally {
-        setLoading(false);
+  const [fromDay, setFromDay] = useState<string>("");
+  const [toDay, setToDay] = useState<string>("");
+  const [recordType, setRecordType] = useState<string>("all");
+
+  const fetchDashboard = async () => {
+    setLoading(true);
+    try {
+      const filters: any = {};
+      if (fromDay) filters.fromDay = fromDay;
+      if (toDay) filters.toDay = toDay;
+      if (recordType && recordType !== "all") filters.recordType = parseInt(recordType);
+
+      const result = await api.statistics.getDashboard(filters);
+      // Map labels for outcome distribution
+      if (result.outcomeDistribution) {
+        result.outcomeDistribution = result.outcomeDistribution.map((d: any) => ({
+          ...d,
+          label: OUTCOME_LABELS[d.label] || d.label
+        }));
       }
-    };
+      // Map labels for admission type distribution
+      if (result.admissionTypeDistribution) {
+        result.admissionTypeDistribution = result.admissionTypeDistribution.map((d: any) => ({
+          ...d,
+          label: ADMISSION_LABELS[d.label] || d.label
+        }));
+      }
+      setData(result);
+      setError(null);
+    } catch (err: any) {
+      setError(err.message || "Failed to load dashboard data");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchDashboard();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (loading) {
@@ -87,7 +104,49 @@ export const DashboardPage = () => {
 
   return (
     <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold text-gray-800">Thống kê & Báo cáo</h1>
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        <h1 className="text-2xl font-bold text-gray-800">Thống kê & Báo cáo</h1>
+        
+        <div className="flex flex-wrap items-center gap-3 bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="fromDay" className="text-sm font-medium text-gray-600">Từ ngày</Label>
+            <Input 
+              id="fromDay"
+              type="date" 
+              value={fromDay} 
+              onChange={(e) => setFromDay(e.target.value)}
+              className="w-[140px] h-9"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="toDay" className="text-sm font-medium text-gray-600">Đến ngày</Label>
+            <Input 
+              id="toDay"
+              type="date" 
+              value={toDay} 
+              onChange={(e) => setToDay(e.target.value)}
+              className="w-[140px] h-9"
+            />
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="recordType" className="text-sm font-medium text-gray-600">Loại hồ sơ</Label>
+            <Select value={recordType} onValueChange={setRecordType}>
+              <SelectTrigger className="w-[140px] h-9">
+                <SelectValue placeholder="Tất cả" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tất cả</SelectItem>
+                <SelectItem value="1">Nội khoa</SelectItem>
+                <SelectItem value="2">Ngoại khoa</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={() => fetchDashboard()} className="h-9 bg-vlu-red hover:bg-red-700 text-white">
+            <Filter className="w-4 h-4 mr-2" />
+            Lọc
+          </Button>
+        </div>
+      </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

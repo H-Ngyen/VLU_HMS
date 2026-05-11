@@ -19,7 +19,10 @@ public class NotificationEmailJobService(ILogger<NotificationEmailJobService> lo
         if (userNotification == null) return;
         if (userNotification.IsEmailSend == true) return;
 
-        var isSuccess = await emailService.SendAsync(notification.EmailTitle, notification.EmailContent, toEmail);
+        var IsReceivedEmail = userNotification.User.IsReceivedEmail;
+        var isSuccess = IsReceivedEmail 
+            ? await emailService.SendAsync(notification.EmailTitle, notification.EmailContent, toEmail)
+            : true;
         if (!isSuccess) return;
 
         userNotification.EmailSentAt = dateTimeProvider.Now;

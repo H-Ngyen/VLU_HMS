@@ -24,7 +24,9 @@ public class GetAllPatientsQueryHandler(ILogger<GetAllPatientsQueryHandler> logg
 
         var (patients, totalCount) = await patientsRepository.GetAllMatchingAsync(request.SearchPhrase,
             request.PageSize,
-            request.PageNumber);
+            request.PageNumber,
+            request.FromDay,
+            request.ToDay);
 
         var patientsDto = mapper.Map<IEnumerable<PatientDto>>(patients);
         var result = new PagedResult<PatientDto>(patientsDto, totalCount, request.PageSize, request.PageNumber);

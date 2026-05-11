@@ -9,8 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { NotificationCenter } from "./NotificationCenter";
 
 const navs = [
-  { href: "/dashboard", label: "Thống kê" },
-  { href: "/", label: "Bệnh án" },
+  { href: "/", label: "Thống kê" },
+  { href: "/records", label: "Bệnh án" },
   { href: "/patients", label: "Bệnh nhân" },
   { href: "/account", label: "Tài khoản" },
   { href: "/departments", label: "Khoa" },
@@ -19,14 +19,14 @@ const navs = [
 export function Header() {
   const { pathname } = useLocation();
   const { user, logout: auth0Logout } = useAuth0();
-  const { isAdmin, isTeacher } = useAuth();
+  const { currentUser, isAdmin, isTeacher } = useAuth();
 
   const handleLogout = () => {
     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
   };
 
   const filteredNavs = navs.filter(nav => {
-    if (nav.href === "/dashboard") return isAdmin || isTeacher;
+    if (nav.href === "/") return isAdmin || isTeacher;
     if (nav.href === "/account") return isAdmin;
     if (nav.href === "/departments") return isAdmin || isTeacher;
     return true;
@@ -35,7 +35,8 @@ export function Header() {
   const displayUser = {
     name: user?.name || "Người dùng",
     email: user?.email || "",
-    avatar: user?.picture || ""
+    avatar: user?.picture || "",
+    isReceivedEmail: currentUser?.isReceivedEmail ?? true
   };
 
   return (

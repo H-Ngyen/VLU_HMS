@@ -1,6 +1,7 @@
 using Application.Users.Commands.ChangeRole;
 using Application.Users.Commands.ChangeStatusActive;
 using Application.Users.Commands.CreateCurrentUser;
+using Application.Users.Commands.UpdateUserSetting;
 using Application.Users.Dtos;
 using Application.Users.Queries.GetAllUser;
 using Application.Users.Queries.GetByIdUser;
@@ -33,7 +34,7 @@ public class IdentitiesController(IMediator mediator) : ControllerBase
         var usersDto = await mediator.Send(new GetAllUserQuery());
         return Ok(usersDto);
     }
-  
+
     [HttpPut("users/{userId:int}/active")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -64,4 +65,17 @@ public class IdentitiesController(IMediator mediator) : ControllerBase
         var userDto = await mediator.Send(new GetByIdUserQuery(userId));
         return Ok(userDto);
     }
+
+    [HttpPut("users/{userId:int}/settings")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> UpdateUserSetting(int userId, UpdateUserSettingCommand command)
+    {
+        command.Id = userId;
+        await mediator.Send(command);
+        return NoContent();
+    }
+
 }
