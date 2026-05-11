@@ -51,6 +51,13 @@ public class UserAuthorizationService(ILogger<UserAuthorizationService> logger,
                 logger.LogInformation("Read operation - successful authorization");
                 return true;
             }
+
+            if(resourceOperation == ResourceOperation.Update &&
+                resource.Id == user.Id && UserRoles.IsInRoles(resource.Role.Name))
+            {
+                logger.LogInformation("Update operation - successful authorization");
+                return true;
+            }
         }
 
         return false;
