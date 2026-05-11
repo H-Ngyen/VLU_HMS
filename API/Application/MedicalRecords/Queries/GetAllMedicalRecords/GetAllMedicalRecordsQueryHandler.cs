@@ -25,7 +25,9 @@ public class GetAllMedicalRecordsQueryHandler(ILogger<GetAllMedicalRecordsQueryH
         var (records, totalCount) = await medicalRecordsRepository.GetAllMatchingAsync(request.SearchPhrase,
             request.PageSize,
             request.PageNumber,
-            request.RecordType);
+            request.RecordType,
+            request.FromDay,
+            request.ToDay);
 
         var recordsDto = mapper.Map<IEnumerable<MedicalRecordItemDto>>(records);
         var result = new PagedResult<MedicalRecordItemDto>(recordsDto, totalCount, request.PageSize, request.PageNumber);

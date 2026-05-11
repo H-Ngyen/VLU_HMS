@@ -10,5 +10,7 @@ public class GetAllMedicalRecordsQuery : IRequest<PagedResult<MedicalRecordItemD
     public int PageNumber { get; set; } = 1;
     public int PageSize { get; set; } = 20;
 
+    public DateOnly? FromDay { get; set; }
+    public DateOnly? ToDay { get; set; }
     public RecordType? RecordType { get; set; }
 }

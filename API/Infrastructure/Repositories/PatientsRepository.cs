@@ -36,6 +36,7 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
 
         var totalCount = await baseQuery.CountAsync();
         var patients = await baseQuery
+            .OrderByDescending(p => p.CreatedAt)
             .Skip(pageSize * (pageNumber - 1))
             .Take(pageSize)
             .ToListAsync();
