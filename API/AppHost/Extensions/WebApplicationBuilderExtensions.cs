@@ -16,12 +16,15 @@ public static class WebApplicationBuilderExtensions
             });
 
         // Add CORS
-        var BASE_CLIENT_URL = config["Client:BaseUrl"] ?? throw new InvalidOperationException("Client:BaseUrl is not configured");
+        var BASE_CLIENT_URL = config["Client:BaseUrl"]?
+            .Split(",", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            ?? throw new InvalidOperationException("Client:BaseUrl is not configured");
+
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowReactApp", policy =>
             {
-                policy.SetIsOriginAllowed(origin => true) // Cho phép tất cả origin
+                policy.WithOrigins(BASE_CLIENT_URL)
                       .AllowAnyHeader()
                       .AllowAnyMethod()
                       .AllowCredentials();
@@ -57,8 +60,15 @@ public static class WebApplicationBuilderExtensions
             configuration.ReadFrom.Configuration(context.Configuration)
         );
 
-        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true); 
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        
+        // Ép Kestrel sử dụng URL từ biến môi trường
+        var urls = config["ASPNETCORE:Urls"];
+        if (!string.IsNullOrEmpty(urls))
+        {
+            builder.WebHost.UseUrls(urls.Split(';'));
+        }
     }
 
-    
+
 }
