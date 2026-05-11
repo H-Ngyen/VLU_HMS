@@ -27,7 +27,6 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
     {
         var searchPhraseLower = searchPhrase?.ToLower();
 
-        
         var baseQuery = NoTrackingQuery
             .Include(m => m.Patient)
             .Where(r =>
@@ -73,7 +72,7 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
                 .ThenInclude(x => x.RequestedBy)
             .Include(m => m.Hematologies)
                 .ThenInclude(x => x.PerformedBy)
-            .AsSplitQuery() 
+            .AsSplitQuery()
             .FirstOrDefaultAsync(m => m.Id == id);
 
     public async Task<bool> ExistAsync(int id)

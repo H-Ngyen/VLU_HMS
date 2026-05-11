@@ -26,13 +26,18 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
 
     public async Task<(IEnumerable<Patient>, int)> GetAllMatchingAsync(string? searchPhrase,
         int pageSize,
-        int pageNumber)
+        int pageNumber,
+        DateOnly? from,
+        DateOnly? to)
     {
         var searchPhraseLower = searchPhrase?.ToLower();
 
         var baseQuery = NoTrackingQuery
-            .Where(r => searchPhraseLower == null || r.Name.ToLower().Contains(searchPhraseLower)
-                                                   || r.HealthInsuranceNumber.ToLower().Contains(searchPhraseLower));
+            .Where(r =>
+                (from == null || DateOnly.FromDateTime(r.CreatedAt) >= from) &&
+                (to == null || DateOnly.FromDateTime(r.CreatedAt) <= to) &&
+                (searchPhraseLower == null || r.Name.ToLower().Contains(searchPhraseLower)
+                                                   || r.HealthInsuranceNumber.ToLower().Contains(searchPhraseLower)));
 
         var totalCount = await baseQuery.CountAsync();
         var patients = await baseQuery

@@ -9,4 +9,7 @@ public class GetAllPatientsQuery : IRequest<PagedResult<PatientDto>>
     public string? SearchPhrase { get; set; }
     public int PageNumber { get; set; }
     public int PageSize { get; set; }
+
+    public DateOnly? FromDay { get; set; }
+    public DateOnly? ToDay { get; set; }
 }
