@@ -19,7 +19,7 @@ const navs = [
 export function Header() {
   const { pathname } = useLocation();
   const { user, logout: auth0Logout } = useAuth0();
-  const { isAdmin, isTeacher } = useAuth();
+  const { currentUser, isAdmin, isTeacher } = useAuth();
 
   const handleLogout = () => {
     auth0Logout({ logoutParams: { returnTo: window.location.origin } });
@@ -35,7 +35,8 @@ export function Header() {
   const displayUser = {
     name: user?.name || "Người dùng",
     email: user?.email || "",
-    avatar: user?.picture || ""
+    avatar: user?.picture || "",
+    isReceivedEmail: currentUser?.isReceivedEmail ?? true
   };
 
   return (

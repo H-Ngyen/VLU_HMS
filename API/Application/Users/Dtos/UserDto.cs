@@ -10,4 +10,5 @@ public class UserDto
     public bool Active { get; set; }
     public required string RoleName { get; set; }
     public required DateTime CreateAt { get; set; }
+    public bool IsReceivedEmail { get; set; }
 }

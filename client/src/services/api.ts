@@ -19,19 +19,20 @@ const getHeaders = (manualToken?: string | null, headers: Record<string, string>
 
 export const api = {
   patients: {
-    getAll: async (params?: { searchPhrase?: string; pageNumber?: number; pageSize?: number }): Promise<Patient[]> => {
+    getAll: async (params?: { searchPhrase?: string; pageNumber?: number; pageSize?: number; fromDay?: string; toDay?: string }): Promise<{ items: Patient[], totalPages: number, totalItemsCount: number }> => {
       const queryParams = new URLSearchParams({
         pageNumber: (params?.pageNumber || 1).toString(),
         pageSize: (params?.pageSize || 30).toString(),
-        ...(params?.searchPhrase && { searchPhrase: params.searchPhrase })
+        ...(params?.searchPhrase && { searchPhrase: params.searchPhrase }),
+        ...(params?.fromDay && { fromDay: params.fromDay }),
+        ...(params?.toDay && { toDay: params.toDay })
       });
       
       const response = await fetch(`${API_BASE_URL}/patients?${queryParams}`, {
         headers: getHeaders()
       });
       if (!response.ok) throw new Error('Failed to fetch patients');
-      const data = await response.json();
-      return data.items || [];
+      return await response.json();
     },
     
     getById: async (id: number): Promise<Patient> => {
@@ -142,12 +143,14 @@ export const api = {
   },
 
   medicalRecords: {
-    getAll: async (params?: { searchPhrase?: string; pageNumber?: number; pageSize?: number; recordType?: number }) => {
+    getAll: async (params?: { searchPhrase?: string; pageNumber?: number; pageSize?: number; recordType?: number; fromDay?: string; toDay?: string }) => {
       const queryParams = new URLSearchParams({
         pageNumber: (params?.pageNumber || 1).toString(),
         pageSize: (params?.pageSize || 30).toString(),
         ...(params?.searchPhrase && { searchPhrase: params.searchPhrase }),
-        ...(params?.recordType && { recordType: params.recordType.toString() })
+        ...(params?.recordType && { recordType: params.recordType.toString() }),
+        ...(params?.fromDay && { fromDay: params.fromDay }),
+        ...(params?.toDay && { toDay: params.toDay })
       });
 
       const response = await fetch(`${API_BASE_URL}/medical-records?${queryParams}`, {
@@ -535,6 +538,24 @@ export const api = {
       }
     },
 
+    updateSettings: async (userId: number, isReceivedEmail: boolean) => {
+      const response = await fetch(`${API_BASE_URL}/identities/users/${userId}/settings`, {
+        method: 'PUT',
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ isReceivedEmail })
+      });
+      if (!response.ok) {
+        let error;
+        try {
+          error = await response.json();
+        } catch {
+          const text = await response.text();
+          throw new Error(text || 'Failed to update user settings');
+        }
+        throw new Error(error?.message || error?.title || 'Failed to update user settings');
+      }
+    },
+
     changeRole: async (userId: number, roleName: string) => {
       const response = await fetch(`${API_BASE_URL}/identities/users/${userId}/roles`, {
         method: 'PUT',
@@ -653,8 +674,16 @@ export const api = {
   },
 
   statistics: {
-    getDashboard: async () => {
-      const response = await fetch(`${API_BASE_URL}/statistics/dashboard`, {
+    getDashboard: async (filters?: { fromDay?: string, toDay?: string, recordType?: number }) => {
+      const query = new URLSearchParams();
+      if (filters?.fromDay) query.append('fromDay', filters.fromDay);
+      if (filters?.toDay) query.append('toDay', filters.toDay);
+      if (filters?.recordType) query.append('recordType', filters.recordType.toString());
+      
+      const queryString = query.toString();
+      const url = `${API_BASE_URL}/statistics/dashboard${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await fetch(url, {
         headers: getHeaders()
       });
       if (!response.ok) throw new Error('Failed to fetch dashboard statistics');
