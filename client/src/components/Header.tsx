@@ -9,8 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { NotificationCenter } from "./NotificationCenter";
 
 const navs = [
-  { href: "/dashboard", label: "Thống kê" },
-  { href: "/", label: "Bệnh án" },
+  { href: "/", label: "Thống kê" },
+  { href: "/records", label: "Bệnh án" },
   { href: "/patients", label: "Bệnh nhân" },
   { href: "/account", label: "Tài khoản" },
   { href: "/departments", label: "Khoa" },
@@ -26,7 +26,7 @@ export function Header() {
   };
 
   const filteredNavs = navs.filter(nav => {
-    if (nav.href === "/dashboard") return isAdmin || isTeacher;
+    if (nav.href === "/") return isAdmin || isTeacher;
     if (nav.href === "/account") return isAdmin;
     if (nav.href === "/departments") return isAdmin || isTeacher;
     return true;

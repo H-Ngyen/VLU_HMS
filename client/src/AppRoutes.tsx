@@ -23,8 +23,8 @@ function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         
         <Route element={<ProtectedRoute component={Layout} />}>
-          <Route path="/" element={<RecordsPage />} />
-          <Route path="/dashboard" element={isAdmin || isTeacher ? <DashboardPage /> : <Navigate to="/" replace />} />
+          <Route path="/" element={isAdmin || isTeacher ? <DashboardPage /> : <Navigate to="/records" replace />} />
+          <Route path="/records" element={<RecordsPage />} />
           <Route path="/record/:id" element={<RecordDetailView />} />
           <Route path="/record/edit/:id" element={<EditRecordView />} />
           <Route path="/record/create/:patientId" element={<CreateRecordView />} />
