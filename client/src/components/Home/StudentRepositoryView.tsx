@@ -34,6 +34,29 @@ export const StudentRepositoryView = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [totalRecords, setTotalRecords] = useState(0);
 
+  // Auto-apply search with 300ms debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppliedFilters(prev => ({
+        ...prev,
+        searchTerm: inputValue
+      }));
+      setCurrentPage(1);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [inputValue]);
+
+  const handleApplyFilter = () => {
+    setAppliedFilters(prev => ({
+      ...prev,
+      filterType,
+      fromDay,
+      toDay
+    }));
+    setCurrentPage(1);
+  };
+
   const fetchRecords = useCallback(async () => {
     setLoading(true);
     try {
@@ -99,16 +122,6 @@ export const StudentRepositoryView = () => {
   useEffect(() => {
     fetchRecords();
   }, [fetchRecords]);
-
-  const handleApplyFilter = () => {
-    setAppliedFilters({
-      searchTerm: inputValue,
-      filterType,
-      fromDay,
-      toDay
-    });
-    setCurrentPage(1);
-  };
 
   const [recordToDelete, setRecordToDelete] = useState<Record | null>(null);
 

@@ -2,20 +2,10 @@ import { Search, Filter as FilterIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { RECORD_TYPES } from "@/constants/recordTypes";
 
-interface RecordFilterProps {
+interface PatientFilterProps {
   inputValue: string;
   setInputValue: (val: string) => void;
-  filterType: string;
-  setFilterType: (val: string) => void;
   fromDay?: string;
   onFromDayChange?: (val: string) => void;
   toDay?: string;
@@ -23,17 +13,15 @@ interface RecordFilterProps {
   onFilter?: () => void;
 }
 
-export const RecordFilter = ({
+export const PatientFilter = ({
   inputValue,
   setInputValue,
-  filterType,
-  setFilterType,
   fromDay = "",
   onFromDayChange,
   toDay = "",
   onToDayChange,
   onFilter,
-}: RecordFilterProps) => {
+}: PatientFilterProps) => {
   return (
     <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 flex flex-col gap-4">
       <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
@@ -44,7 +32,7 @@ export const RecordFilter = ({
             </div>
             <Input
               className="pl-9 h-9"
-              placeholder="Tìm kiếm theo Mã lưu trữ, tên hoặc số cccd"
+              placeholder="Tìm kiếm theo mã BN, tên hoặc số cccd"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
             />
@@ -76,29 +64,6 @@ export const RecordFilter = ({
               />
             </div>
           )}
-
-          <div className="flex items-center gap-2">
-            <div className="flex items-center text-gray-500 text-sm font-medium whitespace-nowrap">
-              Loại hồ sơ:
-            </div>
-            <Select value={filterType} onValueChange={setFilterType}>
-              <SelectTrigger className="w-[140px] h-9 bg-white">
-                <SelectValue placeholder="Tất cả" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tất cả</SelectItem>
-                {RECORD_TYPES.map((type) => (
-                  <SelectItem
-                    key={type.id}
-                    value={type.id}
-                    disabled={type.id !== "internal" && type.id !== "surgery"}
-                  >
-                    {type.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
 
           {onFilter && (
             <Button onClick={onFilter} className="h-9 bg-vlu-red hover:bg-red-700 text-white">
