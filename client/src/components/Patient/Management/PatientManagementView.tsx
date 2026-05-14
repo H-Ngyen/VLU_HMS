@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { api } from "@/services/api";
 import { PatientTable } from "./PatientTable";
 import { PatientPageHeader } from "./PatientPageHeader";
+import { PatientFilter } from "./PatientFilter";
 import type { Patient } from "@/types";
 
 const ITEMS_PER_PAGE = 10;
@@ -25,6 +26,19 @@ export const PatientManagementView = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+
+  // Auto-apply search with 300ms debounce
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppliedFilters(prev => ({
+        ...prev,
+        searchTerm: inputValue
+      }));
+      setCurrentPage(1);
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, [inputValue]);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -64,11 +78,11 @@ export const PatientManagementView = () => {
   }, [fetchData]);
 
   const handleApplyFilter = () => {
-    setAppliedFilters({
-      searchTerm: inputValue,
+    setAppliedFilters(prev => ({
+      ...prev,
       fromDay,
       toDay
-    });
+    }));
     setCurrentPage(1);
   };
 
@@ -84,15 +98,18 @@ export const PatientManagementView = () => {
 
   return (
     <div className="w-full p-4 md:p-6">
-      <PatientPageHeader
-        searchTerm={inputValue}
-        onSearchChange={setInputValue}
+      <PatientPageHeader />
+      
+      <PatientFilter
+        inputValue={inputValue}
+        setInputValue={setInputValue}
         fromDay={fromDay}
         onFromDayChange={setFromDay}
         toDay={toDay}
         onToDayChange={setToDay}
         onFilter={handleApplyFilter}
       />
+
       <PatientTable 
         patients={patients} 
         onPatientDeleted={fetchData} 
