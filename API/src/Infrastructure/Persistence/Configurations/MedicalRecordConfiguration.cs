@@ -31,5 +31,9 @@ internal class MedicalRecordConfiguration : IEntityTypeConfiguration<MedicalReco
               builder.HasOne(m => m.Detail)
                      .WithOne(d => d.MedicalRecord)
                      .HasForeignKey<MedicalRecordDetail>(d => d.Id);
+
+              builder.HasIndex(m => m.RecordType);
+              builder.HasIndex(m => m.StorageCode);
+              builder.HasIndex(m => m.CreatedAt);
        }
 }

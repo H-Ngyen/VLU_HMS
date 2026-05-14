@@ -23,22 +23,70 @@ internal class MedicalRecordsRepository(AppDbContext context) : BaseRepository<M
             .Where(m => m.StorageCode != null && m.StorageCode.StartsWith(yearPrefix + "."))
             .MaxAsync(m => m.StorageCode);
 
-    public async Task<(IEnumerable<MedicalRecord>, int)> GetAllMatchingAsync(string? searchPhrase, int pageSize, int pageNumber, RecordType? recordType, DateOnly? FromDay, DateOnly? ToDay)
+    // public async Task<(IEnumerable<MedicalRecord>, int)> GetAllMatchingAsync(string? searchPhrase, int pageSize, int pageNumber, RecordType? recordType, DateOnly? FromDay, DateOnly? ToDay)
+    // {
+    //     var searchPhraseLower = searchPhrase?.ToLower();
+
+    //     var baseQuery = NoTrackingQuery
+    //         .Include(m => m.Patient)
+    //         .Where(r =>
+    //             (recordType == null || r.RecordType == recordType) &&
+    //             (FromDay == null || DateOnly.FromDateTime(r.CreatedAt) >= FromDay) &&
+    //             (ToDay == null || DateOnly.FromDateTime(r.CreatedAt) <= ToDay) &&
+    //             (searchPhraseLower == null || (r.StorageCode != null && r.StorageCode.ToLower().Contains(searchPhraseLower))
+    //                                                 || r.Patient.Name.ToLower().Contains(searchPhraseLower)
+    //                                                 || r.Patient.HealthInsuranceNumber.ToLower().Contains(searchPhraseLower)));
+
+    //     var totalCount = await baseQuery.CountAsync();
+    //     var records = await baseQuery
+    //         .OrderByDescending(m => m.CreatedAt)
+    //         .Skip(pageSize * (pageNumber - 1))
+    //         .Take(pageSize)
+    //         .ToListAsync();
+
+    //     return (records, totalCount);
+    // }
+
+    public async Task<(IEnumerable<MedicalRecord>, int)> GetAllMatchingAsync(
+        string? searchPhrase,
+        int pageSize,
+        int pageNumber,
+        RecordType? recordType,
+        DateOnly? FromDay,
+        DateOnly? ToDay)
     {
-        var searchPhraseLower = searchPhrase?.ToLower();
+        var query = NoTrackingQuery.AsQueryable();
 
-        var baseQuery = NoTrackingQuery
+        if (recordType.HasValue)
+        {
+            query = query.Where(r => r.RecordType == recordType.Value);
+        }
+
+        if (FromDay.HasValue)
+        {
+            var fromDateTime = FromDay.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(r => r.CreatedAt >= fromDateTime);
+        }
+
+        if (ToDay.HasValue)
+        {
+            var toDateTime = ToDay.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(r => r.CreatedAt <= toDateTime);
+        }
+
+        
+        if (!string.IsNullOrWhiteSpace(searchPhrase))
+        {
+            var pattern = $"%{searchPhrase}%";
+            query = query.Where(r => EF.Functions.ILike(r.StorageCode!, pattern)
+                                  || EF.Functions.ILike(r.Patient.Name, pattern)
+                                  || EF.Functions.ILike(r.Patient.HealthInsuranceNumber, pattern));
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var records = await query
             .Include(m => m.Patient)
-            .Where(r =>
-                (recordType == null || r.RecordType == recordType) &&
-                (FromDay == null || DateOnly.FromDateTime(r.CreatedAt) >= FromDay) &&
-                (ToDay == null || DateOnly.FromDateTime(r.CreatedAt) <= ToDay) &&
-                (searchPhraseLower == null || (r.StorageCode != null && r.StorageCode.ToLower().Contains(searchPhraseLower))
-                                                    || r.Patient.Name.ToLower().Contains(searchPhraseLower)
-                                                    || r.Patient.HealthInsuranceNumber.ToLower().Contains(searchPhraseLower)));
-
-        var totalCount = await baseQuery.CountAsync();
-        var records = await baseQuery
             .OrderByDescending(m => m.CreatedAt)
             .Skip(pageSize * (pageNumber - 1))
             .Take(pageSize)

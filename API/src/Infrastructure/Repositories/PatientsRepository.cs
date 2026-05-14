@@ -58,9 +58,6 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
     {
         var query = NoTrackingQuery.AsQueryable();
 
-        // 1. Tối ưu Search: Sử dụng ILike (PostgreSQL) để thay thế ToLower().Contains()
-        // Điều này cho phép Database sử dụng Index (nếu có GIN/Trigram index)
-        // và tránh quét toàn bộ bảng (Full Table Scan).
         if (!string.IsNullOrWhiteSpace(searchPhrase))
         {
             var pattern = $"%{searchPhrase}%";
@@ -68,8 +65,6 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
                                   || EF.Functions.ILike(r.HealthInsuranceNumber, pattern));
         }
 
-        // 2. Tối ưu Date Filter: So sánh trực tiếp với DateTime thay vì dùng DateOnly.FromDateTime(r.CreatedAt)
-        // Việc gọi hàm trên cột 'CreatedAt' sẽ làm vô hiệu hóa B-Tree Index trên cột này.
         if (from.HasValue)
         {
             var fromDateTime = from.Value.ToDateTime(TimeOnly.MinValue);
@@ -82,7 +77,6 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
             query = query.Where(r => r.CreatedAt <= toDateTime);
         }
 
-        // 3. Phân trang & Thực thi
         var totalCount = await query.CountAsync();
 
         var patients = await query
