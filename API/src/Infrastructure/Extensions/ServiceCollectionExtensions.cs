@@ -8,6 +8,7 @@ using Infrastructure.Repositories;
 using Infrastructure.Seeders;
 using Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -111,7 +112,7 @@ public static class ServiceCollectionExtensions
         // services.AddSingleton<IFileStorageService, FileStorageService>(); // Cũ (MinIO)
         services.AddSingleton<IFileStorageService, S3StorageService>(); // Mới (AWS S3 / S3-Compatible)
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        services.AddScoped<IGenerateIdService, GenerateIdService>();
+        services.AddSingleton<IGenerateIdService, GenerateIdService>();
         services.AddScoped<IPdfProcessorService, PdfProcessorService>();
         services.AddHttpClient<IGeminiClientService, GeminiClientService>();
         services.AddSingleton<IBackgroundTaskQueue, BackgroundTaskQueue>();
@@ -131,5 +132,24 @@ public static class ServiceCollectionExtensions
         // Background Services
         services.AddHostedService<Worker>();
         services.AddHostedService<NotificationEmailRecoveryService>();
+    }
+
+    public static async Task<WebApplication> InitialiseDatabaseAsync(this WebApplication app)
+    {
+        using var scope = app.Services.CreateScope();
+
+        var services = scope.ServiceProvider;
+
+        var dbContext = services.GetRequiredService<AppDbContext>();
+
+        // Apply migrations
+        await dbContext.Database.MigrateAsync();
+
+        // Seed data
+        var seeder = services.GetRequiredService<ISeeder>();
+
+        await seeder.Seed();
+
+        return app;
     }
 }
