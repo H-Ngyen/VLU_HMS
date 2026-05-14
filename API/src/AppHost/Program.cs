@@ -19,10 +19,8 @@ builder.Services.AddInfrastructure(config);
 
 var app = builder.Build();
 
-// Add seeder to the database
-var scope = app.Services.CreateScope();
-var seeder = scope.ServiceProvider.GetRequiredService<ISeeder>();
-await seeder.Seed();
+// Inital db and seeder to the database
+await app.InitialiseDatabaseAsync();
 
 // Configure the HTTP request pipeline. 
 app.UseMiddleware<ErrorHandlingMiddleware>();
@@ -31,13 +29,13 @@ app.UseMiddleware<RequestTimeLoggingMiddleware>();
 
 app.UseSerilogRequestLogging();
 
-if (app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment() || true)
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 // Enable CORS
 app.UseCors("AllowReactApp");
