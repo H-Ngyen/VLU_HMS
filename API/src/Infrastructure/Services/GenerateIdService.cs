@@ -1,10 +1,11 @@
 using Domain.Interfaces;
 using Domain.Repositories;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Infrastructure.Services;
 
 public class GenerateIdService(IDateTimeProvider dateTimeProvider,
-    IMedicalRecordsRepository medicalRecordsRepository) : IGenerateIdService
+    IServiceScopeFactory serviceScopeFactory) : IGenerateIdService
 {
     private static readonly SemaphoreSlim _lock = new(1, 1);
     private string _lastYear = "-1"; 
@@ -21,6 +22,8 @@ public class GenerateIdService(IDateTimeProvider dateTimeProvider,
                 return $"{yearPrefix}.{++_lastId:D6}";
             
             // Tìm mã lớn nhất trong năm hiện tại
+            using var scope = serviceScopeFactory.CreateScope();
+            var medicalRecordsRepository = scope.ServiceProvider.GetRequiredService<IMedicalRecordsRepository>();
             var lastRecord = await medicalRecordsRepository.GetLastStorageIdForYear(yearPrefix);
 
             if (string.IsNullOrEmpty(lastRecord))

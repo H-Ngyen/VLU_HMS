@@ -11,7 +11,7 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
     {
         _dbContext.Add(patient);
         await SaveChanges();
-        return  patient.Id;
+        return patient.Id;
     }
 
     public async Task<IEnumerable<Patient>> GetAllAsync()
@@ -24,26 +24,72 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
             .Include(p => p.Ethnicity)
             .FirstOrDefaultAsync(p => p.Id == id);
 
-    public async Task<(IEnumerable<Patient>, int)> GetAllMatchingAsync(string? searchPhrase,
+    // public async Task<(IEnumerable<Patient>, int)> GetAllMatchingAsync(string? searchPhrase,
+    //     int pageSize,
+    //     int pageNumber,
+    //     DateOnly? from,
+    //     DateOnly? to)
+    // {
+    //     var searchPhraseLower = searchPhrase?.ToLower();
+
+    //     var baseQuery = NoTrackingQuery
+    //         .Where(r =>
+    //             (from == null || DateOnly.FromDateTime(r.CreatedAt) >= from) &&
+    //             (to == null || DateOnly.FromDateTime(r.CreatedAt) <= to) &&
+    //             (searchPhraseLower == null || r.Name.ToLower().Contains(searchPhraseLower)
+    //                                                || r.HealthInsuranceNumber.ToLower().Contains(searchPhraseLower)));
+
+    //     var totalCount = await baseQuery.CountAsync();
+    //     var patients = await baseQuery
+    //         .OrderByDescending(p => p.Id)
+    //         .Skip(pageSize * (pageNumber - 1))
+    //         .Take(pageSize)
+    //         .ToListAsync();
+
+    //     return (patients, totalCount);
+    // }
+
+    public async Task<(IEnumerable<Patient>, int)> GetAllMatchingAsync(
+        string? searchPhrase,
         int pageSize,
         int pageNumber,
         DateOnly? from,
         DateOnly? to)
     {
-        var searchPhraseLower = searchPhrase?.ToLower();
+        var query = NoTrackingQuery.AsQueryable();
 
-        var baseQuery = NoTrackingQuery
-            .Where(r =>
-                (from == null || DateOnly.FromDateTime(r.CreatedAt) >= from) &&
-                (to == null || DateOnly.FromDateTime(r.CreatedAt) <= to) &&
-                (searchPhraseLower == null || r.Name.ToLower().Contains(searchPhraseLower)
-                                                   || r.HealthInsuranceNumber.ToLower().Contains(searchPhraseLower)));
+        // 1. Tối ưu Search: Sử dụng ILike (PostgreSQL) để thay thế ToLower().Contains()
+        // Điều này cho phép Database sử dụng Index (nếu có GIN/Trigram index)
+        // và tránh quét toàn bộ bảng (Full Table Scan).
+        if (!string.IsNullOrWhiteSpace(searchPhrase))
+        {
+            var pattern = $"%{searchPhrase}%";
+            query = query.Where(r => EF.Functions.ILike(r.Name, pattern)
+                                  || EF.Functions.ILike(r.HealthInsuranceNumber, pattern));
+        }
 
-        var totalCount = await baseQuery.CountAsync();
-        var patients = await baseQuery
-            .OrderByDescending(p => p.CreatedAt)
+        // 2. Tối ưu Date Filter: So sánh trực tiếp với DateTime thay vì dùng DateOnly.FromDateTime(r.CreatedAt)
+        // Việc gọi hàm trên cột 'CreatedAt' sẽ làm vô hiệu hóa B-Tree Index trên cột này.
+        if (from.HasValue)
+        {
+            var fromDateTime = from.Value.ToDateTime(TimeOnly.MinValue);
+            query = query.Where(r => r.CreatedAt >= fromDateTime);
+        }
+
+        if (to.HasValue)
+        {
+            var toDateTime = to.Value.ToDateTime(TimeOnly.MaxValue);
+            query = query.Where(r => r.CreatedAt <= toDateTime);
+        }
+
+        // 3. Phân trang & Thực thi
+        var totalCount = await query.CountAsync();
+
+        var patients = await query
+            .OrderByDescending(p => p.Id)
             .Skip(pageSize * (pageNumber - 1))
             .Take(pageSize)
+            .Include(p => p.Ethnicity)
             .ToListAsync();
 
         return (patients, totalCount);

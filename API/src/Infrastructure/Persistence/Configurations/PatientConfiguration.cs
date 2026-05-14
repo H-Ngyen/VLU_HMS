@@ -25,5 +25,10 @@ internal class PatientConfiguration : IEntityTypeConfiguration<Patient>
                .WithMany()
                .HasForeignKey(p => p.CreatedBy)
                .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasIndex(x => x.CreatedAt);
+        builder.HasIndex(x => x.Name);
+        builder.HasIndex(x => x.HealthInsuranceNumber);
+
     }
 }
