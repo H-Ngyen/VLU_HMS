@@ -18,6 +18,92 @@ const getHeaders = (manualToken?: string | null, headers: Record<string, string>
 };
 
 export const api = {
+  auth: {
+    googleLogin: async (credential: string) => {
+      const response = await fetch(`${API_BASE_URL}/auth/patient/google-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: credential })
+      });
+      if (!response.ok) {
+        let error;
+        try {
+          error = await response.json();
+        } catch {
+          throw new Error(`Failed to login with Google (Status: ${response.status})`);
+        }
+        if (response.status === 404 && error?.requiresOnboarding) {
+           return error;
+        }
+        throw new Error(error?.message || 'Failed to login with Google');
+      }
+      return response.json();
+    },
+    googleOnboard: async (credential: string, patientData: any) => {
+      const response = await fetch(`${API_BASE_URL}/auth/patient/google-onboard`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken: credential, ...patientData })
+      });
+      if (!response.ok) {
+        let error;
+        try {
+          error = await response.json();
+        } catch {
+          throw new Error(`Failed to onboard with Google (Status: ${response.status})`);
+        }
+        throw new Error(error?.message || 'Failed to onboard with Google');
+      }
+      return response.json();
+    }
+  },
+  
+  appointments: {
+    book: async (data: { date: string, reason: string }) => {
+      const response = await fetch(`${API_BASE_URL}/appointments/book`, {
+        method: 'POST',
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify(data)
+      });
+      if (!response.ok) {
+        let error;
+        try {
+          error = await response.json();
+        } catch {
+          const text = await response.text();
+          throw new Error(text || 'Failed to book appointment');
+        }
+        throw new Error(error?.message || error?.title || 'Failed to book appointment');
+      }
+      return response.json();
+    },
+    getMyAppointments: async () => {
+      const response = await fetch(`${API_BASE_URL}/appointments/my-appointments`, {
+        headers: getHeaders()
+      });
+      if (!response.ok) {
+        throw new Error('Failed to fetch appointments');
+      }
+      return response.json();
+    },
+    updateStatus: async (id: number, status: number) => {
+      const response = await fetch(`${API_BASE_URL}/appointments/${id}/status`, {
+        method: 'PATCH',
+        headers: getHeaders(null, { 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ appointmentId: id, status: status })
+      });
+      if (!response.ok) {
+        let error;
+        try {
+          error = await response.json();
+        } catch {
+          const text = await response.text();
+          throw new Error(text || 'Failed to update appointment status');
+        }
+        throw new Error(error?.message || error?.title || 'Failed to update appointment status');
+      }
+    }
+  },
   patients: {
     getAll: async (params?: { searchPhrase?: string; pageNumber?: number; pageSize?: number; fromDay?: string; toDay?: string }): Promise<{ items: Patient[], totalPages: number, totalItemsCount: number }> => {
       const queryParams = new URLSearchParams({

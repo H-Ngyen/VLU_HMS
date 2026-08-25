@@ -11,6 +11,7 @@ import { NotificationCenter } from "./NotificationCenter";
 const navs = [
   { href: "/", label: "Thống kê" },
   { href: "/records", label: "Bệnh án" },
+  { href: "/doctor-appointments", label: "Lịch khám" },
   { href: "/patients", label: "Bệnh nhân" },
   { href: "/account", label: "Tài khoản" },
   { href: "/departments", label: "Khoa" },
@@ -19,14 +20,20 @@ const navs = [
 export function Header() {
   const { pathname } = useLocation();
   const { user, logout: auth0Logout } = useAuth0();
-  const { currentUser, isAdmin, isTeacher } = useAuth();
+  const { currentUser, isAdmin, isTeacher, isPatient, logoutPatient } = useAuth();
 
   const handleLogout = () => {
-    auth0Logout({ logoutParams: { returnTo: window.location.origin } });
+    if (isPatient) {
+      logoutPatient();
+    } else {
+      auth0Logout({ logoutParams: { returnTo: window.location.origin } });
+    }
   };
 
   const filteredNavs = navs.filter(nav => {
+    if (isPatient) return false; // Patients have their own dashboard, no top nav links needed
     if (nav.href === "/") return isAdmin || isTeacher;
+    if (nav.href === "/doctor-appointments") return isAdmin || isTeacher;
     if (nav.href === "/account") return isAdmin;
     if (nav.href === "/departments") return isAdmin || isTeacher;
     return true;

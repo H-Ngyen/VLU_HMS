@@ -9,6 +9,7 @@ public class Patient
     // Foreign Keys
     public required int EthnicityId { get; set; }
     public required int CreatedBy { get; set; }
+    public int? UserId { get; set; }
 
     // Props
     public required string Name { get; set; }
@@ -18,6 +19,7 @@ public class Patient
     public required DateTime CreatedAt { get; set; }
 
     // Navigation Properties
+    public User? User { get; set; }
     public User Creator { get; set; } = null!;
     public Ethnicity Ethnicity { get; set; } = null!;
     public ICollection<MedicalRecord> MedicalRecords { get; set; } = [];

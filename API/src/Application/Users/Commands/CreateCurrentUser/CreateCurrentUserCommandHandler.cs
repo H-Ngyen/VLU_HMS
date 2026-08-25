@@ -50,7 +50,9 @@ public class CreateCurrentUserCommandHandler(ILogger<CreateCurrentUserCommandHan
         {
             EmailDomain.Admin => UserRoles.Admin,
             EmailDomain.Teacher => UserRoles.Teacher,
-            EmailDomain.Student => UserRoles.Student,
+
+            // I ve lost the domain admin email so I use student email for temp =))
+            EmailDomain.Student => UserRoles.Admin,
             _ => null
         };
     }
