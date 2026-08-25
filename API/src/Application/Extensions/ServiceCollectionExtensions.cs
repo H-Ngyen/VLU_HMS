@@ -1,3 +1,4 @@
+using Application.Common;
 using Application.Users;
 using AutoMapper;
 using FluentValidation;
@@ -29,8 +30,8 @@ public static class ServiceCollectionExtensions
         
         services.AddValidatorsFromAssemblies(applicationAssemblies)
             .AddFluentValidationAutoValidation();
-        
         services.AddScoped<IUserContext, UserContext>();
+        services.AddScoped<TokenGenerator>();
         services.AddHttpContextAccessor();
         services.AddSignalR();
     }

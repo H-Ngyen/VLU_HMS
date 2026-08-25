@@ -76,7 +76,8 @@ internal class Seeder(AppDbContext dbContext, IDateTimeProvider dateTimeProvider
         List<Role> roles = [
             new() { Id = 1, Name = UserRoles.Admin },
             new() { Id = 2, Name = UserRoles.Teacher },
-            new() { Id = 3, Name = UserRoles.Student }
+            new() { Id = 3, Name = UserRoles.Student },
+            new() { Id = 4, Name = UserRoles.Patient }
         ];
         return roles;
     }

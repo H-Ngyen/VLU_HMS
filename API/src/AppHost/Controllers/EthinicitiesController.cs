@@ -8,7 +8,7 @@ namespace AppHost.Controllers;
 
 [ApiController]
 [Route("api/ethinicities")]
-[Authorize]
+// [Authorize]
 public class EthinicitiesController(IMediator mediator) : ControllerBase
 {
     [HttpGet]

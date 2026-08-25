@@ -24,6 +24,7 @@ internal class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(
     internal DbSet<Department> Departments { get; set; }
     internal DbSet<Notification> Notification { get; set; }
     internal DbSet<UserNotification> UserNotifications { get; set; }
+    internal DbSet<Appointment> Appointments { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

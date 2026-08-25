@@ -63,11 +63,8 @@ public static class ServiceCollectionExtensions
         });
 
         // Add Authentication Services
-        services.AddAuthentication(options =>
-        {
-            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-        }).AddJwtBearer(options =>
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
         {
             options.Authority = config["Auth0:Authority"];
             options.Audience = config["Auth0:Audience"];
@@ -89,6 +86,28 @@ public static class ServiceCollectionExtensions
                     return Task.CompletedTask;
                 }
             };
+        })
+        .AddJwtBearer("Custom", options =>
+        {
+            options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = config["Jwt:Issuer"],
+                ValidAudience = config["Jwt:Audience"],
+                IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(config["Jwt:Key"]!))
+            };
+        });
+
+        services.AddAuthorization(options =>
+        {
+            var defaultAuthorizationPolicyBuilder = new Microsoft.AspNetCore.Authorization.AuthorizationPolicyBuilder(
+                JwtBearerDefaults.AuthenticationScheme,
+                "Custom");
+            defaultAuthorizationPolicyBuilder = defaultAuthorizationPolicyBuilder.RequireAuthenticatedUser();
+            options.DefaultPolicy = defaultAuthorizationPolicyBuilder.Build();
         });
 
 
@@ -104,6 +123,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDepartmentRepository, DepartmentRepository>();
         services.AddScoped<INotificationRepository, NotificationRepository>();
         services.AddScoped<IUserNotificationRepository, UserNotificationRepository>();
+        services.AddScoped<IAppointmentRepository, AppointmentRepository>();
 
         // add seeders scoped
         services.AddScoped<ISeeder, Seeder>();

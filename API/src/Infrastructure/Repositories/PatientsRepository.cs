@@ -94,6 +94,17 @@ internal class PatientsRepository(AppDbContext context) : BaseRepository<Patient
     public async Task<bool> ExistHealthInsuranceNumber(string healthInsuranceNumber)
         => await NoTrackingQuery.AnyAsync(p => p.HealthInsuranceNumber == healthInsuranceNumber);
 
+    public async Task<Patient?> FindOneAsync(System.Linq.Expressions.Expression<Func<Patient, bool>> predicate)
+    {
+        return await TrackingQuery.Include(p => p.Ethnicity).FirstOrDefaultAsync(predicate);
+    }
+
+    public async Task UpdateAsync(Patient patient)
+    {
+        _dbContext.Update(patient);
+        await SaveChanges();
+    }
+
     public async Task DeleteAsync(Patient patient)
     {
         _dbContext.Patients.Remove(patient);
